@@ -98,7 +98,7 @@ export function quarterNews(before: GameState, after: GameState, data: GameData)
     const was = before.people.find((x) => x.id === p.id);
     if (!was || p.death_year !== null) continue;
     for (const stat of STATS) {
-      if (p[stat] > was[stat]) add("family", `${p.name}'s ${stat} rises to ${p[stat]} (was ${was[stat]}).`);
+      if (p[stat] > was[stat]) add("family", `${p.name} gains in ${stat}: now ${p[stat]} (was ${was[stat]}).`);
     }
   }
   for (const p of after.people.slice(before.people.length)) {

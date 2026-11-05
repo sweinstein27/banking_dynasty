@@ -132,3 +132,11 @@ input {
 .news-event strong { color: var(--accent); }
 .crisis { margin-top: 1rem; border: 2px solid var(--warn); border-radius: 8px; padding: 0.6rem 0.8rem; background: #fff8e8; }
 .holdings li.debt { color: var(--bad); }
+
+.person.head { border: 1px solid var(--line); border-radius: 6px; padding: 0.5rem 0.8rem; margin: 0.6rem 0; }
+.stat-list, .heirs { padding-left: 1.2rem; margin: 0.3rem 0; }
+.heirs li { margin: 0.5rem 0; }
+.next-heir { border-left: 4px solid var(--accent); padding-left: 0.5rem; list-style: none; margin-left: -1.2rem; }
+.tag { margin-left: 0.5rem; background: var(--accent); color: var(--accent-ink); border-radius: 4px; padding: 0.05rem 0.4rem; font-size: 0.85rem; }
+.good { color: var(--good); }
+.chronicle { max-width: 70ch; line-height: 1.5; }

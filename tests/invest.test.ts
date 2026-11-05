@@ -120,6 +120,6 @@ describe("heir events", () => {
     // Rolls: the mood, the random-event roll, the event pick, then the heir and the stat.
     const s = endTurn(fresh(), [], fixedRng(CALM, 0, 0, 0, 0, CALM), data);
     const heir = s.people[1]!;
-    expect(s.news.map((n) => n.title ?? n.text)).toEqual(["Unexpected talent", `${heir.name}'s acumen rises to ${heir.acumen} (was ${heir.acumen - 2}).`]);
+    expect(s.news.map((n) => n.title ?? n.text)).toEqual(["Unexpected talent", `${heir.name} gains in acumen: now ${heir.acumen} (was ${heir.acumen - 2}).`]);
   });
 });

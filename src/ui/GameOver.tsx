@@ -1,3 +1,5 @@
+import { gameData } from "../data";
+import { chronicle } from "../sim/chronicle";
 import { netWorth } from "../sim/turn";
 import type { GameState } from "../sim/types";
 import { dateLabel, fl, previousQuarter } from "./format";
@@ -22,6 +24,12 @@ export function GameOver({ state, reason, seed, onNewGame, onSave }: {
       </p>
       <p className="final-worth">Final net worth: {fl(worth)}</p>
       <p className="muted">Seed {seed}, {state.world.turn - 1} quarters played. The panels below show the final books.</p>
+      <h3>The chronicle of the house</h3>
+      <div className="chronicle">
+        {chronicle(state, gameData).map((para, i) => (
+          <p key={i}>{para}</p>
+        ))}
+      </div>
       <div className="row">
         <button className="primary" onClick={onNewGame}>New game</button>
         <button className="secondary" onClick={onSave}>Save this game</button>
