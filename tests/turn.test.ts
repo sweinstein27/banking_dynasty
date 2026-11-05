@@ -4,26 +4,26 @@ import { newGame } from "../src/sim/init";
 import { accountBalance } from "../src/sim/ledger";
 import { endTurn, loanBook, netWorth } from "../src/sim/turn";
 import type { LendDecision } from "../src/sim/types";
-import { fixedRng, noDefaults } from "./helpers";
+import { fixedRng, noDefaults, noEvents } from "./helpers";
 
 const lendFair: LendDecision = { kind: "lend", amount: 10000, rate: 0.08, tier: "fair" };
 
 describe("endTurn: calendar", () => {
   it("advances one quarter", () => {
-    const s = endTurn(newGame(gameData), [], noDefaults, gameData);
+    const s = endTurn(newGame(gameData), [], noDefaults, noEvents);
     expect(s.world).toMatchObject({ turn: 2, year: 1815, quarter: 2 });
   });
 
   it("rolls Q4 over to Q1 of the next year", () => {
     let s = newGame(gameData);
-    for (let i = 0; i < 4; i++) s = endTurn(s, [], noDefaults, gameData);
+    for (let i = 0; i < 4; i++) s = endTurn(s, [], noDefaults, noEvents);
     expect(s.world).toMatchObject({ turn: 5, year: 1816, quarter: 1 });
   });
 
   it("does not change the input state", () => {
     const s0 = newGame(gameData);
     const before = structuredClone(s0);
-    endTurn(s0, [lendFair], noDefaults, gameData);
+    endTurn(s0, [lendFair], noDefaults, noEvents);
     expect(s0).toEqual(before);
   });
 });
@@ -31,7 +31,7 @@ describe("endTurn: calendar", () => {
 describe("endTurn: interest and repayment", () => {
   it("collects interest in the quarter the loan is made", () => {
     const s0 = newGame(gameData);
-    const s1 = endTurn(s0, [lendFair], noDefaults, gameData);
+    const s1 = endTurn(s0, [lendFair], noDefaults, noEvents);
     expect(s1.house.cash).toBe(s0.house.cash - 10000 + 200);
     expect(s1.ledger.filter((e) => e.category === "interest")).toHaveLength(1);
   });
@@ -39,18 +39,18 @@ describe("endTurn: interest and repayment", () => {
   it("repays principal after the term and stops paying interest", () => {
     let s = newGame(gameData);
     const start = s.house.cash;
-    s = endTurn(s, [lendFair], noDefaults, gameData);
-    for (let i = 1; i < gameData.tuning.loans.term_quarters; i++) s = endTurn(s, [], noDefaults, gameData);
+    s = endTurn(s, [lendFair], noDefaults, noEvents);
+    for (let i = 1; i < gameData.tuning.loans.term_quarters; i++) s = endTurn(s, [], noDefaults, noEvents);
     expect(s.loans[0]!.status).toBe("repaid");
     expect(s.house.cash).toBe(start + 200 * gameData.tuning.loans.term_quarters);
     expect(loanBook(s)).toBe(0);
 
-    const after = endTurn(s, [], noDefaults, gameData);
+    const after = endTurn(s, [], noDefaults, noEvents);
     expect(after.house.cash).toBe(s.house.cash);
   });
 
   it("throws on an invalid decision", () => {
-    expect(() => endTurn(newGame(gameData), [{ ...lendFair, amount: 10_000_000 }], noDefaults, gameData)).toThrow(
+    expect(() => endTurn(newGame(gameData), [{ ...lendFair, amount: 10_000_000 }], noDefaults, noEvents)).toThrow(
       /Not enough cash/,
     );
   });
@@ -59,7 +59,7 @@ describe("endTurn: interest and repayment", () => {
 describe("endTurn: defaults", () => {
   it("writes off the principal and pays no interest when the roll defaults", () => {
     const s0 = newGame(gameData);
-    const s1 = endTurn(s0, [lendFair], fixedRng(0), gameData);
+    const s1 = endTurn(s0, [lendFair], fixedRng(0), noEvents);
     expect(s1.loans[0]!.status).toBe("defaulted");
     expect(s1.house.cash).toBe(s0.house.cash - 10000);
     expect(loanBook(s1)).toBe(0);
@@ -70,17 +70,17 @@ describe("endTurn: defaults", () => {
 
   it("uses the formula threshold: a roll just under p defaults, just over does not", () => {
     const p = gameData.tuning.loans.p0 * (1 - 0.6);
-    const hit = endTurn(newGame(gameData), [lendFair], fixedRng(p - 1e-9), gameData);
-    const miss = endTurn(newGame(gameData), [lendFair], fixedRng(p + 1e-9), gameData);
+    const hit = endTurn(newGame(gameData), [lendFair], fixedRng(p - 1e-9), noEvents);
+    const miss = endTurn(newGame(gameData), [lendFair], fixedRng(p + 1e-9), noEvents);
     expect(hit.loans[0]!.status).toBe("defaulted");
     expect(miss.loans[0]!.status).toBe("active");
   });
 
   it("never touches a defaulted loan again", () => {
     // Default the loan, then roll high so the mood stays calm and no withdrawals move cash.
-    let s = endTurn(newGame(gameData), [lendFair], fixedRng(0, 0.999999), gameData);
+    let s = endTurn(newGame(gameData), [lendFair], fixedRng(0, 0.999999), noEvents);
     const cash = s.house.cash;
-    s = endTurn(s, [], fixedRng(0), gameData);
+    s = endTurn(s, [], fixedRng(0), noEvents);
     expect(s.house.cash).toBe(cash);
     expect(s.ledger.filter((e) => e.category === "default")).toHaveLength(1);
   });
@@ -91,8 +91,8 @@ describe("endTurn: defaults", () => {
     const calm = newGame(gameData);
     const panic = newGame(gameData);
     panic.world.sentiment = "panic";
-    expect(endTurn(calm, [lendFair], fixedRng(roll), gameData).loans[0]!.status).toBe("active");
-    expect(endTurn(panic, [lendFair], fixedRng(roll), gameData).loans[0]!.status).toBe("defaulted");
+    expect(endTurn(calm, [lendFair], fixedRng(roll), noEvents).loans[0]!.status).toBe("active");
+    expect(endTurn(panic, [lendFair], fixedRng(roll), noEvents).loans[0]!.status).toBe("defaulted");
   });
 });
 
@@ -104,14 +104,14 @@ describe("netWorth and ledger", () => {
 
   it("is unchanged by lending itself", () => {
     const s0 = newGame(gameData);
-    const r = endTurn(s0, [lendFair], noDefaults, gameData);
+    const r = endTurn(s0, [lendFair], noDefaults, noEvents);
     expect(netWorth(r)).toBe(netWorth(s0) + 200);
   });
 
   it("reconciles every balance to the ledger", () => {
     let s = newGame(gameData);
-    s = endTurn(s, [lendFair, { ...lendFair, tier: "poor", rate: 0.15 }], fixedRng(0.9, 0), gameData);
-    s = endTurn(s, [], noDefaults, gameData);
+    s = endTurn(s, [lendFair, { ...lendFair, tier: "poor", rate: 0.15 }], fixedRng(0.9, 0), noEvents);
+    s = endTurn(s, [], noDefaults, noEvents);
     expect(accountBalance(s, "cash")).toBe(s.house.cash);
     expect(accountBalance(s, "loans")).toBe(loanBook(s));
     expect(accountBalance(s, "deposits")).toBe(s.house.deposits);

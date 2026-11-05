@@ -1,1 +1,218 @@
-[]
+[
+  {
+    "id": "peace-1815",
+    "title": "Peace after Waterloo",
+    "text": "Napoleon was beaten at Waterloo on 18 June and has abdicated. The powers must pay for the wars and rebuild, and they will need bankers.",
+    "historical": true,
+    "year": 1815,
+    "quarter": 3,
+    "conditions": {},
+    "effects": [{ "kind": "reputation", "delta": 5 }]
+  },
+  {
+    "id": "paris-treaty-1815",
+    "title": "The Second Peace of Paris",
+    "text": "The treaty signed on 20 November makes France pay an indemnity of 700 million francs and keep an allied army of occupation. French credit is strained.",
+    "historical": true,
+    "year": 1815,
+    "quarter": 4,
+    "conditions": {},
+    "effects": [{ "kind": "state_risk", "state": "france", "delta": 0.05 }]
+  },
+  {
+    "id": "london-banks-1825",
+    "title": "Banks fail in London",
+    "text": "In December Pole and Company and other London banks close their doors, and dozens of country banks follow. Bills drawn on London are refused at the Frankfurt bourse.",
+    "historical": true,
+    "year": 1825,
+    "quarter": 4,
+    "conditions": {},
+    "effects": [{ "kind": "set_sentiment", "sentiment": "uneasy" }]
+  },
+  {
+    "id": "panic-1826",
+    "title": "Panic reaches the continent",
+    "text": "The London crisis spreads to the merchant houses of Europe. Frankfurt depositors want their money back, and they want it now.",
+    "historical": true,
+    "year": 1826,
+    "quarter": 1,
+    "conditions": {},
+    "effects": [{ "kind": "set_sentiment", "sentiment": "panic" }]
+  },
+  {
+    "id": "july-revolution-1830",
+    "title": "Revolution in Paris",
+    "text": "Three days of street fighting at the end of July drive Charles X from the throne. French bonds fall while investors wait to see what follows.",
+    "historical": true,
+    "year": 1830,
+    "quarter": 3,
+    "conditions": {},
+    "effects": [
+      { "kind": "state_risk", "state": "france", "delta": 0.15 },
+      { "kind": "set_sentiment", "sentiment": "uneasy" }
+    ]
+  },
+  {
+    "id": "zollverein-1834",
+    "title": "The Zollverein begins",
+    "text": "A customs union led by Prussia takes effect across much of Germany. Frankfurt, a free city that lives by its own trade, stays outside for now.",
+    "historical": true,
+    "year": 1834,
+    "quarter": 1,
+    "conditions": {},
+    "effects": []
+  },
+  {
+    "id": "railway-1835",
+    "title": "Germany's first railway",
+    "text": "On 7 December the locomotive Adler pulls the first train from Nuremberg to Fuerth. Railway companies will soon come looking for capital.",
+    "historical": true,
+    "year": 1835,
+    "quarter": 4,
+    "conditions": {},
+    "effects": []
+  },
+  {
+    "id": "frankfurt-zollverein-1836",
+    "title": "Frankfurt joins the Zollverein",
+    "text": "The free city signs up to the customs union. Goods now cross from the Rhine to the Prussian east without tolls, and merchant credit is safer for it.",
+    "historical": true,
+    "year": 1836,
+    "quarter": 1,
+    "conditions": {},
+    "effects": [{ "kind": "trade_risk", "factor": 0.8 }]
+  },
+  {
+    "id": "crisis-1847",
+    "title": "Commercial crisis in London",
+    "text": "Speculation in corn and railways ends in October with a wave of failures among London trading houses. Credit tightens across Europe.",
+    "historical": true,
+    "year": 1847,
+    "quarter": 4,
+    "conditions": {},
+    "effects": [
+      { "kind": "set_sentiment", "sentiment": "uneasy" },
+      { "kind": "trade_risk", "factor": 1.25 }
+    ]
+  },
+  {
+    "id": "february-revolution-1848",
+    "title": "France is a republic again",
+    "text": "After three days of fighting in late February, Louis-Philippe abdicates and a republic is proclaimed. French bonds tumble.",
+    "historical": true,
+    "year": 1848,
+    "quarter": 1,
+    "conditions": {},
+    "effects": [
+      { "kind": "state_risk", "state": "france", "delta": 0.2 },
+      { "kind": "set_sentiment", "sentiment": "panic" }
+    ]
+  },
+  {
+    "id": "march-revolutions-1848",
+    "title": "Revolution in Vienna and Berlin",
+    "text": "In March crowds drive Metternich from power in Vienna, and Berlin fights its own soldiers in the streets. Every government in Germany looks shaky.",
+    "historical": true,
+    "year": 1848,
+    "quarter": 1,
+    "conditions": {},
+    "effects": [
+      { "kind": "state_risk", "state": "austria", "delta": 0.15 },
+      { "kind": "state_risk", "state": "prussia", "delta": 0.1 },
+      { "kind": "state_risk", "state": "bavaria", "delta": 0.1 }
+    ]
+  },
+  {
+    "id": "warehouse-fire",
+    "title": "Fire in the Fahrgasse",
+    "text": "A blaze destroys a merchant's warehouse and all his stock. He cannot repay the house.",
+    "historical": false,
+    "weight": 2,
+    "conditions": { "has_active_loans": true },
+    "effects": [{ "kind": "loan_default" }]
+  },
+  {
+    "id": "clerk-skimming",
+    "title": "A clerk caught skimming",
+    "text": "A junior clerk has been taking small sums from the strongbox for months. Word of it gets out.",
+    "historical": false,
+    "weight": 2,
+    "conditions": {},
+    "effects": [
+      { "kind": "cash", "share": -0.02 },
+      { "kind": "reputation", "delta": -2 }
+    ]
+  },
+  {
+    "id": "rival-rumours",
+    "title": "Rumours from Bankhaus Kessler",
+    "text": "A rival house whispers on the bourse that your house is short of cash. Some depositors listen.",
+    "historical": false,
+    "weight": 2,
+    "conditions": {},
+    "effects": [{ "kind": "reputation", "delta": -6 }]
+  },
+  {
+    "id": "good-name",
+    "title": "A good name",
+    "text": "A respected merchant tells the bourse that your house has never once been late with a payment.",
+    "historical": false,
+    "weight": 2,
+    "conditions": { "max_reputation": 80 },
+    "effects": [{ "kind": "reputation", "delta": 4 }]
+  },
+  {
+    "id": "good-harvest",
+    "title": "A good harvest",
+    "text": "Full granaries across Hesse and the Palatinate ease the worries of merchants and depositors alike.",
+    "historical": false,
+    "weight": 2,
+    "conditions": { "sentiment": ["uneasy"] },
+    "effects": [{ "kind": "set_sentiment", "sentiment": "calm" }]
+  },
+  {
+    "id": "poor-harvest",
+    "title": "A poor harvest",
+    "text": "Rain ruins the harvest. Grain prices climb and merchants grow cautious.",
+    "historical": false,
+    "weight": 2,
+    "conditions": { "sentiment": ["calm"] },
+    "effects": [{ "kind": "set_sentiment", "sentiment": "uneasy" }]
+  },
+  {
+    "id": "busy-fair",
+    "title": "A busy fair",
+    "text": "The Frankfurt fair is crowded with buyers, and the house earns good commissions on bills of exchange.",
+    "historical": false,
+    "weight": 2,
+    "conditions": {},
+    "effects": [{ "kind": "cash", "amount": 2000 }]
+  },
+  {
+    "id": "courier-robbed",
+    "title": "Courier robbed on the Mainz road",
+    "text": "Highwaymen stop the house's courier and take a bag of coin.",
+    "historical": false,
+    "weight": 1,
+    "conditions": {},
+    "effects": [{ "kind": "cash", "amount": -1500 }]
+  },
+  {
+    "id": "naples-doubts",
+    "title": "Doubts about Naples",
+    "text": "Letters from Naples speak of an empty treasury and unpaid troops. Neapolitan bonds are harder to sell.",
+    "historical": false,
+    "weight": 1,
+    "conditions": { "holds_bonds_of": "naples" },
+    "effects": [{ "kind": "state_risk", "state": "naples", "delta": 0.1 }]
+  },
+  {
+    "id": "austria-strain",
+    "title": "Austrian finances strained",
+    "text": "Vienna borrows again to cover last year's deficit. Holders of Austrian bonds grow uneasy.",
+    "historical": false,
+    "weight": 1,
+    "conditions": { "holds_bonds_of": "austria" },
+    "effects": [{ "kind": "state_risk", "state": "austria", "delta": 0.05 }]
+  }
+]

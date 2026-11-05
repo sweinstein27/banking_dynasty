@@ -50,8 +50,8 @@ describe("bondOffers", () => {
 describe("ventureOffers", () => {
   it("blocks railways before their unlock year and allows them after", () => {
     const s = newGame(gameData);
-    expect(ventureOffers(s, gameData).find((o) => o.id === "railway")!.blocked).toBe("Not before 1835");
-    s.world.year = 1835;
+    expect(ventureOffers(s, gameData).find((o) => o.id === "railway")!.blocked).toBe("Not before 1836");
+    s.world.year = 1836;
     expect(ventureOffers(s, gameData).find((o) => o.id === "railway")!.blocked).toBeNull();
   });
 

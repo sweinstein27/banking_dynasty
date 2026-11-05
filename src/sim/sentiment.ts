@@ -16,9 +16,15 @@ export function nextSentiment(current: Sentiment, roll: number, tuning: Tuning):
   return current;
 }
 
-/** Deposits withdrawn this quarter given the mood, in whole gulden. */
-export function withdrawalDemand(deposits: number, sentiment: Sentiment, tuning: Tuning): number {
-  return Math.round(deposits * tuning.sentiment.withdrawal_share[sentiment]);
+/**
+ * Deposits withdrawn this quarter given the mood and the house's reputation, in whole gulden.
+ * The mood's share is scaled by 1 + weight * (neutral - reputation) / neutral: a house below the
+ * neutral reputation loses more, one above it loses less.
+ */
+export function withdrawalDemand(deposits: number, sentiment: Sentiment, tuning: Tuning, reputation: number): number {
+  const { neutral, weight } = tuning.sentiment.reputation_withdrawals;
+  const scale = Math.max(0, 1 + (weight * (neutral - reputation)) / neutral);
+  return Math.min(deposits, Math.round(deposits * tuning.sentiment.withdrawal_share[sentiment] * scale));
 }
 
 /**
@@ -27,7 +33,7 @@ export function withdrawalDemand(deposits: number, sentiment: Sentiment, tuning:
  */
 export function applyWithdrawals(state: GameState, tuning: Tuning): WithdrawalResult | null {
   const { sentiment } = state.world;
-  const demand = withdrawalDemand(state.house.deposits, sentiment, tuning);
+  const demand = withdrawalDemand(state.house.deposits, sentiment, tuning, state.house.reputation);
   if (demand === 0) return null;
   return payWithdrawal(state, demand, `Depositors withdraw (${sentiment})`);
 }

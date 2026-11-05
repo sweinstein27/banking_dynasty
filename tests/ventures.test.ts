@@ -15,7 +15,7 @@ import {
   ventureFailureChance,
   venturePayout,
 } from "../src/sim/ventures";
-import { fixedRng, noDefaults } from "./helpers";
+import { fixedRng, noDefaults, noEvents } from "./helpers";
 
 const tuning = gameData.tuning;
 const type = (id: string) => gameData.ventures.find((v) => v.id === id)!;
@@ -37,7 +37,7 @@ function reconciles(s: GameState) {
 
 /** Plays `n` quiet turns: nothing defaults, ventures succeed, the mood stays calm. */
 function quiet(s: GameState, n: number): GameState {
-  for (let i = 0; i < n; i++) s = endTurn(s, [], noDefaults, gameData);
+  for (let i = 0; i < n; i++) s = endTurn(s, [], noDefaults, noEvents);
   return s;
 }
 
@@ -84,9 +84,9 @@ describe("investVenture", () => {
     expect(s0).toEqual(before);
   });
 
-  it("refuses a railway before 1835, and allows it from then", () => {
+  it("refuses a railway before 1836, after the first German line opens, and allows it from then", () => {
     const s = newGame(gameData);
-    expect(checkInvestVenture(s, invest("railway"), gameData)).toMatch(/before 1835/);
+    expect(checkInvestVenture(s, invest("railway"), gameData)).toMatch(/before 1836/);
     s.world.year = type("railway").unlock_year;
     expect(checkInvestVenture(s, invest("railway"), gameData)).toBeNull();
   });
@@ -123,11 +123,11 @@ describe("investVenture", () => {
 describe("endTurn: ventures", () => {
   it("keeps capital locked, with no income and no roll, until the term", () => {
     const mill = type("mill");
-    let s = endTurn(newGame(gameData), [invest("mill")], noDefaults, gameData);
+    let s = endTurn(newGame(gameData), [invest("mill")], noDefaults, noEvents);
     const cash = s.house.cash;
     let calls = 0;
     const counting = { next: () => (calls++, 0.999999) };
-    for (let i = 1; i < mill.term_quarters - 1; i++) s = endTurn(s, [], counting, gameData);
+    for (let i = 1; i < mill.term_quarters - 1; i++) s = endTurn(s, [], counting, noEvents);
     expect(s.ventures[0]!.status).toBe("active");
     expect(s.house.cash).toBe(cash);
     expect(calls).toBe(2 * (mill.term_quarters - 2)); // only the mood and random-event rolls
@@ -137,7 +137,7 @@ describe("endTurn: ventures", () => {
   it("pays out at the end of its term on success", () => {
     const mill = type("mill");
     const s0 = newGame(gameData);
-    const s = quiet(endTurn(s0, [invest("mill")], noDefaults, gameData), mill.term_quarters - 1);
+    const s = quiet(endTurn(s0, [invest("mill")], noDefaults, noEvents), mill.term_quarters - 1);
     expect(s.ventures[0]!.status).toBe("paid_out");
     expect(s.house.cash).toBe(s0.house.cash - 10000 + 14000);
     expect(netWorth(s)).toBe(netWorth(s0) + 4000);
@@ -147,9 +147,9 @@ describe("endTurn: ventures", () => {
   it("loses the whole stake on failure", () => {
     const shipping = type("shipping");
     let s = newGame(gameData);
-    s = quiet(endTurn(s, [invest("shipping")], noDefaults, gameData), shipping.term_quarters - 2);
+    s = quiet(endTurn(s, [invest("shipping")], noDefaults, noEvents), shipping.term_quarters - 2);
     const before = netWorth(s);
-    s = endTurn(s, [], fixedRng(0, 0.999999), gameData); // venture fails, mood stays calm
+    s = endTurn(s, [], fixedRng(0, 0.999999), noEvents); // venture fails, mood stays calm
     expect(s.ventures[0]!.status).toBe("failed");
     expect(netWorth(s)).toBe(before - 10000);
     reconciles(s);
@@ -158,20 +158,20 @@ describe("endTurn: ventures", () => {
   it("uses the mood at maturity: a roll that succeeds when calm fails in a panic", () => {
     const mill = type("mill");
     let s = newGame(gameData);
-    s = quiet(endTurn(s, [invest("mill")], noDefaults, gameData), mill.term_quarters - 2);
+    s = quiet(endTurn(s, [invest("mill")], noDefaults, noEvents), mill.term_quarters - 2);
     const roll = mill.failure_risk * 2; // above the calm chance, below the panic chance
-    const calm = endTurn(s, [], fixedRng(roll, 0.999999), gameData);
+    const calm = endTurn(s, [], fixedRng(roll, 0.999999), noEvents);
     const panicked = structuredClone(s);
     panicked.world.sentiment = "panic";
     panicked.house.deposits = 0; // no run, to isolate the venture
-    const panic = endTurn(panicked, [], fixedRng(roll, 0.999999), gameData);
+    const panic = endTurn(panicked, [], fixedRng(roll, 0.999999), noEvents);
     expect(calm.ventures[0]!.status).toBe("paid_out");
     expect(panic.ventures[0]!.status).toBe("failed");
   });
 
   it("never resolves a venture twice", () => {
     const mill = type("mill");
-    let s = quiet(endTurn(newGame(gameData), [invest("mill")], noDefaults, gameData), mill.term_quarters - 1);
+    let s = quiet(endTurn(newGame(gameData), [invest("mill")], noDefaults, noEvents), mill.term_quarters - 1);
     const cash = s.house.cash;
     s = quiet(s, 3);
     expect(s.house.cash).toBe(cash);

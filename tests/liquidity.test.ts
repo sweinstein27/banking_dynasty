@@ -7,7 +7,7 @@ import { loanSalePrice, principalToSell, raiseCash, resolveWithdrawals } from ".
 import { lend, quarterlyInterest } from "../src/sim/loans";
 import { endTurn, loanBook, netWorth } from "../src/sim/turn";
 import type { GameState, LendDecision } from "../src/sim/types";
-import { noDefaults } from "./helpers";
+import { noDefaults, noEvents } from "./helpers";
 
 const tuning = gameData.tuning;
 const panicShare = tuning.sentiment.withdrawal_share.panic;
@@ -132,12 +132,12 @@ describe("forced sales", () => {
 
   it("leave the unsold part of a loan earning interest at its smaller principal", () => {
     let s = house({ cash: 0, deposits: 50000, loans: [20000] });
-    s = endTurn(s, [], noDefaults, gameData);
+    s = endTurn(s, [], noDefaults, noEvents);
     const kept = s.loans[0]!.principal;
     expect(kept).toBeGreaterThan(0);
     s.world.sentiment = "calm";
     const cash = s.house.cash;
-    s = endTurn(s, [], noDefaults, gameData);
+    s = endTurn(s, [], noDefaults, noEvents);
     expect(s.house.cash - cash).toBe(quarterlyInterest({ principal: kept, rate: 0.06 }));
   });
 
@@ -184,9 +184,9 @@ describe("bankruptcy", () => {
 
   it("ends the run: End Turn refuses to play on and no decisions are accepted", () => {
     const s0 = house({ cash: 0, deposits: 50000 });
-    const s1 = endTurn(s0, [], noDefaults, gameData);
+    const s1 = endTurn(s0, [], noDefaults, noEvents);
     expect(s1.house.status).toBe("bankrupt");
-    expect(() => endTurn(s1, [], noDefaults, gameData)).toThrow(/bankrupt/);
+    expect(() => endTurn(s1, [], noDefaults, noEvents)).toThrow(/bankrupt/);
     const r = applyDecision(s1, { kind: "set_reserve", amount: 5000 }, gameData);
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.reason).toMatch(/bankrupt/);
@@ -196,7 +196,7 @@ describe("bankruptcy", () => {
     // A loan repaid this quarter adds cash before withdrawals, which can save the house.
     let s = house({ cash: 0, deposits: 50000, loans: [20000] });
     s.world.turn = s.loans[0]!.start_turn + tuning.loans.term_quarters - 1;
-    s = endTurn(s, [], noDefaults, gameData);
+    s = endTurn(s, [], noDefaults, noEvents);
     expect(s.loans[0]!.status).toBe("repaid");
     expect(s.house.status).toBe("solvent");
   });

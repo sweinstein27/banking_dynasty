@@ -7,7 +7,7 @@ import { checkLend } from "../src/sim/loans";
 import { checkSetReserve, freeCash, payWithdrawal, setReserve } from "../src/sim/reserves";
 import { endTurn, netWorth } from "../src/sim/turn";
 import type { Decision, GameState, LendDecision, SetReserveDecision } from "../src/sim/types";
-import { noDefaults } from "./helpers";
+import { noDefaults, noEvents } from "./helpers";
 
 const tuning = gameData.tuning;
 const reserve = (amount: number): SetReserveDecision => ({ kind: "set_reserve", amount });
@@ -102,12 +102,12 @@ describe("reserve and lending", () => {
   it("applies decisions in order: a reserve set first limits a later loan in the same turn", () => {
     const s0 = newGame(gameData);
     const tooBig = lendGood(s0.house.cash - 10000);
-    expect(() => endTurn(s0, [reserve(20000), tooBig], noDefaults, gameData)).toThrow(/above the reserve/);
-    expect(() => endTurn(s0, [tooBig, reserve(20000)], noDefaults, gameData)).not.toThrow();
+    expect(() => endTurn(s0, [reserve(20000), tooBig], noDefaults, noEvents)).toThrow(/above the reserve/);
+    expect(() => endTurn(s0, [tooBig, reserve(20000)], noDefaults, noEvents)).not.toThrow();
   });
 
   it("keeps the reserve across turns", () => {
-    const s = endTurn(newGame(gameData), [reserve(25000)], noDefaults, gameData);
+    const s = endTurn(newGame(gameData), [reserve(25000)], noDefaults, noEvents);
     expect(s.house.reserve).toBe(25000);
   });
 });
@@ -124,7 +124,7 @@ describe("actions are shared across decision types", () => {
   });
 
   it("resets at the end of the turn", () => {
-    const s = endTurn(newGame(gameData), [reserve(10000), lendGood(1000), lendGood(1000)], noDefaults, gameData);
+    const s = endTurn(newGame(gameData), [reserve(10000), lendGood(1000), lendGood(1000)], noDefaults, noEvents);
     expect(s.actions_this_turn).toBe(0);
   });
 });

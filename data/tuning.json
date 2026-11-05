@@ -36,7 +36,8 @@
       "calm": 0,
       "uneasy": 0.02,
       "panic": 0.2
-    }
+    },
+    "reputation_withdrawals": { "neutral": 50, "weight": 0.5 }
   },
   "forced_sale": {
     "loan_discount": 0.3,

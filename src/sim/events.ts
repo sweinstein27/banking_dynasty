@@ -64,6 +64,9 @@ function applyEffect(state: GameState, e: EventEffect, note: string, rng: Rng): 
     case "state_risk":
       state.risk_shift[e.state] = Math.round(((state.risk_shift[e.state] ?? 0) + e.delta) * 1000) / 1000;
       return;
+    case "trade_risk":
+      state.trade_risk = Math.round(state.trade_risk * e.factor * 1000) / 1000;
+      return;
   }
 }
 
@@ -130,12 +133,14 @@ export function checkEventData(data: GameData): string[] {
       if (c.sentiment?.some((s) => !SENTIMENTS.includes(s))) p("unknown sentiment in conditions");
       if (c.holds_bonds_of && !stateIds.has(c.holds_bonds_of)) p(`unknown state "${c.holds_bonds_of}" in conditions`);
     }
-    if (!Array.isArray(ev.effects) || ev.effects.length === 0) p("needs at least one effect");
+    // An empty list is allowed: some events are news only.
+    if (!Array.isArray(ev.effects)) p("needs an effects list (may be empty)");
     for (const e of ev.effects ?? []) {
       if (e.kind === "set_sentiment" && !SENTIMENTS.includes(e.sentiment)) p(`unknown sentiment "${e.sentiment}"`);
       else if (e.kind === "state_risk" && !stateIds.has(e.state)) p(`unknown state "${e.state}"`);
       else if (e.kind === "cash" && (e.amount === undefined) === (e.share === undefined)) p("cash effects need exactly one of amount or share");
-      else if (!["set_sentiment", "reputation", "cash", "loan_default", "state_risk"].includes(e.kind)) p(`unknown effect "${(e as { kind: string }).kind}"`);
+      else if (e.kind === "trade_risk" && !(e.factor > 0)) p("trade_risk needs a factor above zero");
+      else if (!["set_sentiment", "reputation", "cash", "loan_default", "state_risk", "trade_risk"].includes(e.kind)) p(`unknown effect "${(e as { kind: string }).kind}"`);
     }
   }
   return problems;

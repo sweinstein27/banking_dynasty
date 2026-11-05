@@ -5,7 +5,7 @@ import { accountBalance } from "../src/sim/ledger";
 import { applyWithdrawals, nextSentiment, withdrawalDemand } from "../src/sim/sentiment";
 import { endTurn } from "../src/sim/turn";
 import type { LendDecision, Sentiment } from "../src/sim/types";
-import { fixedRng, noDefaults } from "./helpers";
+import { fixedRng, noDefaults, noEvents } from "./helpers";
 
 const tuning = gameData.tuning;
 const tr = tuning.sentiment.transitions;
@@ -54,9 +54,39 @@ describe("nextSentiment", () => {
   });
 });
 
+describe("withdrawalDemand: reputation", () => {
+  const uneasy = (rep: number) => withdrawalDemand(100000, "uneasy", tuning, rep);
+  const { neutral, weight } = tuning.sentiment.reputation_withdrawals;
+
+  it("is unchanged at the neutral reputation", () => {
+    expect(uneasy(neutral)).toBe(Math.round(100000 * tuning.sentiment.withdrawal_share.uneasy));
+  });
+
+  it("rises below neutral and falls above it", () => {
+    expect(uneasy(0)).toBe(Math.round(100000 * tuning.sentiment.withdrawal_share.uneasy * (1 + weight)));
+    expect(uneasy(100)).toBe(Math.round(100000 * tuning.sentiment.withdrawal_share.uneasy * (1 - weight)));
+    expect(uneasy(30)).toBeGreaterThan(uneasy(50));
+  });
+
+  it("never asks for more than the deposits", () => {
+    expect(withdrawalDemand(1000, "panic", { ...tuning, sentiment: { ...tuning.sentiment, withdrawal_share: { ...tuning.sentiment.withdrawal_share, panic: 1 } } }, 0)).toBe(1000);
+  });
+
+  it("drives End Turn: a low-reputation house loses more deposits", () => {
+    const run = (rep: number) => {
+      const s0 = newGame(gameData);
+      s0.world.sentiment = "uneasy";
+      s0.house.reputation = rep;
+      return endTurn(s0, [], fixedRng(0.999999), noEvents).house.deposits;
+    };
+    expect(run(20)).toBeLessThan(run(50));
+    expect(run(80)).toBeGreaterThan(run(50));
+  });
+});
+
 describe("endTurn: sentiment", () => {
   it("rolls next quarter's mood at the end of the turn", () => {
-    const s = endTurn(newGame(gameData), [], fixedRng(0), gameData);
+    const s = endTurn(newGame(gameData), [], fixedRng(0), noEvents);
     expect(s.world.sentiment).toBe("uneasy");
   });
 
@@ -64,14 +94,14 @@ describe("endTurn: sentiment", () => {
     // Fair loan: p = p0 * m * 0.4. Roll between the calm and uneasy thresholds, then roll calm -> uneasy.
     const lendFair: LendDecision = { kind: "lend", amount: 10000, rate: 0.08, tier: "fair" };
     const p = tuning.loans.p0 * 0.4;
-    const s = endTurn(newGame(gameData), [lendFair], fixedRng(p * 1.5, 0), gameData);
+    const s = endTurn(newGame(gameData), [lendFair], fixedRng(p * 1.5, 0), noEvents);
     expect(s.loans[0]!.status).toBe("active");
     expect(s.world.sentiment).toBe("uneasy");
   });
 
   it("draws one roll for the mood and one for random events when there are no loans", () => {
     let calls = 0;
-    endTurn(newGame(gameData), [], { next: () => (calls++, 0.5) }, gameData);
+    endTurn(newGame(gameData), [], { next: () => (calls++, 0.5) }, noEvents);
     expect(calls).toBe(2);
   });
 
@@ -79,23 +109,23 @@ describe("endTurn: sentiment", () => {
     const s0 = newGame(gameData);
     s0.world.sentiment = "uneasy";
     const before = structuredClone(s0);
-    endTurn(s0, [], fixedRng(0), gameData);
+    endTurn(s0, [], fixedRng(0), noEvents);
     expect(s0).toEqual(before);
   });
 });
 
 describe("withdrawals by mood", () => {
   it("is zero when calm", () => {
-    expect(withdrawalDemand(50000, "calm", tuning)).toBe(0);
+    expect(withdrawalDemand(50000, "calm", tuning, 50)).toBe(0);
   });
 
   it("is the uneasy share of deposits, rounded to whole gulden", () => {
-    expect(withdrawalDemand(50000, "uneasy", tuning)).toBe(Math.round(50000 * tuning.sentiment.withdrawal_share.uneasy));
-    expect(Number.isInteger(withdrawalDemand(12345, "uneasy", tuning))).toBe(true);
+    expect(withdrawalDemand(50000, "uneasy", tuning, 50)).toBe(Math.round(50000 * tuning.sentiment.withdrawal_share.uneasy));
+    expect(Number.isInteger(withdrawalDemand(12345, "uneasy", tuning, 50))).toBe(true);
   });
 
   it("is zero with zero deposits", () => {
-    expect(withdrawalDemand(0, "uneasy", tuning)).toBe(0);
+    expect(withdrawalDemand(0, "uneasy", tuning, 50)).toBe(0);
   });
 
   it("writes no ledger entry when nothing is withdrawn", () => {
@@ -108,8 +138,8 @@ describe("withdrawals by mood", () => {
   it("pays uneasy depositors during End Turn and reconciles", () => {
     const s0 = newGame(gameData);
     s0.world.sentiment = "uneasy";
-    const demand = withdrawalDemand(s0.house.deposits, "uneasy", tuning);
-    const s1 = endTurn(s0, [], noDefaults, gameData);
+    const demand = withdrawalDemand(s0.house.deposits, "uneasy", tuning, 50);
+    const s1 = endTurn(s0, [], noDefaults, noEvents);
     expect(s1.house.deposits).toBe(s0.house.deposits - demand);
     expect(s1.house.cash).toBe(s0.house.cash - demand);
     expect(accountBalance(s1, "cash")).toBe(s1.house.cash);
@@ -121,7 +151,7 @@ describe("withdrawals by mood", () => {
     s0.world.sentiment = "uneasy";
     s0.house.cash = 0;
     const r = applyWithdrawals(s0, tuning);
-    expect(r?.shortfall).toBe(withdrawalDemand(50000, "uneasy", tuning));
+    expect(r?.shortfall).toBe(withdrawalDemand(50000, "uneasy", tuning, 50));
     expect(s0.house.deposits).toBe(50000);
   });
 
@@ -130,6 +160,6 @@ describe("withdrawals by mood", () => {
     s0.world.sentiment = "uneasy";
     s0.house.reserve = 20000;
     const r = applyWithdrawals(s0, tuning);
-    expect(r).toMatchObject({ fromReserve: withdrawalDemand(50000, "uneasy", tuning), fromFreeCash: 0 });
+    expect(r).toMatchObject({ fromReserve: withdrawalDemand(50000, "uneasy", tuning, 50), fromFreeCash: 0 });
   });
 });

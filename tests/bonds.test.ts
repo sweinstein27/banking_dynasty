@@ -16,7 +16,7 @@ import { accountBalance } from "../src/sim/ledger";
 import { amountToSell, bondSaleRatio, raiseCash } from "../src/sim/liquidity";
 import { endTurn, loanBook, netWorth } from "../src/sim/turn";
 import type { BuyBondDecision, Decision, GameState } from "../src/sim/types";
-import { fixedRng, noDefaults } from "./helpers";
+import { fixedRng, noDefaults, noEvents } from "./helpers";
 
 const tuning = gameData.tuning;
 const issuer = (id: string) => gameData.states.find((s) => s.id === id)!;
@@ -157,19 +157,19 @@ describe("buyBond", () => {
 describe("endTurn: bonds", () => {
   it("pays a coupon in the quarter of purchase and every quarter after", () => {
     const s0 = newGame(gameData);
-    let s = endTurn(s0, [buy("bavaria")], noDefaults, gameData);
+    let s = endTurn(s0, [buy("bavaria")], noDefaults, noEvents);
     expect(s.house.cash).toBe(s0.house.cash - 10000 + 125);
-    s = endTurn(s, [], noDefaults, gameData);
+    s = endTurn(s, [], noDefaults, noEvents);
     expect(s.house.cash).toBe(s0.house.cash - 10000 + 250);
     reconciles(s);
   });
 
   it("writes off every holding of a state that defaults, with no coupon", () => {
     let s = newGame(gameData);
-    s = endTurn(s, [buy("naples"), buy("naples", 5000), buy("bavaria")], fixedRng(0.999999), gameData);
+    s = endTurn(s, [buy("naples"), buy("naples", 5000), buy("bavaria")], fixedRng(0.999999), noEvents);
     const before = netWorth(s);
     // Rolls in states.json order: bavaria survives, naples defaults, then the mood roll stays calm.
-    s = endTurn(s, [], fixedRng(0.999999, 0, 0.999999), gameData);
+    s = endTurn(s, [], fixedRng(0.999999, 0, 0.999999), noEvents);
     expect(s.bonds.map((b) => b.status)).toEqual(["defaulted", "defaulted", "active"]);
     expect(s.defaulted_states).toEqual(["naples"]);
     expect(netWorth(s)).toBe(before - 15000 + 125);
@@ -179,8 +179,8 @@ describe("endTurn: bonds", () => {
 
   it("uses the formula threshold for a state default", () => {
     const p = bondDefaultChance(issuer("naples").risk, "calm", tuning);
-    const hit = endTurn(newGame(gameData), [buy("naples")], fixedRng(p - 1e-9, 0.999999), gameData);
-    const miss = endTurn(newGame(gameData), [buy("naples")], fixedRng(p + 1e-9, 0.999999), gameData);
+    const hit = endTurn(newGame(gameData), [buy("naples")], fixedRng(p - 1e-9, 0.999999), noEvents);
+    const miss = endTurn(newGame(gameData), [buy("naples")], fixedRng(p + 1e-9, 0.999999), noEvents);
     expect(hit.bonds[0]!.status).toBe("defaulted");
     expect(miss.bonds[0]!.status).toBe("active");
   });
@@ -188,14 +188,14 @@ describe("endTurn: bonds", () => {
   it("rolls once per state held, not per holding, and not for states not held", () => {
     let calls = 0;
     const rng = { next: () => (calls++, 0.999999) };
-    endTurn(newGame(gameData), [buy("bavaria"), buy("bavaria", 2000), buy("austria")], rng, gameData);
+    endTurn(newGame(gameData), [buy("bavaria"), buy("bavaria", 2000), buy("austria")], rng, noEvents);
     expect(calls).toBe(2 + 2); // bavaria, austria, then the mood and the random-event roll
   });
 
   it("never rolls or pays again for a defaulted holding", () => {
-    let s = endTurn(newGame(gameData), [buy("naples")], fixedRng(0, 0.999999), gameData);
+    let s = endTurn(newGame(gameData), [buy("naples")], fixedRng(0, 0.999999), noEvents);
     let calls = 0;
-    s = endTurn(s, [], { next: () => (calls++, 0.999999) }, gameData);
+    s = endTurn(s, [], { next: () => (calls++, 0.999999) }, noEvents);
     expect(calls).toBe(2); // the mood and the random-event roll
     expect(s.ledger.filter((e) => e.category === "coupon")).toHaveLength(0);
   });
@@ -204,7 +204,7 @@ describe("endTurn: bonds", () => {
 describe("markBonds", () => {
   it("reprices holdings when the mood changes and writes a revaluation", () => {
     // Buy while calm, then the mood roll turns uneasy.
-    const s = endTurn(newGame(gameData), [buy("france")], fixedRng(0.999999, 0), gameData);
+    const s = endTurn(newGame(gameData), [buy("france")], fixedRng(0.999999, 0), noEvents);
     expect(s.world.sentiment).toBe("uneasy");
     const price = bondPrice(issuer("france").risk, "uneasy", tuning);
     expect(s.bonds[0]!.price).toBe(price);
@@ -224,7 +224,7 @@ describe("markBonds", () => {
   it("recovers the price when the mood calms again", () => {
     let s = newGame(gameData);
     s.world.sentiment = "uneasy";
-    s = endTurn(s, [buy("france")], fixedRng(0.999999, 0), gameData); // uneasy -> calm
+    s = endTurn(s, [buy("france")], fixedRng(0.999999, 0), noEvents); // uneasy -> calm
     expect(s.world.sentiment).toBe("calm");
     expect(s.bonds[0]!.price).toBe(1);
     expect(bondValue(s.bonds[0]!)).toBe(10000);
@@ -265,7 +265,7 @@ describe("forced sales of bonds", () => {
     // 5,000 cash + 1,188 coupon cannot meet a 10,000 panic withdrawal without selling bonds.
     s = applyOk(s, buy("bavaria", 95000));
     s.world.sentiment = "panic";
-    s = endTurn(s, [], noDefaults, gameData);
+    s = endTurn(s, [], noDefaults, noEvents);
     expect(s.house.status).toBe("solvent");
     expect(s.bonds[0]!.face_value).toBeLessThan(95000);
     reconciles(s);

@@ -145,6 +145,8 @@ export interface GameState {
   fired_events: FiredEvent[];
   /** Change to each state's risk caused by events, by state id. Missing means no change. */
   risk_shift: Record<string, number>;
+  /** Multiplier on every loan's default chance, set by events. 1 means no change. */
+  trade_risk: number;
   /** Decisions taken so far this turn. Reset when the turn ends. */
   actions_this_turn: number;
 }

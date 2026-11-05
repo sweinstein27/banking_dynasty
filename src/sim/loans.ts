@@ -51,9 +51,9 @@ export function quarterlyInterest(loan: Pick<Loan, "principal" | "rate">): numbe
   return Math.round((loan.principal * loan.rate) / 4);
 }
 
-/** p_default = p0 * m_sentiment * (1 - q), per quarter. */
-export function defaultChance(quality: number, sentiment: Sentiment, tuning: Tuning): number {
-  return tuning.loans.p0 * tuning.sentiment_multiplier[sentiment] * (1 - quality);
+/** p_default = p0 * m_sentiment * (1 - q) * trade_risk, per quarter. trade_risk is 1 until events change it. */
+export function defaultChance(quality: number, sentiment: Sentiment, tuning: Tuning, tradeRisk: number): number {
+  return tuning.loans.p0 * tuning.sentiment_multiplier[sentiment] * (1 - quality) * tradeRisk;
 }
 
 function notEnoughCash(state: GameState): string {

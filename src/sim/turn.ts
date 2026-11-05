@@ -47,7 +47,7 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
   for (const loan of next.loans) {
     if (loan.status !== "active") continue;
 
-    if (rng.next() < defaultChance(loan.quality, world.sentiment, data.tuning)) {
+    if (rng.next() < defaultChance(loan.quality, world.sentiment, data.tuning, next.trade_risk)) {
       loan.status = "defaulted";
       addEntry(next, "loans", "default", -loan.principal, `Loan #${loan.id}: ${loan.borrower_name} defaulted`);
       continue;

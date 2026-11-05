@@ -31,6 +31,7 @@ export function newGame(data: GameData): GameState {
     news: [],
     fired_events: [],
     risk_shift: {},
+    trade_risk: 1,
     actions_this_turn: 0,
   };
   addEntry(state, "cash", "opening", s.cash, "Opening cash");

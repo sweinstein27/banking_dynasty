@@ -33,17 +33,17 @@ describe("quarterlyInterest", () => {
 
 describe("defaultChance", () => {
   it("is zero for a perfect borrower", () => {
-    expect(defaultChance(1, "panic", tuning)).toBe(0);
+    expect(defaultChance(1, "panic", tuning, 1)).toBe(0);
   });
 
   it("is p0 times the sentiment multiplier for the worst borrower", () => {
-    expect(defaultChance(0, "calm", tuning)).toBeCloseTo(tuning.loans.p0);
-    expect(defaultChance(0, "uneasy", tuning)).toBeCloseTo(tuning.loans.p0 * 2);
-    expect(defaultChance(0, "panic", tuning)).toBeCloseTo(tuning.loans.p0 * 5);
+    expect(defaultChance(0, "calm", tuning, 1)).toBeCloseTo(tuning.loans.p0);
+    expect(defaultChance(0, "uneasy", tuning, 1)).toBeCloseTo(tuning.loans.p0 * 2);
+    expect(defaultChance(0, "panic", tuning, 1)).toBeCloseTo(tuning.loans.p0 * 5);
   });
 
   it("scales with (1 - q)", () => {
-    expect(defaultChance(0.75, "calm", tuning)).toBeCloseTo(tuning.loans.p0 * 0.25);
+    expect(defaultChance(0.75, "calm", tuning, 1)).toBeCloseTo(tuning.loans.p0 * 0.25);
   });
 });
 

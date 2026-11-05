@@ -39,6 +39,8 @@ export interface Tuning {
     transitions: Record<Sentiment, Partial<Record<Sentiment, number>>>;
     /** Share of deposits withdrawn each quarter in each mood. */
     withdrawal_share: Record<Sentiment, number>;
+    /** Scales withdrawals by reputation: 1 + weight * (neutral - reputation) / neutral. */
+    reputation_withdrawals: { neutral: number; weight: number };
   };
   /** Haircut taken when assets are sold to meet withdrawals. 0.3 means 70% of book value is recovered. */
   forced_sale: {
@@ -100,7 +102,9 @@ export type EventEffect =
   | { kind: "cash"; amount?: number; share?: number }
   /** One active loan, picked at random, defaults. */
   | { kind: "loan_default" }
-  | { kind: "state_risk"; state: string; delta: number };
+  | { kind: "state_risk"; state: string; delta: number }
+  /** Multiplies every loan's default chance from now on (0.8 makes trade lending safer). */
+  | { kind: "trade_risk"; factor: number };
 
 /** One record in data/events.json. Historical events fire once at their date; random ones by weight. */
 export interface GameEvent {
@@ -115,6 +119,7 @@ export interface GameEvent {
   weight?: number;
   cooldown_quarters?: number;
   conditions: EventConditions;
+  /** May be empty for news-only events. */
   effects: EventEffect[];
 }
 

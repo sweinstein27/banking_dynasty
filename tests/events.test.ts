@@ -7,6 +7,7 @@ import { newGame } from "../src/sim/init";
 import { accountBalance } from "../src/sim/ledger";
 import { parseSave, toSave } from "../src/sim/save";
 import type { GameData, GameEvent } from "../src/sim/tuning";
+import { defaultChance } from "../src/sim/loans";
 import { endTurn, loanBook } from "../src/sim/turn";
 import type { Decision, GameState } from "../src/sim/types";
 import { fixedRng } from "./helpers";
@@ -182,6 +183,15 @@ describe("event effects", () => {
     expect(accountBalance(s, "bonds")).toBe(s.bonds.reduce((sum, b) => sum + Math.round(b.face_value * b.price), 0));
   });
 
+  it("trade_risk scales every loan's default chance from then on", () => {
+    const s = fire([{ kind: "trade_risk", factor: 0.8 }]);
+    expect(s.trade_risk).toBe(0.8);
+    const before = newGame(gameData);
+    before.trade_risk = 0.8;
+    expect(fire([{ kind: "trade_risk", factor: 0.5 }], before).trade_risk).toBe(0.4);
+    expect(defaultChance(0.5, "calm", tuning, s.trade_risk)).toBeCloseTo(defaultChance(0.5, "calm", tuning, 1) * 0.8);
+  });
+
   it("state risk stays within 0 to 1", () => {
     const s = newGame(gameData);
     const naples = gameData.states.find((st) => st.id === "naples")!;
@@ -249,5 +259,29 @@ describe("saves with events", () => {
     delete raw.state.risk_shift;
     const r = parseSave(JSON.stringify(raw), gameData);
     expect(r.ok ? null : r.reason).toMatch(/risk_shift/);
+  });
+});
+
+describe("data/events.json in a full run", () => {
+  it("fires every historical event once, in its quarter, and the books still reconcile", () => {
+    let s = newGame(gameData);
+    const rng = { next: (() => { let x = 7; return () => ((x = (x * 16807) % 2147483647) / 2147483647); })() };
+    while (s.world.year <= tuning.end.year) s = endTurn(s, [], rng, gameData);
+    for (const ev of gameData.events.filter((e) => e.historical)) {
+      const fired = s.fired_events.filter((f) => f.id === ev.id);
+      expect(fired, ev.id).toHaveLength(1);
+      // Fired at the end of the turn before its quarter: turn 1 is 1815 Q1.
+      const turnOfQuarter = (ev.year! - 1815) * 4 + ev.quarter!;
+      expect(fired[0]!.turn, ev.id).toBe(turnOfQuarter - 1);
+    }
+    expect(s.fired_events.some((f) => !gameData.events.find((e) => e.id === f.id)!.historical)).toBe(true);
+    for (const account of ["cash", "deposits"] as const) expect(accountBalance(s, account)).toBe(account === "cash" ? s.house.cash : s.house.deposits);
+  });
+
+  it("puts the 1825 crisis in the news as uneasy, then panic in 1826 Q1", () => {
+    let s = newGame(gameData);
+    while (!(s.world.year === 1826 && s.world.quarter === 1)) s = endTurn(s, [], fixedRng(0.999999), gameData);
+    expect(s.world.sentiment).toBe("panic");
+    expect(s.news.filter((n) => n.kind === "event").map((n) => n.title)).toEqual(expect.arrayContaining(["Banks fail in London", "Panic reaches the continent"]));
   });
 });

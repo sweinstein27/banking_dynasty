@@ -1,3 +1,5 @@
+import { gameData } from "../src/data";
+import type { GameData } from "../src/sim/tuning";
 import type { Rng } from "../src/sim/rng";
 
 /** An Rng that returns the given values in order, then repeats the last one. */
@@ -8,3 +10,6 @@ export function fixedRng(...values: number[]): Rng {
 
 /** Never triggers a default (every roll is the highest possible value). */
 export const noDefaults: Rng = { next: () => 0.999999 };
+
+/** The real game data with no events, for unit tests of other systems so event rolls cannot fire. */
+export const noEvents: GameData = { ...gameData, events: [] };
