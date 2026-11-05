@@ -1,0 +1,43 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`golden run > matches the recorded result 1`] = `
+{
+  "cash": 59054,
+  "ledger_entries": 436,
+  "loan_book": 67400,
+  "loans": {
+    "active": 9,
+    "defaulted": 2,
+    "repaid": 49,
+  },
+  "net_worth_by_turn": [
+    50872,
+    52283,
+    54033,
+    54239,
+    55765,
+    57276,
+    58913,
+    60767,
+    62565,
+    64326,
+    66114,
+    67990,
+    63335,
+    65085,
+    66848,
+    68653,
+    70603,
+    72545,
+    74489,
+    76454,
+  ],
+  "world": {
+    "base_rate": 0.05,
+    "quarter": 1,
+    "sentiment": "calm",
+    "turn": 21,
+    "year": 1820,
+  },
+}
+`;
