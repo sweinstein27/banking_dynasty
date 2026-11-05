@@ -1,0 +1,98 @@
+/* Plain and functional. Trackpad rules: big click targets, no hover-only information, no drag. */
+:root {
+  --bg: #f4f1ea;
+  --panel: #fffdf8;
+  --ink: #222;
+  --muted: #666;
+  --line: #d8d2c4;
+  --accent: #1f4e79;
+  --accent-ink: #fff;
+  --bad: #a12a2a;
+  --good: #2c6e2c;
+  --warn: #9a6a00;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); }
+h1, h2, h3 { margin: 0 0 0.5rem; }
+h2 { font-size: 1.3rem; border-bottom: 1px solid var(--line); padding-bottom: 0.3rem; }
+h3 { font-size: 1.05rem; margin-top: 1rem; }
+p { margin: 0.4rem 0; }
+
+button {
+  font: inherit;
+  min-height: 48px;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  cursor: pointer;
+}
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button.secondary { background: #ece7dc; }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+button.wide { width: 100%; }
+button:focus-visible, input:focus-visible { outline: 3px solid #f0a020; outline-offset: 2px; }
+
+input {
+  font: inherit;
+  min-height: 48px;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  width: 100%;
+  background: #fff;
+}
+
+.row { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.6rem; }
+.muted { color: var(--muted); }
+.strong { font-weight: bold; }
+.error { color: var(--bad); font-weight: bold; }
+.num { text-align: right; white-space: nowrap; }
+
+.start { max-width: 560px; margin: 3rem auto; padding: 0 1rem; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 1rem; margin-top: 1rem; }
+.field { display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.6rem; }
+
+.app { padding: 0.8rem; }
+.topbar {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 0.6rem 1rem; margin-bottom: 0.8rem;
+}
+.grid { display: grid; grid-template-columns: 1fr 1.6fr; gap: 0.8rem; }
+@media (max-width: 1000px) { .grid { grid-template-columns: 1fr; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 1rem; min-width: 0; }
+
+.mood-calm { color: var(--good); font-weight: bold; }
+.mood-uneasy { color: var(--warn); font-weight: bold; }
+.mood-panic { color: var(--bad); font-weight: bold; }
+
+.news { padding-left: 1.2rem; }
+.news li { margin: 0.4rem 0; }
+.news-loan_default, .news-bond_default, .news-venture_failed, .news-forced_sale, .news-bankruptcy { color: var(--bad); }
+.news-venture_paid_out { color: var(--good); }
+
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 0.3rem 1rem; margin: 0; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; }
+
+.sheet { width: 100%; border-collapse: collapse; }
+.sheet th { text-align: left; font-weight: normal; color: var(--muted); padding: 0.25rem 0.5rem 0.25rem 0; }
+.sheet td { text-align: right; padding: 0.25rem 1rem 0.25rem 0; white-space: nowrap; }
+
+.holdings { padding-left: 1.2rem; margin: 0.3rem 0; }
+.holdings li { margin: 0.25rem 0; }
+
+.scroll { max-height: 340px; overflow: auto; border: 1px solid var(--line); border-radius: 6px; }
+.entries { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.entries th { position: sticky; top: 0; background: #ece7dc; text-align: left; padding: 0.35rem 0.5rem; }
+.entries td { border-top: 1px solid var(--line); padding: 0.35rem 0.5rem; vertical-align: top; }
+.entries tr.queued td { background: #eef3f9; }
+
+.queued-list { padding-left: 1.4rem; }
+.end-turn { width: 100%; margin-top: 1.2rem; font-size: 1.2rem; min-height: 60px; }
