@@ -1,3 +1,4 @@
+import { runOver } from "./actions";
 import { bondBook, markBonds, resolveBonds } from "./bonds";
 import { applyDecision } from "./decisions";
 import { addEntry } from "./ledger";
@@ -25,10 +26,12 @@ export function loanBook(state: GameState): number {
  * 6. resolve ventures that reach their term, 7. depositors withdraw for the current mood, with
  * forced sales if cash runs short (bankruptcy if even that fails), 8. roll next quarter's mood,
  * 9. mark bonds to that mood's prices, 10. advance the calendar.
- * Throws if the house is already bankrupt, or if a decision is invalid (check with applyDecision first).
+ * Throws if the run is over (bankrupt, or past tuning.end), or if a decision is invalid (check with applyDecision first).
  */
 export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data: GameData): GameState {
-  if (state.house.status === "bankrupt") throw new Error("The house is bankrupt; the run has ended");
+  const over = runOver(state, data.tuning);
+  if (over === "bankrupt") throw new Error("The house is bankrupt; the run has ended");
+  if (over === "finished") throw new Error("The run is over; the last quarter has been played");
   let next = state;
   for (const d of decisions) {
     const result = applyDecision(next, d, data);

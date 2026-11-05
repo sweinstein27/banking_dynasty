@@ -9,7 +9,12 @@
     "reputation": 50,
     "base_rate": 0.05,
     "sentiment": "calm",
-    "reserve": 0
+    "reserve": 0,
+    "head_of_house": "Johann Adler"
+  },
+  "end": {
+    "year": 1850,
+    "quarter": 4
   },
   "actions_per_turn": 3,
   "sentiment_multiplier": {

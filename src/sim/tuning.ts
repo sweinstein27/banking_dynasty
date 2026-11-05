@@ -17,6 +17,13 @@ export interface Tuning {
     base_rate: number;
     sentiment: Sentiment;
     reserve: number;
+    /** Placeholder name shown in the Family panel until Week 5 adds people. */
+    head_of_house: string;
+  };
+  /** Last quarter of the run. Once it has been played the run is finished. */
+  end: {
+    year: number;
+    quarter: Quarter;
   };
   /** Shared by every decision type. */
   actions_per_turn: number;

@@ -10,7 +10,7 @@ The prototype has to prove one thing: that lending, investing and surviving pani
 
 ## Prototype scope
 
-One city, one family, 35 years: 140 quarterly turns from 1815 to 1850.
+One city, one family, 36 years: 144 quarterly turns from 1815 Q1 to the end of 1850.
 
 | In the prototype | Saved for later |
 | --- | --- |
