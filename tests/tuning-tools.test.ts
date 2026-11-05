@@ -29,6 +29,15 @@ describe("applyOverrides", () => {
   it("rejects keys tuning.json does not have and unknown events, so typos cannot pass silently", () => {
     expect(() => applyOverrides(gameData, { tuning: { loans: { spred: 1 } } })).toThrow(/"loans.spred" is not in tuning.json/);
     expect(() => applyOverrides(gameData, { events: { "no-such-event": { weight: 1 } } })).toThrow(/unknown event/);
+    expect(() => applyOverrides(gameData, { states: { atlantis: { coupon: 1 } } })).toThrow(/unknown state "atlantis"/);
+    expect(() => applyOverrides(gameData, { states: { naples: { name: "x" } as never } })).toThrow(/Cannot override states\.naples\.name/);
+  });
+
+  it("sets state and venture fields by id", () => {
+    const d = applyOverrides(gameData, { states: { naples: { coupon: 0.08 } }, ventures: { mill: { expected_return: 0.5 } } });
+    expect(d.states.find((s) => s.id === "naples")!.coupon).toBe(0.08);
+    expect(d.ventures.find((v) => v.id === "mill")!.expected_return).toBe(0.5);
+    expect(gameData.states.find((s) => s.id === "naples")!.coupon).toBe(0.06);
   });
 });
 
@@ -41,7 +50,9 @@ describe("overrideAt and combine", () => {
   });
 
   it("refuse paths outside tuning and events", () => {
-    expect(() => overrideAt("states.naples.risk", 1)).toThrow(/must start with tuning\. or events\./);
+    expect(() => overrideAt("borrowers.weber.quality", 1)).toThrow(/must start with tuning\., events\., states\. or ventures\./);
+    expect(overrideAt("states.naples.coupon", 0.08)).toEqual({ states: { naples: { coupon: 0.08 } } });
+    expect(combine(overrideAt("states.naples.coupon", 0.08), overrideAt("states.naples.risk", 0.5))).toEqual({ states: { naples: { coupon: 0.08, risk: 0.5 } } });
   });
 });
 
