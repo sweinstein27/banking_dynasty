@@ -4,15 +4,24 @@ import { applyWithdrawals } from "./sentiment";
 import type { Tuning } from "./tuning";
 import type { GameState } from "./types";
 
-/** What a loan fetches in a forced sale, in whole gulden. */
+/** What a slice of loan principal fetches in a forced sale, in whole gulden. */
 export function loanSalePrice(principal: number, tuning: Tuning): number {
   return Math.round(principal * (1 - tuning.forced_sale.loan_discount));
 }
 
+/** Smallest slice of principal (capped at the whole loan) whose sale price covers `needed`. */
+export function principalToSell(needed: number, available: number, tuning: Tuning): number {
+  let slice = Math.min(available, Math.ceil(needed / (1 - tuning.forced_sale.loan_discount)));
+  while (slice > 1 && loanSalePrice(slice - 1, tuning) >= needed) slice--;
+  while (slice < available && loanSalePrice(slice, tuning) < needed) slice++;
+  return slice;
+}
+
 /**
- * Sells whole assets at a discount until `needed` cash is raised or nothing is left to sell.
- * Loans go oldest first. Bonds and ventures join this list in later steps.
- * Returns the cash raised, which can exceed `needed` because assets are sold whole.
+ * Sells assets at a discount until `needed` cash is raised or nothing is left to sell.
+ * Loans go oldest first, and only the slice of principal needed is sold: the rest stays on the
+ * books and keeps earning. A loan sold down to nothing gets status `sold`.
+ * Bonds and ventures join this list in later steps. Returns the cash raised.
  * Mutates `state`; callers pass a draft copy.
  */
 export function raiseCash(state: GameState, needed: number, tuning: Tuning): number {
@@ -20,13 +29,16 @@ export function raiseCash(state: GameState, needed: number, tuning: Tuning): num
   for (const loan of state.loans) {
     if (raised >= needed) break;
     if (loan.status !== "active") continue;
-    const price = loanSalePrice(loan.principal, tuning);
-    loan.status = "sold";
+    const slice = principalToSell(needed - raised, loan.principal, tuning);
+    const price = loanSalePrice(slice, tuning);
+    loan.principal -= slice;
+    if (loan.principal === 0) loan.status = "sold";
     state.house.cash += price;
     raised += price;
-    const note = `Loan #${loan.id} (${loan.borrower_name}) sold at a discount to meet withdrawals`;
+    const what = loan.status === "sold" ? "sold" : `${slice} of principal sold, ${loan.principal} kept`;
+    const note = `Loan #${loan.id} (${loan.borrower_name}) ${what}, at a discount to meet withdrawals`;
     addEntry(state, "cash", "forced_sale", price, note);
-    addEntry(state, "loans", "forced_sale", -loan.principal, note);
+    addEntry(state, "loans", "forced_sale", -slice, note);
   }
   return raised;
 }

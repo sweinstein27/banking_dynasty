@@ -3,8 +3,8 @@ import { gameData } from "../src/data";
 import { applyDecision } from "../src/sim/decisions";
 import { newGame } from "../src/sim/init";
 import { accountBalance } from "../src/sim/ledger";
-import { loanSalePrice, raiseCash, resolveWithdrawals } from "../src/sim/liquidity";
-import { lend } from "../src/sim/loans";
+import { loanSalePrice, principalToSell, raiseCash, resolveWithdrawals } from "../src/sim/liquidity";
+import { lend, quarterlyInterest } from "../src/sim/loans";
 import { endTurn, loanBook, netWorth } from "../src/sim/turn";
 import type { GameState, LendDecision } from "../src/sim/types";
 import { noDefaults } from "./helpers";
@@ -61,45 +61,84 @@ describe("panic withdrawals", () => {
   });
 });
 
+describe("principalToSell", () => {
+  it("is the smallest slice whose sale price covers the need", () => {
+    for (const need of [1, 2, 699, 700, 701, 3000, 8000, 12345]) {
+      const slice = principalToSell(need, 1_000_000, tuning);
+      expect(loanSalePrice(slice, tuning)).toBeGreaterThanOrEqual(need);
+      expect(loanSalePrice(slice - 1, tuning)).toBeLessThan(need);
+    }
+  });
+
+  it("is capped at the whole loan", () => {
+    expect(principalToSell(50000, 20000, tuning)).toBe(20000);
+  });
+
+  it("covers an exact whole-loan price with the whole loan", () => {
+    expect(principalToSell(7000, 10000, tuning)).toBe(10000);
+  });
+});
+
 describe("forced sales", () => {
   it("price a loan at the discount, in whole gulden", () => {
     expect(loanSalePrice(10000, tuning)).toBe(Math.round(10000 * (1 - tuning.forced_sale.loan_discount)));
     expect(Number.isInteger(loanSalePrice(12345, tuning))).toBe(true);
   });
 
-  it("cover a shortfall by selling loans, oldest first, and only as many as needed", () => {
-    // Demand 10,000; cash 2,000; shortfall 8,000. The first 20,000 loan alone covers it.
+  it("sell only the slice of a loan needed, and the rest stays active", () => {
+    // Demand 10,000; cash 2,000; shortfall 8,000.
     const s = house({ cash: 2000, deposits: 50000, loans: [20000, 30000] });
+    const slice = principalToSell(8000, 20000, tuning);
     const out = resolveWithdrawals(s, tuning);
-    expect(out.bankrupt).toBe(false);
-    expect(out.raised).toBe(loanSalePrice(20000, tuning));
-    expect(s.loans.map((l) => l.status)).toEqual(["sold", "active"]);
+    expect(out).toMatchObject({ raised: loanSalePrice(slice, tuning), bankrupt: false });
+    expect(s.loans.map((l) => [l.status, l.principal])).toEqual([
+      ["active", 20000 - slice],
+      ["active", 30000],
+    ]);
     expect(s.house.deposits).toBe(40000);
-    expect(s.house.cash).toBe(2000 + loanSalePrice(20000, tuning) - 10000);
+    expect(s.house.cash).toBe(2000 + loanSalePrice(slice, tuning) - 10000);
   });
 
-  it("sell several loans when one is not enough", () => {
-    // Demand 10,000 with no cash: one 10,000 loan fetches 7,000, two fetch 14,000.
+  it("sell the oldest loan outright, then a slice of the next", () => {
+    // Demand 10,000 with no cash: the first 10,000 loan fetches 7,000, then 3,000 more is needed.
     const s = house({ cash: 0, deposits: 50000, loans: [10000, 10000, 10000] });
     resolveWithdrawals(s, tuning);
-    expect(s.loans.map((l) => l.status)).toEqual(["sold", "sold", "active"]);
+    const slice = principalToSell(3000, 10000, tuning);
+    expect(s.loans.map((l) => [l.status, l.principal])).toEqual([
+      ["sold", 0],
+      ["active", 10000 - slice],
+      ["active", 10000],
+    ]);
     expect(s.house.status).toBe("solvent");
+    reconciles(s);
   });
 
   it("skip loans that are not active", () => {
     const s = house({ cash: 0, deposits: 50000, loans: [20000, 20000] });
     s.loans[0]!.status = "defaulted";
-    const raised = raiseCash(s, 1, tuning);
-    expect(raised).toBe(loanSalePrice(20000, tuning));
-    expect(s.loans[1]!.status).toBe("sold");
+    raiseCash(s, 1000, tuning);
+    expect(s.loans[0]!.principal).toBe(20000);
+    expect(s.loans[1]!.principal).toBeLessThan(20000);
   });
 
-  it("lose exactly the discount from net worth, and reconcile", () => {
+  it("lose exactly the discount on the slice sold, and reconcile", () => {
     const s = house({ cash: 0, deposits: 50000, loans: [20000] });
     const before = netWorth(s);
     resolveWithdrawals(s, tuning);
-    expect(netWorth(s)).toBe(before - (20000 - loanSalePrice(20000, tuning)));
+    const slice = principalToSell(10000, 20000, tuning);
+    expect(netWorth(s)).toBe(before - (slice - loanSalePrice(slice, tuning)));
     reconciles(s);
+  });
+
+  it("leave the unsold part of a loan earning interest at its smaller principal", () => {
+    let s = house({ cash: 0, deposits: 50000, loans: [20000] });
+    s = endTurn(s, [], noDefaults, gameData);
+    const kept = s.loans[0]!.principal;
+    expect(kept).toBeGreaterThan(0);
+    s.world.sentiment = "calm";
+    const cash = s.house.cash;
+    s = endTurn(s, [], noDefaults, gameData);
+    expect(s.house.cash - cash).toBe(quarterlyInterest({ principal: kept, rate: 0.06 }));
   });
 
   it("draw on the reserve before selling anything", () => {
