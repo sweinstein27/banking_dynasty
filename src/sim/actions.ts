@@ -10,6 +10,7 @@ export function actionsLeft(state: GameState, tuning: Tuning): number {
 
 /** Returns a reason if the turn's actions are used up, or null if one is left. */
 export function checkActionLeft(state: GameState, tuning: Tuning): string | null {
+  if (state.house.status === "bankrupt") return "The house is bankrupt";
   if (actionsLeft(state, tuning) > 0) return null;
   return `No actions left this turn (max ${tuning.actions_per_turn})`;
 }

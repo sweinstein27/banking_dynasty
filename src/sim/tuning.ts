@@ -27,6 +27,10 @@ export interface Tuning {
     /** Share of deposits withdrawn each quarter in each mood. */
     withdrawal_share: Record<Sentiment, number>;
   };
+  /** Haircut taken when assets are sold to meet withdrawals. 0.3 means 70% of book value is recovered. */
+  forced_sale: {
+    loan_discount: number;
+  };
   loans: {
     p0: number;
     term_quarters: number;

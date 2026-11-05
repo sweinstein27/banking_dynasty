@@ -20,6 +20,7 @@ export function newGame(data: GameData): GameState {
       deposits: s.deposits,
       reputation: s.reputation,
       reserve: s.reserve,
+      status: "solvent",
     },
     loans: [],
     ledger: [],

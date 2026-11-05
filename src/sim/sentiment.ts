@@ -22,8 +22,8 @@ export function withdrawalDemand(deposits: number, sentiment: Sentiment, tuning:
 }
 
 /**
- * Depositors withdraw their share for the current mood. A shortfall is left owed for now;
- * forced sales and bankruptcy arrive in Week 2 step 3. Mutates `state`; callers pass a draft copy.
+ * Depositors withdraw their share for the current mood, paying what cash allows.
+ * Any shortfall is handled by resolveWithdrawals in liquidity.ts. Mutates `state`; callers pass a draft copy.
  */
 export function applyWithdrawals(state: GameState, tuning: Tuning): WithdrawalResult | null {
   const { sentiment } = state.world;

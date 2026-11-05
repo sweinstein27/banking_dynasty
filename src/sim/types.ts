@@ -21,9 +21,13 @@ export interface House {
   reputation: number;
   /** Cash floor set by the player. Spending may not take cash below it; withdrawals may. */
   reserve: number;
+  /** A bankrupt house cannot play another turn: the run is over. */
+  status: HouseStatus;
 }
 
-export type LoanStatus = "active" | "repaid" | "defaulted";
+export type HouseStatus = "solvent" | "bankrupt";
+
+export type LoanStatus = "active" | "repaid" | "defaulted" | "sold";
 
 export interface Loan {
   id: number;
@@ -41,7 +45,7 @@ export interface Loan {
 /** Which balance an entry moves. Summing entries per account reproduces that balance. */
 export type LedgerAccount = "cash" | "loans" | "deposits";
 
-export type LedgerCategory = "opening" | "loan_out" | "interest" | "default" | "repayment" | "withdrawal";
+export type LedgerCategory = "opening" | "loan_out" | "interest" | "default" | "repayment" | "withdrawal" | "forced_sale";
 
 export interface LedgerEntry {
   id: number;

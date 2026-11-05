@@ -26,8 +26,11 @@
     "withdrawal_share": {
       "calm": 0,
       "uneasy": 0.02,
-      "panic": 0
+      "panic": 0.2
     }
+  },
+  "forced_sale": {
+    "loan_discount": 0.3
   },
   "loans": {
     "p0": 0.04,

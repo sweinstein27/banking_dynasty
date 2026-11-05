@@ -128,6 +128,12 @@ async function main() {
     state = endTurn(state, queued, rng, gameData);
     printLedger(state.ledger.filter((e) => e.turn === turn && e.category !== "opening"));
     if (state.world.sentiment !== mood) console.log(`\nMarket sentiment turns ${state.world.sentiment} (was ${mood}).`);
+    if (state.house.status === "bankrupt") {
+      console.log("\n*** HOUSE BANKRUPT ***");
+      console.log(`${state.house.name} could not pay its depositors, even after selling its assets. The run is over.`);
+      printStatus(state);
+      return;
+    }
   }
 
   printStatus(state);
