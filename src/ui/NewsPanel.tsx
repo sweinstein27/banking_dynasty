@@ -1,5 +1,5 @@
 import type { GameState } from "../sim/types";
-import { dateLabel } from "./format";
+import { dateLabel, previousQuarter } from "./format";
 
 /** The news from the quarter that just resolved. */
 export function NewsPanel({ state }: { state: GameState }) {
@@ -28,8 +28,4 @@ export function NewsPanel({ state }: { state: GameState }) {
       )}
     </section>
   );
-}
-
-function previousQuarter(w: GameState["world"]) {
-  return w.quarter === 1 ? { year: w.year - 1, quarter: 4 as const } : { year: w.year, quarter: (w.quarter - 1) as 1 | 2 | 3 };
 }

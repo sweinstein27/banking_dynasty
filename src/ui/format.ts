@@ -7,5 +7,10 @@ export const pct = (r: number) => `${(r * 100).toFixed(1)}%`;
 export const signedFl = (n: number) => `${n > 0 ? "+" : ""}${fl(n)}`;
 export const dateLabel = (w: Pick<WorldState, "year" | "quarter">) => `${w.year} Q${w.quarter}`;
 
+/** The quarter before `w`: the one whose results the panels are showing. */
+export function previousQuarter(w: Pick<WorldState, "year" | "quarter">): Pick<WorldState, "year" | "quarter"> {
+  return w.quarter === 1 ? { year: w.year - 1, quarter: 4 } : { year: w.year, quarter: (w.quarter - 1) as WorldState["quarter"] };
+}
+
 /** Parses a typed amount ("12,000" or "12000") to a number, or NaN. The sim decides if it is valid. */
 export const parseAmount = (text: string) => (text.trim() === "" ? NaN : Number(text.replace(/[,\s]/g, "")));

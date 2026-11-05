@@ -119,3 +119,9 @@ input {
 }
 .choice[data-state="on"] { border-color: var(--accent); background: #e6eef7; }
 .choice[data-state="on"]::before { content: "Selected"; font-size: 0.8rem; color: var(--accent); font-weight: bold; }
+
+.topbar-buttons { margin-top: 0; align-items: center; }
+
+.game-over { background: var(--panel); border: 3px solid var(--accent); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.8rem; }
+.game-over-bankrupt { border-color: var(--bad); }
+.final-worth { font-size: 1.6rem; font-weight: bold; }
