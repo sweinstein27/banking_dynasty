@@ -8,7 +8,7 @@ import { createRng } from "../src/sim/rng";
 import { endTurn } from "../src/sim/turn";
 import type { GameState } from "../src/sim/types";
 import { fresh, noDefaults, quiet } from "./helpers";
-import { aggressiveDecisions, economyDecisions } from "./strategies";
+import { aggressiveDecisions, economyDecisions } from "../src/harness/golden";
 
 const { tuning } = gameData;
 
@@ -16,7 +16,7 @@ const { tuning } = gameData;
 function fullRun(seed: number, strategy = economyDecisions): GameState {
   const rng = createRng(seed);
   let s = newGame(gameData, rng);
-  while (!runOver(s, tuning)) s = endTurn(s, strategy(s), rng, gameData);
+  while (!runOver(s, tuning)) s = endTurn(s, strategy(s, gameData), rng, gameData);
   return s;
 }
 

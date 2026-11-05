@@ -7,7 +7,7 @@ import { cloneState } from "../src/sim/state";
 import { endTurn } from "../src/sim/turn";
 import type { GameState } from "../src/sim/types";
 import { fresh } from "./helpers";
-import { aggressiveDecisions, economyDecisions } from "./strategies";
+import { aggressiveDecisions, economyDecisions } from "../src/harness/golden";
 
 /** Freezes every entry of the add-only histories, so any later change to one throws. */
 function freezeHistories(s: GameState): void {
@@ -41,7 +41,7 @@ describe("cloneState", () => {
       let s = newGame(gameData, rng);
       while (!runOver(s, gameData.tuning)) {
         freezeHistories(s);
-        s = endTurn(s, strategy(s), rng, gameData);
+        s = endTurn(s, strategy(s, gameData), rng, gameData);
       }
       expect(s.world.turn).toBeGreaterThan(1);
     }

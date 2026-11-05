@@ -1,6 +1,7 @@
 // Searches seeds for the panic golden run. Usage: npm run find-panic-seed -- [--max N] [--turns N]
 // Prints how many seeds qualify and the five richest; pick one and set PANIC_SEED in tests/strategies.ts.
-import { aggressiveDecisions, panicCoverage, play } from "../tests/strategies";
+import { gameData } from "../src/data";
+import { aggressiveDecisions, panicCoverage, play } from "../src/harness/golden";
 
 function argValue(name: string): number | undefined {
   const i = process.argv.indexOf(`--${name}`);
@@ -14,7 +15,7 @@ const hits: { seed: number; score: number }[] = [];
 let panics = 0;
 let bankrupt = 0;
 for (let seed = 1; seed <= max; seed++) {
-  const result = play(aggressiveDecisions, seed, turns);
+  const result = play(aggressiveDecisions, seed, turns, gameData);
   const { ok, checks, score } = panicCoverage(result, turns);
   if (checks.panic) panics++;
   if (checks.panic && result.state.house.status === "bankrupt") bankrupt++;

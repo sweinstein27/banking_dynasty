@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { gameData } from "../src/data";
-import { fresh, GOOD } from "./helpers";
+import { fresh, GOOD, PANIC_SEED } from "./helpers";
 import { applyDecisions } from "../src/sim/decisions";
 import { newGame } from "../src/sim/init";
 import { createRng } from "../src/sim/rng";
 import { parseSave, SAVE_VERSION, toSave } from "../src/sim/save";
 import { endTurn } from "../src/sim/turn";
 import type { Decision, GameState } from "../src/sim/types";
-import { aggressiveDecisions, PANIC_SEED, play } from "./strategies";
+import { aggressiveDecisions, play } from "../src/harness/golden";
 
 /** The panic seed survives 20 turns of the aggressive strategy, so the run never ends early. */
 const SEED = PANIC_SEED;
@@ -16,7 +16,7 @@ const SEED = PANIC_SEED;
 function playTo(turns: number) {
   const rng = createRng(SEED);
   let state = newGame(gameData, rng);
-  for (let i = 0; i < turns; i++) state = endTurn(state, aggressiveDecisions(state), rng, gameData);
+  for (let i = 0; i < turns; i++) state = endTurn(state, aggressiveDecisions(state, gameData), rng, gameData);
   return { state, rng };
 }
 
@@ -34,22 +34,22 @@ describe("save and load", () => {
   });
 
   it("resumes mid-run, with queued decisions, exactly as an unbroken run", () => {
-    const unbroken = play(aggressiveDecisions, SEED, 20).state;
+    const unbroken = play(aggressiveDecisions, SEED, 20, gameData).state;
 
     const { state, rng } = playTo(10);
-    const queued: Decision[] = aggressiveDecisions(state);
+    const queued: Decision[] = aggressiveDecisions(state, gameData);
     expect(queued.length).toBeGreaterThan(0);
     const save = parsed(toSave(state, SEED, rng.state, queued));
 
     const resumedRng = createRng(save.rng_state);
     let s: GameState = endTurn(save.state, save.queued, resumedRng, gameData);
-    for (let i = 11; i < 20; i++) s = endTurn(s, aggressiveDecisions(s), resumedRng, gameData);
+    for (let i = 11; i < 20; i++) s = endTurn(s, aggressiveDecisions(s, gameData), resumedRng, gameData);
     expect(s).toEqual(unbroken);
   });
 
   it("lets the queued decisions be replayed onto the loaded state", () => {
     const { state, rng } = playTo(3);
-    const queued = aggressiveDecisions(state);
+    const queued = aggressiveDecisions(state, gameData);
     const save = parsed(toSave(state, SEED, rng.state, queued));
     const r = applyDecisions(save.state, save.queued, gameData);
     expect(r.ok && r.state.actions_this_turn).toBe(queued.length);

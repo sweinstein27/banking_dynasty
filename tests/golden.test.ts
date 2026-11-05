@@ -10,12 +10,14 @@ import { bondBook } from "../src/sim/bonds";
 import { accountBalance } from "../src/sim/ledger";
 import { loanBook } from "../src/sim/turn";
 import { ventureBook } from "../src/sim/ventures";
-import { aggressiveDecisions, economyDecisions, PANIC_SEED, panicCoverage, play as playWith, scriptedDecisions, type Strategy } from "./strategies";
+import type { Strategy } from "../src/harness/common";
+import { aggressiveDecisions, economyDecisions, panicCoverage, play as playWith, scriptedDecisions } from "../src/harness/golden";
+import { PANIC_SEED } from "./helpers";
 
 const SEED = 1815;
 const TURNS = 20;
 
-const play = (strategy: Strategy = scriptedDecisions, seed = SEED) => playWith(strategy, seed, TURNS);
+const play = (strategy: Strategy = scriptedDecisions, seed = SEED) => playWith(strategy, seed, TURNS, gameData);
 
 describe("golden run", () => {
   it("is identical when replayed with the same seed", () => {
