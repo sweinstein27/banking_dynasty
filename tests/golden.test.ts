@@ -2,91 +2,22 @@
 // then update with `npx vitest run -u`.
 // 1. "golden run": lending only (Week 1 strategy), kept so older balance changes stay comparable.
 // 2. "golden run: full economy": reserves, bonds, ventures and lending together (Week 2).
+// 3. "golden run: panic": an aggressive strategy on a seed chosen to hit panics, bank runs,
+//    forced sales of bonds and loans, and a state default, and still survive 20 turns.
 import { describe, expect, it } from "vitest";
 import { gameData } from "../src/data";
 import { bondBook } from "../src/sim/bonds";
-import { newGame } from "../src/sim/init";
 import { accountBalance } from "../src/sim/ledger";
-import { applyDecision } from "../src/sim/decisions";
-import { checkLend } from "../src/sim/loans";
-import { freeCash } from "../src/sim/reserves";
-import { createRng } from "../src/sim/rng";
-import { endTurn, loanBook, netWorth } from "../src/sim/turn";
-import type { Decision, GameState, Sentiment } from "../src/sim/types";
+import { loanBook } from "../src/sim/turn";
 import { ventureBook } from "../src/sim/ventures";
+import { aggressiveDecisions, economyDecisions, play as playWith, scriptedDecisions, type Strategy } from "./strategies";
 
 const SEED = 1815;
+/** Picked by searching seeds 1 to 3,000 with aggressiveDecisions; see docs/decisions.md. */
+const PANIC_SEED = 76;
 const TURNS = 20;
 
-/** A simple mixed strategy: each turn, lend a share of cash to each tier at its maximum rate. */
-function scriptedDecisions(state: GameState): Decision[] {
-  const decisions: Decision[] = [];
-  const share = { good: 0.2, fair: 0.15, poor: 0.1 } as const;
-  let cash = state.house.cash;
-  for (const tier of ["good", "fair", "poor"] as const) {
-    const amount = Math.floor((cash * share[tier]) / 100) * 100;
-    const d: Decision = { kind: "lend", amount, rate: gameData.tuning.loans.tiers[tier].max_rate, tier };
-    if (checkLend({ ...state, house: { ...state.house, cash } }, d, gameData.tuning) === null) {
-      decisions.push(d);
-      cash -= amount;
-    }
-  }
-  return decisions;
-}
-
-/**
- * Full-economy strategy. Turn 1: set a 20,000 reserve, buy Bavarian bonds, back a mill.
- * Later turns: lend to a good borrower, buy bonds rotating through four states, and back a
- * shipping line with 30% of what is left every fourth turn. Shares are of free cash; decisions that
- * would be refused (for example below a minimum amount) are skipped.
- */
-function economyDecisions(state: GameState): Decision[] {
-  const t = state.world.turn;
-  const rotation = ["bavaria", "austria", "france", "naples"];
-  const share = (s: GameState, f: number) => Math.floor((freeCash(s) * f) / 100) * 100;
-  const wanted: ((s: GameState) => Decision)[] =
-    t === 1
-      ? [
-          () => ({ kind: "set_reserve", amount: 20000 }),
-          (s) => ({ kind: "buy_bond", state: "bavaria", face_value: share(s, 0.2) }),
-          (s) => ({ kind: "invest_venture", venture: "mill", amount: share(s, 0.1) }),
-        ]
-      : [
-          (s) => ({ kind: "lend", amount: share(s, 0.2), rate: 0.06, tier: "good" }),
-          (s) => ({ kind: "buy_bond", state: rotation[t % rotation.length]!, face_value: share(s, 0.1) }),
-          ...(t % 4 === 1 ? [(s: GameState) => ({ kind: "invest_venture", venture: "shipping", amount: share(s, 0.3) }) as Decision] : []),
-        ];
-  const decisions: Decision[] = [];
-  let preview = state;
-  for (const make of wanted) {
-    const d = make(preview);
-    const r = applyDecision(preview, d, gameData);
-    if (!r.ok) continue;
-    decisions.push(d);
-    preview = r.state;
-  }
-  return decisions;
-}
-
-type Strategy = (state: GameState) => Decision[];
-
-function play(strategy: Strategy = scriptedDecisions): {
-  state: GameState;
-  netWorthByTurn: number[];
-  sentimentByTurn: Sentiment[];
-} {
-  const rng = createRng(SEED);
-  let state = newGame(gameData);
-  const netWorthByTurn: number[] = [];
-  const sentimentByTurn: Sentiment[] = [];
-  for (let i = 0; i < TURNS; i++) {
-    if (state.house.status === "bankrupt") break;
-    state = endTurn(state, strategy(state), rng, gameData);
-    netWorthByTurn.push(netWorth(state));
-    sentimentByTurn.push(state.world.sentiment);
-  }
-  return { state, netWorthByTurn, sentimentByTurn };
-}
+const play = (strategy: Strategy = scriptedDecisions, seed = SEED) => playWith(strategy, seed, TURNS);
 
 describe("golden run", () => {
   it("is identical when replayed with the same seed", () => {
@@ -160,6 +91,59 @@ describe("golden run: full economy", () => {
       ventures: tally(state.ventures),
       defaulted_states: state.defaulted_states,
       forced_sales: state.ledger.filter((e) => e.category === "forced_sale" && e.account === "cash").length,
+      ledger_entries: state.ledger.length,
+    }).toMatchSnapshot();
+  });
+});
+
+describe("golden run: panic", () => {
+  const run = () => play(aggressiveDecisions, PANIC_SEED);
+  const salesOf = (state: ReturnType<typeof run>["state"], account: string) =>
+    state.ledger.filter((e) => e.category === "forced_sale" && e.account === account).length;
+
+  it("is identical when replayed with the same seed", () => {
+    expect(run().state).toEqual(run().state);
+  });
+
+  it("reconciles every balance to the ledger", () => {
+    const { state } = run();
+    expect(accountBalance(state, "cash")).toBe(state.house.cash);
+    expect(accountBalance(state, "loans")).toBe(loanBook(state));
+    expect(accountBalance(state, "bonds")).toBe(bondBook(state));
+    expect(accountBalance(state, "ventures")).toBe(ventureBook(state));
+    expect(accountBalance(state, "deposits")).toBe(state.house.deposits);
+  });
+
+  it("still covers what it was chosen for: panic, a run, forced sales, a default, survival", () => {
+    const { state, sentimentByTurn } = run();
+    expect(sentimentByTurn).toContain("panic");
+    expect(state.ledger.some((e) => e.category === "withdrawal" && e.note.includes("(panic)"))).toBe(true);
+    expect(salesOf(state, "bonds")).toBeGreaterThan(0);
+    expect(salesOf(state, "loans")).toBeGreaterThan(0);
+    expect(state.defaulted_states.length).toBeGreaterThan(0);
+    expect(state.house.status).toBe("solvent");
+    expect(sentimentByTurn).toHaveLength(TURNS);
+  });
+
+  it("matches the recorded result", () => {
+    const { state, netWorthByTurn, sentimentByTurn } = run();
+    const tally = (items: { status: string }[]) =>
+      items.reduce<Record<string, number>>((acc, i) => ((acc[i.status] = (acc[i.status] ?? 0) + 1), acc), {});
+    expect({
+      world: state.world,
+      status: state.house.status,
+      cash: state.house.cash,
+      deposits: state.house.deposits,
+      loan_book: loanBook(state),
+      bond_book: bondBook(state),
+      venture_book: ventureBook(state),
+      net_worth_by_turn: netWorthByTurn,
+      sentiment_by_turn: sentimentByTurn,
+      loans: tally(state.loans),
+      bonds: tally(state.bonds),
+      ventures: tally(state.ventures),
+      defaulted_states: state.defaulted_states,
+      forced_sales: { bonds: salesOf(state, "bonds"), loans: salesOf(state, "loans"), ventures: salesOf(state, "ventures") },
       ledger_entries: state.ledger.length,
     }).toMatchSnapshot();
   });
