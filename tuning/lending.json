@@ -1,0 +1,1 @@
+{ "tuning": { "loans": { "p0": 0.015, "rate": { "base": 0.05, "spread": 0.22 } } } }

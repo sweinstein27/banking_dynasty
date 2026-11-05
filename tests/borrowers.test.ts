@@ -48,7 +48,7 @@ describe("maxRate", () => {
   it("is base + spread * (1 - market quality), to the nearest half percent", () => {
     expect(maxRate(1, tuning)).toBe(t.rate.base);
     expect(maxRate(0, tuning)).toBe(Math.round((t.rate.base + t.rate.spread) * 200) / 200);
-    expect(maxRate(0.6, tuning)).toBe(0.095);
+    expect(maxRate(0.6, tuning)).toBe(Math.round((t.rate.base + t.rate.spread * 0.4) * 200) / 200);
   });
 });
 

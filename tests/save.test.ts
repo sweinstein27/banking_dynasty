@@ -36,14 +36,17 @@ describe("save and load", () => {
   it("resumes mid-run, with queued decisions, exactly as an unbroken run", () => {
     const unbroken = play(aggressiveDecisions, SEED, 20, gameData).state;
 
-    const { state, rng } = playTo(10);
+    // Save at the first turn from 10 on where the strategy has something queued.
+    let at = 10;
+    while (aggressiveDecisions(playTo(at).state, gameData).length === 0) at++;
+    expect(at).toBeLessThan(20);
+    const { state, rng } = playTo(at);
     const queued: Decision[] = aggressiveDecisions(state, gameData);
-    expect(queued.length).toBeGreaterThan(0);
     const save = parsed(toSave(state, SEED, rng.state, queued));
 
     const resumedRng = createRng(save.rng_state);
     let s: GameState = endTurn(save.state, save.queued, resumedRng, gameData);
-    for (let i = 11; i < 20; i++) s = endTurn(s, aggressiveDecisions(s, gameData), resumedRng, gameData);
+    for (let i = at + 1; i < 20; i++) s = endTurn(s, aggressiveDecisions(s, gameData), resumedRng, gameData);
     expect(s).toEqual(unbroken);
   });
 

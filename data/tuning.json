@@ -91,12 +91,12 @@
     "min_amount": 1000
   },
   "loans": {
-    "p0": 0.04,
+    "p0": 0.015,
     "term_quarters": 4,
     "min_amount": 1000,
     "requests_per_quarter": 3,
     "request_amount": { "min": 5000, "max": 20000, "growth_per_repaid": 0.25, "max_growth": 3 },
-    "rate": { "base": 0.04, "spread": 0.14 },
+    "rate": { "base": 0.05, "spread": 0.22 },
     "market": { "noise": 0.15, "default_penalty": 0.15, "repaid_bonus": 0.02 },
     "estimate": { "width": 0.25, "prudence_step": 0.05, "report_width": 0.05, "report_cost": 500 },
     "defaulter_absence_quarters": 12

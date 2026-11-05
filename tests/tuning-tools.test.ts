@@ -13,10 +13,11 @@ import { endTurn } from "../src/sim/turn";
 
 describe("applyOverrides", () => {
   it("replaces only the named tuning values, leaving the rest and the original data alone", () => {
-    const d = applyOverrides(gameData, { tuning: { loans: { rate: { spread: 0.2 } } } });
-    expect(d.tuning.loans.rate).toEqual({ base: gameData.tuning.loans.rate.base, spread: 0.2 });
+    const spread = gameData.tuning.loans.rate.spread;
+    const d = applyOverrides(gameData, { tuning: { loans: { rate: { spread: spread + 0.01 } } } });
+    expect(d.tuning.loans.rate).toEqual({ base: gameData.tuning.loans.rate.base, spread: spread + 0.01 });
     expect(d.tuning.loans.p0).toBe(gameData.tuning.loans.p0);
-    expect(gameData.tuning.loans.rate.spread).toBe(0.14);
+    expect(gameData.tuning.loans.rate.spread).toBe(spread);
   });
 
   it("sets event fields by id", () => {

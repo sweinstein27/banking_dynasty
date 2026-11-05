@@ -54,5 +54,5 @@ export function reopenRequests(s: GameState): void {
   s.requests = fresh().requests;
 }
 /** Seed for the panic golden run, picked with `npm run find-panic-seed`; see docs/decisions.md. */
-export const PANIC_SEED = 159;
+export const PANIC_SEED = 2894;
 

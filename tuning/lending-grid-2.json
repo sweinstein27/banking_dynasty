@@ -1,0 +1,8 @@
+{
+  "base": { "tuning": { "loans": { "rate": { "base": 0.05 } } } },
+  "vary": {
+    "tuning.loans.p0": [0.02, 0.015, 0.01],
+    "tuning.loans.rate.spread": [0.14, 0.18, 0.22],
+    "events.warehouse-fire.weight": [1, 0.5]
+  }
+}
