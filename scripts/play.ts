@@ -3,13 +3,14 @@ import { createInterface } from "node:readline";
 import { gameData } from "../src/data";
 import { newGame } from "../src/sim/init";
 import { actionsLeft } from "../src/sim/actions";
-import { bondBook, bondPrice, bondValue, quarterlyCoupon } from "../src/sim/bonds";
+import { bondBook, bondValue, quarterlyCoupon } from "../src/sim/bonds";
+import { bondOffers, lendOffers, ventureOffers } from "../src/sim/offers";
 import { applyDecision } from "../src/sim/decisions";
 import { freeCash } from "../src/sim/reserves";
 import { createRng } from "../src/sim/rng";
 import { endTurn, loanBook, netWorth } from "../src/sim/turn";
 import type { Decision, GameState, LedgerEntry, TierName } from "../src/sim/types";
-import { quartersLeft, ventureBook, ventureFailureChance, venturePayout } from "../src/sim/ventures";
+import { quartersLeft, ventureBook, venturePayout } from "../src/sim/ventures";
 
 function argValue(name: string): number | undefined {
   const i = process.argv.indexOf(`--${name}`);
@@ -88,12 +89,10 @@ function printLedger(entries: LedgerEntry[]) {
 }
 
 async function askLend(preview: GameState): Promise<Decision | null> {
-  const tierNames = Object.keys(tuning.loans.tiers) as TierName[];
+  const offers = lendOffers(tuning);
+  const tierNames = offers.map((o) => o.tier);
   console.log("Borrower tiers:");
-  tierNames.forEach((t, i) => {
-    const tier = tuning.loans.tiers[t];
-    console.log(`  ${i + 1}) ${t}: quality ${tier.quality}, pays up to ${pct(tier.max_rate)}`);
-  });
+  offers.forEach((o, i) => console.log(`  ${i + 1}) ${o.tier}: quality ${o.quality}, pays up to ${pct(o.max_rate)}`));
   const tierIn = await ask("Tier (1-3): ");
   const tier = tierNames[Number(tierIn) - 1] ?? (tierNames.find((t) => t === tierIn?.trim()) as TierName | undefined);
   if (!tier) return console.log("Unknown tier."), null;
@@ -103,15 +102,9 @@ async function askLend(preview: GameState): Promise<Decision | null> {
 }
 
 async function askBond(preview: GameState): Promise<Decision | null> {
-  const { sentiment } = preview.world;
   console.log("States:");
-  gameData.states.forEach((st, i) => {
-    const price = bondPrice(st.risk, sentiment, tuning);
-    const flags = [
-      preview.defaulted_states.includes(st.id) ? "DEFAULTED" : "",
-      preview.house.reputation < st.min_reputation ? `needs reputation ${st.min_reputation}` : "",
-    ].filter(Boolean);
-    console.log(`  ${i + 1}) ${st.name}: coupon ${pct(st.coupon)}, risk ${st.risk}, price ${price}${flags.length ? `  [${flags.join(", ")}]` : ""}`);
+  bondOffers(preview, gameData).forEach((o, i) => {
+    console.log(`  ${i + 1}) ${o.name}: coupon ${pct(o.coupon)}, risk ${o.risk}, price ${o.price}${o.blocked ? `  [${o.blocked}]` : ""}`);
   });
   const st = gameData.states[Number(await ask(`State (1-${gameData.states.length}): `)) - 1];
   if (!st) return console.log("Unknown state."), null;
@@ -120,12 +113,10 @@ async function askBond(preview: GameState): Promise<Decision | null> {
 }
 
 async function askVenture(preview: GameState): Promise<Decision | null> {
-  const { world } = preview;
   console.log("Ventures:");
-  gameData.ventures.forEach((v, i) => {
-    const locked = world.year < v.unlock_year ? `  [not before ${v.unlock_year}]` : "";
-    const fail = pct(ventureFailureChance(v.failure_risk, world.sentiment, tuning));
-    console.log(`  ${i + 1}) ${v.name}: ${v.term_quarters} qtr, returns ${pct(v.expected_return)}, fails ${fail} if it ended now${locked}`);
+  ventureOffers(preview, gameData).forEach((o, i) => {
+    const locked = o.blocked ? `  [${o.blocked}]` : "";
+    console.log(`  ${i + 1}) ${o.name}: ${o.term_quarters} qtr, returns ${pct(o.expected_return)}, fails ${pct(o.failure_chance)} if it ended now${locked}`);
   });
   const v = gameData.ventures[Number(await ask(`Venture (1-${gameData.ventures.length}): `)) - 1];
   if (!v) return console.log("Unknown venture."), null;
@@ -171,10 +162,10 @@ async function main() {
     }
 
     const turn = state.world.turn;
-    const mood = state.world.sentiment;
     state = endTurn(state, queued, rng, gameData);
     printLedger(state.ledger.filter((e) => e.turn === turn && e.category !== "opening"));
-    if (state.world.sentiment !== mood) console.log(`\nMarket sentiment turns ${state.world.sentiment} (was ${mood}).`);
+    const news = state.news.filter((n) => n.turn === turn);
+    if (news.length) console.log("\n--- News ---\n" + news.map((n) => `  ${n.text}`).join("\n"));
     if (state.house.status === "bankrupt") {
       console.log("\n*** HOUSE BANKRUPT ***");
       console.log(`${state.house.name} could not pay its depositors, even after selling its assets. The run is over.`);
