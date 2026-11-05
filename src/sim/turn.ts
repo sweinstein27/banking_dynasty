@@ -1,3 +1,4 @@
+import { bondBook, markBonds, resolveBonds } from "./bonds";
 import { applyDecision } from "./decisions";
 import { addEntry } from "./ledger";
 import { resolveWithdrawals } from "./liquidity";
@@ -7,9 +8,9 @@ import { nextSentiment } from "./sentiment";
 import type { GameData } from "./tuning";
 import type { Decision, GameState, Quarter } from "./types";
 
-/** NetWorth = Cash + Loans + Bonds + Ventures - Deposits. Bonds and ventures arrive in week 2. */
+/** NetWorth = Cash + Loans + Bonds + Ventures - Deposits. Ventures arrive in Week 2 step 5. */
 export function netWorth(state: GameState): number {
-  return state.house.cash + loanBook(state) - state.house.deposits;
+  return state.house.cash + loanBook(state) + bondBook(state) - state.house.deposits;
 }
 
 export function loanBook(state: GameState): number {
@@ -19,9 +20,10 @@ export function loanBook(state: GameState): number {
 /**
  * Resolves one quarter:
  * 1. apply decisions, 2. roll defaults, 3. collect interest from survivors,
- * 4. repay loans that reached their term, 5. depositors withdraw for the current mood, with
- * forced sales if cash runs short (bankruptcy if even that fails), 6. roll next quarter's mood,
- * 7. advance the calendar.
+ * 4. repay loans that reached their term, 5. roll bond defaults and pay coupons,
+ * 6. depositors withdraw for the current mood, with forced sales if cash runs short
+ * (bankruptcy if even that fails), 7. roll next quarter's mood, 8. mark bonds to that mood's prices,
+ * 9. advance the calendar.
  * Throws if the house is already bankrupt, or if a decision is invalid (check with applyDecision first).
  */
 export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data: GameData): GameState {
@@ -58,8 +60,10 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
     }
   }
 
+  resolveBonds(next, rng, data);
   resolveWithdrawals(next, data.tuning);
   world.sentiment = nextSentiment(world.sentiment, rng.next(), data.tuning);
+  markBonds(next, data);
 
   next.actions_this_turn = 0;
   world.turn += 1;

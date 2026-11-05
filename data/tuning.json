@@ -30,7 +30,14 @@
     }
   },
   "forced_sale": {
-    "loan_discount": 0.3
+    "loan_discount": 0.3,
+    "bond_discount": 0.1
+  },
+  "bonds": {
+    "p0": 0.02,
+    "price_sensitivity": 0.1,
+    "price_floor": 0.2,
+    "min_amount": 1000
   },
   "loans": {
     "p0": 0.04,

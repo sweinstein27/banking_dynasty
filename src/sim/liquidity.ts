@@ -1,8 +1,18 @@
+import { bondValue } from "./bonds";
 import { addEntry } from "./ledger";
 import { payWithdrawal } from "./reserves";
 import { applyWithdrawals } from "./sentiment";
 import type { Tuning } from "./tuning";
-import type { GameState } from "./types";
+import type { Bond, GameState } from "./types";
+
+/** Smallest amount (capped at `available`) whose sale at `ratio` per gulden fetches at least `needed`. */
+export function amountToSell(needed: number, available: number, ratio: number): number {
+  const fetch = (n: number) => Math.round(n * ratio);
+  let slice = Math.min(available, Math.ceil(needed / ratio));
+  while (slice > 1 && fetch(slice - 1) >= needed) slice--;
+  while (slice < available && fetch(slice) < needed) slice++;
+  return slice;
+}
 
 /** What a slice of loan principal fetches in a forced sale, in whole gulden. */
 export function loanSalePrice(principal: number, tuning: Tuning): number {
@@ -11,21 +21,39 @@ export function loanSalePrice(principal: number, tuning: Tuning): number {
 
 /** Smallest slice of principal (capped at the whole loan) whose sale price covers `needed`. */
 export function principalToSell(needed: number, available: number, tuning: Tuning): number {
-  let slice = Math.min(available, Math.ceil(needed / (1 - tuning.forced_sale.loan_discount)));
-  while (slice > 1 && loanSalePrice(slice - 1, tuning) >= needed) slice--;
-  while (slice < available && loanSalePrice(slice, tuning) < needed) slice++;
-  return slice;
+  return amountToSell(needed, available, 1 - tuning.forced_sale.loan_discount);
+}
+
+/** Forced-sale price per gulden of face value: the last market price less the bond discount. */
+export function bondSaleRatio(bond: Pick<Bond, "price">, tuning: Tuning): number {
+  return bond.price * (1 - tuning.forced_sale.bond_discount);
 }
 
 /**
  * Sells assets at a discount until `needed` cash is raised or nothing is left to sell.
- * Loans go oldest first, and only the slice of principal needed is sold: the rest stays on the
- * books and keeps earning. A loan sold down to nothing gets status `sold`.
- * Bonds and ventures join this list in later steps. Returns the cash raised.
+ * Order: bonds (most liquid, oldest first), then loans (oldest first). Only the slice needed is
+ * sold: the rest stays on the books and keeps earning. A holding sold down to nothing gets
+ * status `sold`. Ventures join the list in step 5. Returns the cash raised.
  * Mutates `state`; callers pass a draft copy.
  */
 export function raiseCash(state: GameState, needed: number, tuning: Tuning): number {
   let raised = 0;
+  for (const bond of state.bonds) {
+    if (raised >= needed) break;
+    if (bond.status !== "active") continue;
+    const ratio = bondSaleRatio(bond, tuning);
+    const face = amountToSell(needed - raised, bond.face_value, ratio);
+    const proceeds = Math.round(face * ratio);
+    const bookBefore = bondValue(bond);
+    bond.face_value -= face;
+    if (bond.face_value === 0) bond.status = "sold";
+    state.house.cash += proceeds;
+    raised += proceeds;
+    const what = bond.status === "sold" ? "sold" : `${face} of face value sold, ${bond.face_value} kept`;
+    const note = `Bond #${bond.id} (${bond.issuer_state}) ${what}, at a discount to meet withdrawals`;
+    addEntry(state, "cash", "forced_sale", proceeds, note);
+    addEntry(state, "bonds", "forced_sale", -(bookBefore - bondValue(bond)), note);
+  }
   for (const loan of state.loans) {
     if (raised >= needed) break;
     if (loan.status !== "active") continue;

@@ -1,4 +1,5 @@
 import type { DecisionResult } from "./actions";
+import { buyBond } from "./bonds";
 import { lend } from "./loans";
 import { setReserve } from "./reserves";
 import type { GameData } from "./tuning";
@@ -11,5 +12,7 @@ export function applyDecision(state: GameState, d: Decision, data: GameData): De
       return lend(state, d, data);
     case "set_reserve":
       return setReserve(state, d, data.tuning);
+    case "buy_bond":
+      return buyBond(state, d, data);
   }
 }

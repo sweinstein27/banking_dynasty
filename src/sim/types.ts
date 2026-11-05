@@ -43,9 +43,33 @@ export interface Loan {
 }
 
 /** Which balance an entry moves. Summing entries per account reproduces that balance. */
-export type LedgerAccount = "cash" | "loans" | "deposits";
+export type LedgerAccount = "cash" | "loans" | "bonds" | "deposits";
 
-export type LedgerCategory = "opening" | "loan_out" | "interest" | "default" | "repayment" | "withdrawal" | "forced_sale";
+export type LedgerCategory = "opening" | "loan_out" | "interest" | "default" | "repayment"
+  | "withdrawal"
+  | "forced_sale"
+  | "bond_purchase"
+  | "coupon"
+  | "revaluation"
+  | "bond_default";
+
+export type BondStatus = "active" | "defaulted" | "sold";
+
+/** One purchase of a state's bonds. Several purchases of the same state are separate holdings. */
+export interface Bond {
+  id: number;
+  /** Id from data/states.json. */
+  issuer_state: string;
+  /** Whole gulden. Coupons are paid on this. */
+  face_value: number;
+  /** Annual coupon on face value. */
+  coupon: number;
+  /** Market price per gulden of face value at the last mark; book value is face_value * price. */
+  price: number;
+  risk: number;
+  purchase_turn: number;
+  status: BondStatus;
+}
 
 export interface LedgerEntry {
   id: number;
@@ -61,6 +85,9 @@ export interface GameState {
   world: WorldState;
   house: House;
   loans: Loan[];
+  bonds: Bond[];
+  /** States that have defaulted. They pay nothing more and sell no new bonds. */
+  defaulted_states: string[];
   ledger: LedgerEntry[];
   next_ledger_id: number;
   /** Decisions taken so far this turn. Reset when the turn ends. */
@@ -82,4 +109,12 @@ export interface SetReserveDecision {
   amount: number;
 }
 
-export type Decision = LendDecision | SetReserveDecision;
+export interface BuyBondDecision {
+  kind: "buy_bond";
+  /** Id from data/states.json. */
+  state: string;
+  /** Face value in whole gulden. The cost is face value times the current price. */
+  face_value: number;
+}
+
+export type Decision = LendDecision | SetReserveDecision | BuyBondDecision;

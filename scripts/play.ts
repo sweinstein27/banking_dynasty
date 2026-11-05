@@ -3,6 +3,7 @@ import { createInterface } from "node:readline";
 import { gameData } from "../src/data";
 import { newGame } from "../src/sim/init";
 import { actionsLeft } from "../src/sim/actions";
+import { bondBook, bondPrice, bondValue, quarterlyCoupon } from "../src/sim/bonds";
 import { applyDecision } from "../src/sim/decisions";
 import { freeCash } from "../src/sim/reserves";
 import { createRng } from "../src/sim/rng";
@@ -52,14 +53,19 @@ const pct = (r: number) => `${(r * 100).toFixed(1)}%`;
 function printStatus(s: GameState) {
   const { world, house } = s;
   console.log(`\n=== ${house.name}, ${house.city}. ${world.year} Q${world.quarter} (turn ${world.turn}) ===`);
-  console.log(`Cash ${fl(house.cash)}  Loans ${fl(loanBook(s))}  Deposits ${fl(house.deposits)}  Net worth ${fl(netWorth(s))}`);
+  console.log(`Cash ${fl(house.cash)}  Loans ${fl(loanBook(s))}  Bonds ${fl(bondBook(s))}  Deposits ${fl(house.deposits)}  Net worth ${fl(netWorth(s))}`);
   console.log(`Reserve ${fl(house.reserve)}  Free cash ${fl(freeCash(s))}`);
   console.log(`Sentiment ${world.sentiment}  Base rate ${pct(world.base_rate)}  Actions left ${actionsLeft(s, tuning)}`);
 }
 
-function printLoans(s: GameState) {
+function printHoldings(s: GameState) {
   const active = s.loans.filter((l) => l.status === "active");
-  if (!active.length) return console.log("No active loans.");
+  const bonds = s.bonds.filter((b) => b.status === "active");
+  if (!active.length && !bonds.length) return console.log("No active loans or bonds.");
+  for (const b of bonds) {
+    const name = gameData.states.find((st) => st.id === b.issuer_state)?.name ?? b.issuer_state;
+    console.log(`  Bond #${b.id} ${name}: ${fl(b.face_value)} face at ${b.price}, worth ${fl(bondValue(b))}, coupon ${fl(quarterlyCoupon(b))}/qtr`);
+  }
   for (const l of active) {
     const left = l.term_quarters - (s.world.turn - l.start_turn);
     console.log(`  #${l.id} ${l.borrower_name}: ${fl(l.principal)} at ${pct(l.rate)}, q=${l.quality}, ${left} qtr left`);
@@ -71,7 +77,7 @@ function printLedger(entries: LedgerEntry[]) {
   if (!entries.length) return console.log("  (no entries)");
   for (const e of entries) {
     const amt = (e.amount >= 0 ? "+" : "") + e.amount.toLocaleString("en-US");
-    console.log(`  ${e.account.padEnd(8)} ${e.category.padEnd(10)} ${amt.padStart(10)}  ${e.note}`);
+    console.log(`  ${e.account.padEnd(8)} ${e.category.padEnd(13)} ${amt.padStart(10)}  ${e.note}`);
   }
 }
 
@@ -88,6 +94,23 @@ async function askLend(preview: GameState): Promise<Decision | null> {
   const amount = Number(await ask(`Amount in gulden (free cash ${fl(freeCash(preview))}): `));
   const rate = Number(await ask("Annual rate in % (e.g. 8): ")) / 100;
   return { kind: "lend", amount, rate, tier };
+}
+
+async function askBond(preview: GameState): Promise<Decision | null> {
+  const { sentiment } = preview.world;
+  console.log("States:");
+  gameData.states.forEach((st, i) => {
+    const price = bondPrice(st.risk, sentiment, tuning);
+    const flags = [
+      preview.defaulted_states.includes(st.id) ? "DEFAULTED" : "",
+      preview.house.reputation < st.min_reputation ? `needs reputation ${st.min_reputation}` : "",
+    ].filter(Boolean);
+    console.log(`  ${i + 1}) ${st.name}: coupon ${pct(st.coupon)}, risk ${st.risk}, price ${price}${flags.length ? `  [${flags.join(", ")}]` : ""}`);
+  });
+  const st = gameData.states[Number(await ask(`State (1-${gameData.states.length}): `)) - 1];
+  if (!st) return console.log("Unknown state."), null;
+  const face_value = Number(await ask(`Face value in gulden (free cash ${fl(freeCash(preview))}): `));
+  return { kind: "buy_bond", state: st.id, face_value };
 }
 
 async function askReserve(preview: GameState): Promise<Decision> {
@@ -107,20 +130,23 @@ async function main() {
 
     while (!ended) {
       printStatus(preview);
-      const choice = (await ask("[1] Lend  [2] Set reserve  [3] View loans  [4] End turn  [q] Quit: "))?.trim();
+      const choice = (await ask("[1] Lend  [2] Buy bonds  [3] Set reserve  [4] View holdings  [5] End turn  [q] Quit: "))?.trim();
       if (choice === null || choice === undefined || choice === "q") return;
-      if (choice === "1" || choice === "2") {
-        const d = choice === "1" ? await askLend(preview) : await askReserve(preview);
+      if (choice === "1" || choice === "2" || choice === "3") {
+        const askFor = { "1": askLend, "2": askBond, "3": askReserve }[choice];
+        const d = await askFor(preview);
         if (!d) continue;
         const r = applyDecision(preview, d, gameData);
         if (!r.ok) console.log(`Refused: ${r.reason}`);
         else {
           queued.push(d);
           preview = r.state;
-          console.log(d.kind === "lend" ? "Loan agreed." : `Reserve set to ${fl(d.amount)}`);
+          if (d.kind === "lend") console.log("Loan agreed.");
+          else if (d.kind === "buy_bond") console.log("Bonds bought.");
+          else console.log(`Reserve set to ${fl(d.amount)}`);
         }
-      } else if (choice === "3") printLoans(preview);
-      else if (choice === "4") ended = true;
+      } else if (choice === "4") printHoldings(preview);
+      else if (choice === "5") ended = true;
     }
 
     const turn = state.world.turn;

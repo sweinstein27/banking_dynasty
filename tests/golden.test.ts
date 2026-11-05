@@ -2,6 +2,7 @@
 // then update with `npx vitest run -u`.
 import { describe, expect, it } from "vitest";
 import { gameData } from "../src/data";
+import { bondBook } from "../src/sim/bonds";
 import { newGame } from "../src/sim/init";
 import { accountBalance } from "../src/sim/ledger";
 import { checkLend } from "../src/sim/loans";
@@ -50,6 +51,7 @@ describe("golden run", () => {
     const { state } = play();
     expect(accountBalance(state, "cash")).toBe(state.house.cash);
     expect(accountBalance(state, "loans")).toBe(loanBook(state));
+    expect(accountBalance(state, "bonds")).toBe(bondBook(state));
     expect(accountBalance(state, "deposits")).toBe(state.house.deposits);
   });
 
