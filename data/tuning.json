@@ -16,7 +16,18 @@
     "neutral_stat": 5,
     "max_stat": 10,
     "acumen_step": 0.05,
-    "connections_step": 2
+    "connections_step": 2,
+    "death": { "from_age": 55, "base": 0.02, "per_year": 0.015 },
+    "succession": {
+      "adult_age": 18,
+      "trained_total": 12,
+      "reputation_trained": 3,
+      "reputation_untrained": 10,
+      "inexperience_penalty": 2,
+      "inexperience_quarters": 8,
+      "cousin_stat": 2
+    },
+    "births": { "min_head_age": 25, "max_head_age": 45, "max_heirs": 3, "chance": 0.15 }
   },
   "end": {
     "year": 1850,

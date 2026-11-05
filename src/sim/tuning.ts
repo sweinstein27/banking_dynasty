@@ -23,6 +23,23 @@ export interface Tuning {
     acumen_step: number;
     /** Each point of the head's Connections above neutral lowers states' reputation gates by this much. */
     connections_step: number;
+    /** The head's yearly chance of death from from_age: base + per_year * (age - from_age), rolled each quarter. */
+    death: { from_age: number; base: number; per_year: number };
+    succession: {
+      /** An heir is trained if adult and their stats total at least trained_total. */
+      adult_age: number;
+      trained_total: number;
+      /** Reputation lost when a trained or an untrained heir takes over. */
+      reputation_trained: number;
+      reputation_untrained: number;
+      /** An untrained head's stats count this much lower, for this many quarters. */
+      inexperience_penalty: number;
+      inexperience_quarters: number;
+      /** Stats of the distant cousin who takes over when no heir is left. */
+      cousin_stat: number;
+    };
+    /** At each year end, a head of these ages with fewer than max_heirs heirs has this chance of a child. */
+    births: { min_head_age: number; max_head_age: number; max_heirs: number; chance: number };
   };
   /** Last quarter of the run. Once it has been played the run is finished. */
   end: {
@@ -163,6 +180,11 @@ export interface GameEvent {
 export interface FamilyData {
   head: { name: string; birth_year: number; acumen: number; prudence: number; connections: number };
   children: { name: string; birth_year: number }[];
+  surname: string;
+  /** Takes over if the head dies with no heir left. */
+  cousin: { name: string; age: number };
+  /** First names for children born during the game, used in turn. */
+  child_names: string[];
 }
 
 export interface BorrowerType {

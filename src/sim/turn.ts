@@ -6,6 +6,7 @@ import { resolveWithdrawals } from "./liquidity";
 import { drawRequests, recordDefault, recordRepayment } from "./borrowers";
 import { debtBook, serviceDebts } from "./crisis";
 import { resolveEvents } from "./events";
+import { resolveFamily } from "./family";
 import { quarterNews } from "./news";
 import { defaultChance, quarterlyInterest } from "./loans";
 import type { Rng } from "./rng";
@@ -31,7 +32,8 @@ export function loanBook(state: GameState): number {
  * depositors withdraw for the current mood (less if paying slowly, nothing if suspended), with
  * forced sales if cash runs short (bankruptcy if even that fails), 8. roll next quarter's mood
  * (a roll into panic starts a warning countdown instead; a running countdown overrides the roll),
- * 9. fire events for next quarter (they can override the mood), 10. mark bonds to that mood's
+ * 9. fire events for next quarter (they can override the mood), then the family's quarter (the
+ * head may die and an heir succeed; at year end a child may be born), 10. mark bonds to that mood's
  * prices and each state's risk, 11. draw next quarter's loan requests, 12. write the quarter's
  * news, 13. advance the calendar.
  * Throws if the run is over (bankrupt, or past tuning.end), or if a decision is invalid (check with applyDecision first).
@@ -79,6 +81,7 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
   const rolled = nextSentiment(world.sentiment, rng.next(), data.tuning);
   world.sentiment = moodWithWarnings(next, rolled, rng, data.tuning);
   resolveEvents(next, rng, data);
+  resolveFamily(next, rng, data);
   markBonds(next, data);
   next.requests = drawRequests(next, data, rng);
   next.news.push(...quarterNews(state, next, data));

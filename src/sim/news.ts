@@ -1,3 +1,4 @@
+import { ageIn } from "./family";
 import { fl } from "./format";
 import type { GameData } from "./tuning";
 import type { GameState, LedgerEntry, NewsItem, NewsKind } from "./types";
@@ -81,6 +82,20 @@ export function quarterNews(before: GameState, after: GameState, data: GameData)
   const rep = after.house.reputation - before.house.reputation;
   if (rep !== 0) {
     add("reputation", `The house's reputation ${rep > 0 ? "rises" : "falls"} to ${after.house.reputation} (was ${before.house.reputation}).`);
+  }
+
+  for (const sc of after.successions.slice(before.successions.length)) {
+    const dead = after.people.find((p) => p.id === sc.from)!;
+    const heir = after.people.find((p) => p.id === sc.to)!;
+    const year = after.world.year;
+    const cousin = !before.people.some((p) => p.id === heir.id);
+    const who = cousin ? `With no heir left, a distant cousin, ${heir.name}, aged ${ageIn(heir, year)}, comes to take over.` : `${heir.name}, aged ${ageIn(heir, year)}, takes over the house.`;
+    const how = sc.trained ? "" : " Untrained and unready, the new head will need time, and the bourse knows it.";
+    add("family", `${dead.name} has died, aged ${ageIn(dead, year)}. ${who}${how}`);
+  }
+  for (const p of after.people.slice(before.people.length)) {
+    if (after.successions.some((sc) => sc.to === p.id && !before.successions.includes(sc))) continue;
+    add("family", `A child, ${p.name}, is born to the house.`);
   }
 
   if (after.panic_warning) {

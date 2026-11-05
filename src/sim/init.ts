@@ -35,6 +35,7 @@ export function newGame(data: GameData, rng: Rng): GameState {
     ventures: [],
     borrowers: createBorrowers(data, rng),
     people: createFamily(data, rng),
+    successions: [],
     requests: [],
     ledger: [],
     next_ledger_id: 1,

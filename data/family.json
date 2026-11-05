@@ -1,8 +1,38 @@
 {
-  "head": { "name": "Johann Adler", "birth_year": 1765, "acumen": 5, "prudence": 5, "connections": 5 },
+  "head": {
+    "name": "Johann Adler",
+    "birth_year": 1765,
+    "acumen": 5,
+    "prudence": 5,
+    "connections": 5
+  },
   "children": [
-    { "name": "Friedrich Adler", "birth_year": 1803 },
-    { "name": "Amalie Adler", "birth_year": 1806 },
-    { "name": "Carl Adler", "birth_year": 1810 }
+    {
+      "name": "Friedrich Adler",
+      "birth_year": 1803
+    },
+    {
+      "name": "Amalie Adler",
+      "birth_year": 1806
+    },
+    {
+      "name": "Carl Adler",
+      "birth_year": 1810
+    }
+  ],
+  "surname": "Adler",
+  "cousin": {
+    "name": "Wilhelm Adler",
+    "age": 30
+  },
+  "child_names": [
+    "Luise",
+    "Heinrich",
+    "Sophie",
+    "Ludwig",
+    "Charlotte",
+    "Georg",
+    "Henriette",
+    "Moritz"
   ]
 }

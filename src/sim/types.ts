@@ -42,6 +42,17 @@ export interface Person {
   prudence: number;
   /** Access to state bonds. */
   connections: number;
+  /** An untrained head's stats count lower until this turn. Null when not inexperienced. */
+  inexperienced_until: number | null;
+}
+
+/** A change of head of house, for the news and the family chronicle. */
+export interface Succession {
+  turn: number;
+  /** The head who died. */
+  from: number;
+  to: number;
+  trained: boolean;
 }
 
 /** A merchant house that borrows from the player. Quality is hidden: the player sees estimateRange. */
@@ -158,7 +169,8 @@ export type NewsKind =
   | "event"
   | "reputation"
   | "warning"
-  | "crisis";
+  | "crisis"
+  | "family";
 
 /** One message for the News panel, written when a quarter resolves. */
 export interface NewsItem {
@@ -202,8 +214,9 @@ export interface GameState {
   defaulted_states: string[];
   ventures: Venture[];
   borrowers: Borrower[];
-  /** The family, living and dead, in order of birth (the founding head first). */
+  /** The family, living and dead, in order of joining the house (the founding head first). */
   people: Person[];
+  successions: Succession[];
   /** This quarter's loan requests, drawn at the end of the previous turn. */
   requests: LoanRequest[];
   ledger: LedgerEntry[];
