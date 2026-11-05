@@ -1,3 +1,4 @@
+import { cloneState } from "./state";
 import { runOver } from "./actions";
 import { bondBook, markBonds, resolveBonds } from "./bonds";
 import { applyDecision } from "./decisions";
@@ -48,7 +49,7 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
     if (!result.ok) throw new Error(`Invalid decision: ${result.reason}`);
     next = result.state;
   }
-  next = structuredClone(next);
+  next = cloneState(next);
   const { world, house } = next;
 
   for (const loan of next.loans) {

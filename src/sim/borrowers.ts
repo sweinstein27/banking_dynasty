@@ -1,5 +1,6 @@
 // Named borrowers with hidden quality. The player sees an estimate range; the market's own estimate
 // sets the rate a borrower will pay, so a better estimate than the market's is how you find bargains.
+import { cloneState } from "./state";
 import { checkActionLeft, type DecisionResult } from "./actions";
 import { fl } from "./format";
 import { addEntry } from "./ledger";
@@ -117,7 +118,7 @@ export function checkReport(state: GameState, d: ReportDecision, tuning: Tuning)
 export function buyReport(state: GameState, d: ReportDecision, data: GameData): DecisionResult {
   const reason = checkReport(state, d, data.tuning);
   if (reason) return { ok: false, reason };
-  const next = structuredClone(state);
+  const next = cloneState(state);
   const b = next.borrowers.find((x) => x.id === d.borrower)!;
   const cost = data.tuning.loans.estimate.report_cost;
   b.reported = true;

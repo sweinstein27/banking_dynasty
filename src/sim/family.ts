@@ -1,4 +1,5 @@
 // The family: the head of house, whose stats shape the business, and the heirs who will follow.
+import { cloneState } from "./state";
 import { checkActionLeft, type DecisionResult } from "./actions";
 import { fl } from "./format";
 import { addEntry } from "./ledger";
@@ -184,7 +185,7 @@ export function investFamily(state: GameState, d: InvestFamilyDecision, data: Ga
   const t = data.tuning;
   const reason = checkInvestFamily(state, d, t);
   if (reason) return { ok: false, reason };
-  const next = structuredClone(state);
+  const next = cloneState(state);
   const inv = t.family.invest;
   const cost = investCost(d.form, t);
   const raise = (n: number) => (next.house.reputation = Math.min(100, next.house.reputation + n));

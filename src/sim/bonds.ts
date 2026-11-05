@@ -1,3 +1,4 @@
+import { cloneState } from "./state";
 import { connectionsBonus, headStat } from "./family";
 import { fl } from "./format";
 import { checkActionLeft, type DecisionResult } from "./actions";
@@ -73,7 +74,7 @@ export function buyBond(state: GameState, d: BuyBondDecision, data: GameData): D
   if (reason) return { ok: false, reason };
   const issuer = data.states.find((s) => s.id === d.state)!;
 
-  const next = structuredClone(state);
+  const next = cloneState(state);
   const bond: Bond = {
     id: next.bonds.length + 1,
     issuer_state: issuer.id,

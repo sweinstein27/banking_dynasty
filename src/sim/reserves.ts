@@ -1,3 +1,4 @@
+import { cloneState } from "./state";
 import { fl } from "./format";
 import { checkActionLeft, type DecisionResult } from "./actions";
 import { addEntry } from "./ledger";
@@ -26,7 +27,7 @@ export function checkSetReserve(state: GameState, d: SetReserveDecision, tuning:
 export function setReserve(state: GameState, d: SetReserveDecision, tuning: Tuning): DecisionResult {
   const reason = checkSetReserve(state, d, tuning);
   if (reason) return { ok: false, reason };
-  const next = structuredClone(state);
+  const next = cloneState(state);
   next.house.reserve = d.amount;
   next.actions_this_turn += 1;
   return { ok: true, state: next };

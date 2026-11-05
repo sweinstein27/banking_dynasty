@@ -1,3 +1,4 @@
+import { cloneState } from "./state";
 import { fl } from "./format";
 import { checkActionLeft, type DecisionResult } from "./actions";
 import { addEntry } from "./ledger";
@@ -28,7 +29,7 @@ export function lend(state: GameState, d: LendDecision, data: GameData): Decisio
   const reason = checkLend(state, d, data.tuning);
   if (reason) return { ok: false, reason };
 
-  const next = structuredClone(state);
+  const next = cloneState(state);
   const b = next.borrowers.find((x) => x.id === d.borrower)!;
   const loan: Loan = {
     id: next.loans.length + 1,

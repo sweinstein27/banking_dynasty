@@ -1,3 +1,4 @@
+import { cloneState } from "./state";
 import { acumenFactor, headStat } from "./family";
 import { fl } from "./format";
 import { checkActionLeft, type DecisionResult } from "./actions";
@@ -47,7 +48,7 @@ export function investVenture(state: GameState, d: InvestVentureDecision, data: 
   if (reason) return { ok: false, reason };
   const type = data.ventures.find((v) => v.id === d.venture)!;
 
-  const next = structuredClone(state);
+  const next = cloneState(state);
   const venture: Venture = {
     id: next.ventures.length + 1,
     type: type.id,

@@ -1,5 +1,6 @@
 // Crisis responses: what the house can do when the market is uneasy, panicking, or under a panic
 // warning. Borrow from the rival house, pay depositors slowly, suspend withdrawals, or call a loan in.
+import { cloneState } from "./state";
 import { checkActionLeft, type DecisionResult } from "./actions";
 import { fl } from "./format";
 import { addEntry } from "./ledger";
@@ -64,7 +65,7 @@ export function applyCrisis(state: GameState, d: CrisisDecision, data: GameData)
   const reason = checkCrisis(state, d, data.tuning);
   if (reason) return { ok: false, reason };
   const c = data.tuning.crisis;
-  const next = structuredClone(state);
+  const next = cloneState(state);
   next.actions_this_turn += 1;
   const loseReputation = (n: number) => (next.house.reputation = Math.max(0, next.house.reputation - n));
 
