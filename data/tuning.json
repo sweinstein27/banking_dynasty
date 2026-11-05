@@ -1,0 +1,29 @@
+{
+  "start": {
+    "year": 1815,
+    "quarter": 1,
+    "house_name": "Haus Adler",
+    "city": "Frankfurt",
+    "cash": 100000,
+    "deposits": 50000,
+    "reputation": 50,
+    "base_rate": 0.05,
+    "sentiment": "calm"
+  },
+  "sentiment_multiplier": {
+    "calm": 1,
+    "uneasy": 2,
+    "panic": 5
+  },
+  "loans": {
+    "p0": 0.04,
+    "term_quarters": 4,
+    "actions_per_turn": 3,
+    "min_amount": 1000,
+    "tiers": {
+      "poor": { "quality": 0.3, "max_rate": 0.16 },
+      "fair": { "quality": 0.6, "max_rate": 0.1 },
+      "good": { "quality": 0.9, "max_rate": 0.06 }
+    }
+  }
+}
