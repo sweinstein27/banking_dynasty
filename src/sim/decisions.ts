@@ -19,3 +19,14 @@ export function applyDecision(state: GameState, d: Decision, data: GameData): De
       return investVenture(state, d, data);
   }
 }
+
+/** Applies decisions in order, stopping at the first refusal. */
+export function applyDecisions(state: GameState, ds: Decision[], data: GameData): DecisionResult {
+  let next = state;
+  for (const d of ds) {
+    const r = applyDecision(next, d, data);
+    if (!r.ok) return r;
+    next = r.state;
+  }
+  return { ok: true, state: next };
+}
