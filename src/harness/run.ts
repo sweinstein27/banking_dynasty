@@ -33,6 +33,15 @@ export interface RunRow {
   suspensions: number;
 }
 
+/** Net change to one ledger account from one category over a run, as a row of flows.csv. */
+export interface FlowRow {
+  strategy: string;
+  seed: number;
+  account: string;
+  category: string;
+  amount: number;
+}
+
 /** One year end of one run, as a row of years.csv. */
 export interface YearRow {
   strategy: string;
@@ -43,7 +52,7 @@ export interface YearRow {
 }
 
 /** Plays `strategy` on `seed` to the end of the run and summarises it. */
-export function runOnce(name: string, strategy: Strategy, seed: number, data: GameData): { run: RunRow; years: YearRow[] } {
+export function runOnce(name: string, strategy: Strategy, seed: number, data: GameData): { run: RunRow; years: YearRow[]; flows: FlowRow[] } {
   const rng = createRng(seed);
   let s = newGame(data, rng);
   let peak = netWorth(s);
@@ -85,5 +94,15 @@ export function runOnce(name: string, strategy: Strategy, seed: number, data: Ga
     suspensions: decisions.filter((d) => d.kind === "suspend").length,
   };
   const years = s.year_ends.map((y) => ({ strategy: name, seed, year: y.year, net_worth: y.net_worth, reputation: y.reputation }));
-  return { run, years };
+  const totals = new Map<string, number>();
+  for (const e of s.ledger) {
+    if (e.category === "opening") continue;
+    const key = `${e.account},${e.category}`;
+    totals.set(key, (totals.get(key) ?? 0) + e.amount);
+  }
+  const flows = [...totals].sort(([a], [b]) => a.localeCompare(b)).map(([key, amount]) => {
+    const [account, category] = key.split(",") as [string, string];
+    return { strategy: name, seed, account, category, amount };
+  });
+  return { run, years, flows };
 }

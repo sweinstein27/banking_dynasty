@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.ui.json",
     "play": "tsx scripts/play.ts",
     "find-panic-seed": "tsx scripts/find-panic-seed.ts",
-    "harness": "tsx scripts/harness.ts"
+    "harness": "tsx scripts/harness.ts",
+    "sweep": "tsx scripts/sweep.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
