@@ -138,7 +138,8 @@ export type NewsKind =
   | "bankruptcy"
   | "mood"
   | "event"
-  | "reputation";
+  | "reputation"
+  | "warning";
 
 /** One message for the News panel, written when a quarter resolves. */
 export interface NewsItem {
@@ -177,6 +178,8 @@ export interface GameState {
   risk_shift: Record<string, number>;
   /** Multiplier on every loan's default chance, set by events. 1 means no change. */
   trade_risk: number;
+  /** A panic is coming: the market stays uneasy for `turns_left` more quarters, then panics. */
+  panic_warning: { turns_left: number } | null;
   /** Decisions taken so far this turn. Reset when the turn ends. */
   actions_this_turn: number;
 }

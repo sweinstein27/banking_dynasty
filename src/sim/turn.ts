@@ -8,7 +8,7 @@ import { resolveEvents } from "./events";
 import { quarterNews } from "./news";
 import { defaultChance, quarterlyInterest } from "./loans";
 import type { Rng } from "./rng";
-import { nextSentiment } from "./sentiment";
+import { moodWithWarnings, nextSentiment } from "./sentiment";
 import type { GameData } from "./tuning";
 import type { Decision, GameState, Quarter } from "./types";
 import { resolveVentures, ventureBook } from "./ventures";
@@ -27,7 +27,8 @@ export function loanBook(state: GameState): number {
  * 1. apply decisions, 2. roll defaults, 3. collect interest from survivors,
  * 4. repay loans that reached their term, 5. roll bond defaults and pay coupons,
  * 6. resolve ventures that reach their term, 7. depositors withdraw for the current mood, with
- * forced sales if cash runs short (bankruptcy if even that fails), 8. roll next quarter's mood,
+ * forced sales if cash runs short (bankruptcy if even that fails), 8. roll next quarter's mood
+ * (a roll into panic starts a warning countdown instead; a running countdown overrides the roll),
  * 9. fire events for next quarter (they can override the mood), 10. mark bonds to that mood's
  * prices and each state's risk, 11. draw next quarter's loan requests, 12. write the quarter's
  * news, 13. advance the calendar.
@@ -72,7 +73,8 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
   resolveBonds(next, rng, data);
   resolveVentures(next, rng, data);
   resolveWithdrawals(next, data.tuning);
-  world.sentiment = nextSentiment(world.sentiment, rng.next(), data.tuning);
+  const rolled = nextSentiment(world.sentiment, rng.next(), data.tuning);
+  world.sentiment = moodWithWarnings(next, rolled, rng, data.tuning);
   resolveEvents(next, rng, data);
   markBonds(next, data);
   next.requests = drawRequests(next, data, rng);

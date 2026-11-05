@@ -38,7 +38,16 @@
       "uneasy": 0.02,
       "panic": 0.2
     },
-    "reputation_withdrawals": { "neutral": 50, "weight": 0.5 }
+    "reputation_withdrawals": { "neutral": 50, "weight": 0.5 },
+    "panic_warning_quarters": { "min": 2, "max": 3 },
+    "warning_signs": [
+      "Bills of exchange are refused at the bourse, and the discount on good paper climbs.",
+      "Merchants are hoarding coin and paying their bills late.",
+      "A trading house in Hamburg has stopped payment. Who else lent to it?",
+      "Depositors queue a little longer each morning at the counters of Bankhaus Kessler.",
+      "Rumours of failures arrive with every mail coach from London and Paris.",
+      "Interest on short loans has doubled in a week."
+    ]
   },
   "forced_sale": {
     "loan_discount": 0.3,

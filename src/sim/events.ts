@@ -3,6 +3,7 @@
 import { addEntry } from "./ledger";
 import type { Rng } from "./rng";
 import { recordDefault } from "./borrowers";
+import { startPanicWarning } from "./sentiment";
 import type { EventConditions, EventEffect, GameData, GameEvent, Tuning } from "./tuning";
 import type { GameState, Quarter, Sentiment } from "./types";
 
@@ -40,7 +41,13 @@ function applyEffect(state: GameState, e: EventEffect, note: string, rng: Rng, t
   const { house } = state;
   switch (e.kind) {
     case "set_sentiment":
+      // A panic warning holds the market uneasy until it breaks: only a panic overrides it.
+      if (state.panic_warning && e.sentiment !== "panic") return;
+      if (e.sentiment === "panic") state.panic_warning = null;
       state.world.sentiment = e.sentiment;
+      return;
+    case "panic_warning":
+      startPanicWarning(state, e.quarters);
       return;
     case "reputation":
       house.reputation = Math.min(100, Math.max(0, Math.round(house.reputation + e.delta)));
@@ -140,7 +147,8 @@ export function checkEventData(data: GameData): string[] {
       else if (e.kind === "state_risk" && !stateIds.has(e.state)) p(`unknown state "${e.state}"`);
       else if (e.kind === "cash" && (e.amount === undefined) === (e.share === undefined)) p("cash effects need exactly one of amount or share");
       else if (e.kind === "trade_risk" && !(e.factor > 0)) p("trade_risk needs a factor above zero");
-      else if (!["set_sentiment", "reputation", "cash", "loan_default", "state_risk", "trade_risk"].includes(e.kind)) p(`unknown effect "${(e as { kind: string }).kind}"`);
+      else if (e.kind === "panic_warning" && !(Number.isInteger(e.quarters) && e.quarters >= 1)) p("panic_warning needs a whole number of quarters, at least 1");
+      else if (!["set_sentiment", "reputation", "cash", "loan_default", "state_risk", "trade_risk", "panic_warning"].includes(e.kind)) p(`unknown effect "${(e as { kind: string }).kind}"`);
     }
   }
   return problems;

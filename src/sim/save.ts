@@ -55,6 +55,7 @@ export function parseSave(text: string, data: GameData): ParseResult {
   }
   if (!isObject(s.risk_shift)) return { ok: false, reason: 'Save file state is missing "risk_shift"' };
   if (typeof s.trade_risk !== "number") return { ok: false, reason: 'Save file state is missing "trade_risk"' };
+  if (!("panic_warning" in s)) return { ok: false, reason: 'Save file state is missing "panic_warning"' };
   for (const key of ["next_ledger_id", "actions_this_turn"] as const) {
     if (!Number.isInteger(s[key])) return { ok: false, reason: `Save file state is missing "${key}"` };
   }

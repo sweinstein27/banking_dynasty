@@ -20,6 +20,16 @@
     "effects": [{ "kind": "state_risk", "state": "france", "delta": 0.05 }]
   },
   {
+    "id": "london-shares-1825",
+    "title": "London's mining shares collapse",
+    "text": "The craze for Latin American mining shares is over. Shares that soared last winter have lost most of their value, Latin American bonds have halved, and the banks that lent against them are nervous.",
+    "historical": true,
+    "year": 1825,
+    "quarter": 3,
+    "conditions": {},
+    "effects": [{ "kind": "panic_warning", "quarters": 2 }]
+  },
+  {
     "id": "london-banks-1825",
     "title": "Banks fail in London",
     "text": "In December Pole and Company and other London banks close their doors, and dozens of country banks follow. Bills drawn on London are refused at the Frankfurt bourse.",
@@ -27,7 +37,7 @@
     "year": 1825,
     "quarter": 4,
     "conditions": {},
-    "effects": [{ "kind": "set_sentiment", "sentiment": "uneasy" }]
+    "effects": []
   },
   {
     "id": "panic-1826",
@@ -91,8 +101,8 @@
     "quarter": 4,
     "conditions": {},
     "effects": [
-      { "kind": "set_sentiment", "sentiment": "uneasy" },
-      { "kind": "trade_risk", "factor": 1.25 }
+      { "kind": "trade_risk", "factor": 1.25 },
+      { "kind": "panic_warning", "quarters": 1 }
     ]
   },
   {

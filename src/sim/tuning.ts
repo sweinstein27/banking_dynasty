@@ -38,6 +38,10 @@ export interface Tuning {
     withdrawal_share: Record<Sentiment, number>;
     /** Scales withdrawals by reputation: 1 + weight * (neutral - reputation) / neutral. */
     reputation_withdrawals: { neutral: number; weight: number };
+    /** Quarters of warning before a panic that the mood roll brings: a whole number from min to max. */
+    panic_warning_quarters: { min: number; max: number };
+    /** Warning signs for the news, one per warning quarter, in turn. */
+    warning_signs: string[];
   };
   /** Haircut taken when assets are sold to meet withdrawals. 0.3 means 70% of book value is recovered. */
   forced_sale: {
@@ -116,7 +120,9 @@ export type EventEffect =
   | { kind: "loan_default" }
   | { kind: "state_risk"; state: string; delta: number }
   /** Multiplies every loan's default chance from now on (0.8 makes trade lending safer). */
-  | { kind: "trade_risk"; factor: number };
+  | { kind: "trade_risk"; factor: number }
+  /** Starts a countdown to a panic in `quarters` quarters, unless one is running or the market already panics. */
+  | { kind: "panic_warning"; quarters: number };
 
 /** One record in data/events.json. Historical events fire once at their date; random ones by weight. */
 export interface GameEvent {

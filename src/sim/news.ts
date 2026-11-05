@@ -67,6 +67,13 @@ export function quarterNews(before: GameState, after: GameState, data: GameData)
     add("reputation", `The house's reputation ${rep > 0 ? "rises" : "falls"} to ${after.house.reputation} (was ${before.house.reputation}).`);
   }
 
+  if (after.panic_warning) {
+    const signs = data.tuning.sentiment.warning_signs;
+    const sign = signs.length ? `${signs[turn % signs.length]} ` : "";
+    const n = after.panic_warning.turns_left;
+    add("warning", `${sign}Warning: a panic is coming ${n === 1 ? "next quarter" : `in ${n} quarters`}.`);
+  }
+
   if (after.world.sentiment !== before.world.sentiment) {
     add("mood", `Market sentiment turns ${after.world.sentiment} (was ${before.world.sentiment}).`);
   }

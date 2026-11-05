@@ -1,6 +1,38 @@
 import { payWithdrawal, type WithdrawalResult } from "./reserves";
+import type { Rng } from "./rng";
 import type { Tuning } from "./tuning";
 import type { GameState, Sentiment } from "./types";
+
+/**
+ * Starts a countdown to a panic: the market turns (or stays) uneasy for `quarters` quarters, then
+ * panics. Does nothing if a countdown is running or the market already panics. Mutates `state`.
+ */
+export function startPanicWarning(state: GameState, quarters: number): void {
+  if (state.panic_warning || state.world.sentiment === "panic") return;
+  state.panic_warning = { turns_left: Math.max(1, Math.round(quarters)) };
+  state.world.sentiment = "uneasy";
+}
+
+/**
+ * Next quarter's mood with panic warnings applied, given the mood roll's result. A running
+ * countdown keeps the market uneasy and ends in a panic, whatever the roll. A roll that would start
+ * a panic instead starts a countdown of panic_warning_quarters (one more roll). Mutates `state`.
+ */
+export function moodWithWarnings(state: GameState, rolled: Sentiment, rng: Rng, tuning: Tuning): Sentiment {
+  const warning = state.panic_warning;
+  if (warning) {
+    warning.turns_left -= 1;
+    if (warning.turns_left > 0) return "uneasy";
+    state.panic_warning = null;
+    return "panic";
+  }
+  if (rolled === "panic" && state.world.sentiment !== "panic") {
+    const { min, max } = tuning.sentiment.panic_warning_quarters;
+    startPanicWarning(state, min + Math.floor(rng.next() * (max - min + 1)));
+    return "uneasy";
+  }
+  return rolled;
+}
 
 /**
  * Next quarter's mood from one roll in [0, 1). Walks the current mood's transitions in the order
