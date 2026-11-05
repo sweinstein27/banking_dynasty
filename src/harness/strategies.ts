@@ -3,7 +3,7 @@
 // Each lists what it wants in priority order; the sim's three actions a turn cut the list short.
 import { bondDefaultChance } from "../sim/bonds";
 import { borrowingRoom } from "../sim/crisis";
-import { heirsOf, isTrained, STATS } from "../sim/family";
+import { STATS, statTotal, successor } from "../sim/family";
 import { bondOffers, lendOffers, ventureOffers } from "../sim/offers";
 import { withdrawalDemand } from "../sim/sentiment";
 import type { GameData } from "../sim/tuning";
@@ -32,9 +32,9 @@ export const idle: Strategy = () => [];
 
 /**
  * Cautious: keeps 40% of deposits in reserve (60% from the first warning sign), checks borrowers
- * before lending, lends only where even the low end of the estimate is 0.6 or better, buys the
- * safest bonds open to it, and educates the eldest untrained heir. In a panic it pays depositors
- * slowly when cash is short.
+ * before lending, lends only where even the low end of the estimate is 0.6 or better, buys bonds
+ * only from the safest states (risk 0.25 or less), and educates the heir who would take over until their stats are enough
+ * to be trained. In a panic it pays depositors slowly when cash is short.
  */
 export function cautious(state: GameState, data: GameData): Decision[] {
   const worried = state.panic_warning !== null || state.world.sentiment !== "calm";
@@ -53,13 +53,16 @@ export function cautious(state: GameState, data: GameData): Decision[] {
     });
   }
   wanted.push((s) => {
-    const heir = heirsOf(s).find((p) => !isTrained(p, s.world.year, data.tuning));
-    if (!heir || shareOfFree(s, 1) < 10000) return null;
+    // Only the heir who would take over, and only until their stats reach the trained total
+    // (age does the rest).
+    const heir = successor(s, data.tuning);
+    if (!heir || statTotal(heir) >= data.tuning.family.succession.trained_total || shareOfFree(s, 1) < 10000) return null;
     const stat = [...STATS].sort((a, b) => heir[a] - heir[b])[0]!;
     return { kind: "invest_family", form: "educate", heir: heir.id, stat };
   });
   wanted.push((s) => {
-    const safe = bondOffers(s, data).filter((o) => !o.blocked).sort((a, b) => a.risk - b.risk)[0];
+    // Safe states only (risk 0.25 or less): never Naples or France, even when they are all that is open.
+    const safe = bondOffers(s, data).filter((o) => !o.blocked && o.risk <= 0.25).sort((a, b) => a.risk - b.risk)[0];
     return safe && shareOfFree(s, 1) > 20000 ? { kind: "buy_bond", state: safe.id, face_value: shareOfFree(s, 0.2) } : null;
   });
   return accepted(state, data, wanted);
