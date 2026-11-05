@@ -20,6 +20,12 @@ A turn-based banking dynasty game set in Frankfurt, 1815 to 1850. The full desig
 - `src/ui/` (React) only reads state and dispatches decisions.
 - `scripts/` holds CLI tools: a terminal play mode and, from week 6, the balancing harness.
 
+## Libraries
+
+- Use the libraries listed under "Libraries" in docs/spec.md. Don't add other runtime dependencies without proposing them in the plan first.
+- Keep the existing RNG in src/sim/rng.ts. Do not replace it.
+- No game engine. No AI or LLM calls in game code.
+
 ## UI rules
 
 - Must be fully playable with a trackpad: click only, no drag-and-drop, no hover-only information, large click targets.

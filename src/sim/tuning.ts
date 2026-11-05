@@ -21,6 +21,12 @@ export interface Tuning {
   /** Shared by every decision type. */
   actions_per_turn: number;
   sentiment_multiplier: Record<Sentiment, number>;
+  sentiment: {
+    /** Chance per quarter of moving from one mood to another. Whatever is left over is the chance of staying. */
+    transitions: Record<Sentiment, Partial<Record<Sentiment, number>>>;
+    /** Share of deposits withdrawn each quarter in each mood. */
+    withdrawal_share: Record<Sentiment, number>;
+  };
   loans: {
     p0: number;
     term_quarters: number;

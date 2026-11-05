@@ -124,8 +124,10 @@ async function main() {
     }
 
     const turn = state.world.turn;
+    const mood = state.world.sentiment;
     state = endTurn(state, queued, rng, gameData);
     printLedger(state.ledger.filter((e) => e.turn === turn && e.category !== "opening"));
+    if (state.world.sentiment !== mood) console.log(`\nMarket sentiment turns ${state.world.sentiment} (was ${mood}).`);
   }
 
   printStatus(state);

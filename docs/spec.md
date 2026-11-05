@@ -88,6 +88,35 @@ Starter historical events (from general knowledge; verify dates and details befo
 
 Random event examples: a warehouse fire wipes out a merchant borrower; a clerk is caught skimming; a rival house spreads rumors about your solvency; an heir falls ill or shows unexpected talent.
 
+## What makes it fun
+
+Fun comes from judgment under uncertainty, tension you can see coming, and stories you remember, not from finding the one best number.
+
+### In the prototype
+
+| Feature | How it works | Why it matters | Build week |
+| --- | --- | --- | --- |
+| Hidden borrower quality | You see an estimate, not true quality. Higher Prudence or a paid correspondent's report narrows it. | Every loan is a judgment call | Week 4 |
+| Named, recurring borrowers | Borrowers have names and a history with the house; good payers ask for more, past defaulters return | Defaults feel personal; the ledger becomes a cast | Week 4 |
+| Panics you can fight | 2 to 3 turns of warning signs, then active choices: pay out slowly, borrow from a rival, call in loans, or suspend withdrawals | A bank run is a boss fight, not a dice roll | Week 4 |
+| Family chronicle | End-of-run story generated from the ledger and family records | The payoff for 35 years of play | Week 5 |
+
+Week 4 gets heavier with these; Week 8's buffer absorbs the overflow.
+
+### After the prototype (do not build yet)
+
+- Ambitions: player-picked goals per decade, such as underwriting a state loan by 1830
+- Heirs with traits: succession becomes a real choice between strengths and flaws
+- A reactive rival: bids against you, can stumble in a panic, can be rescued for a stake
+- Information as a resource: news arrives late; a correspondent network gives earlier warning
+- Hard political choices: for example, whether to lend to governments suppressing the 1848 revolutions
+
+### Always
+
+- Fast turns: loans auto-renew unless changed; a "same as last quarter" option
+- No dominant strategy: the Week 6 harness must show cautious, aggressive and bond-heavy play can all win
+- Clear feedback: a year-end report with a net worth chart and one line on what went right and wrong
+
 ## Data model
 
 | Table | Key columns |
@@ -109,6 +138,22 @@ TypeScript and React web app, runs in a browser on a Mac.
 - Seeded randomness: same seed, same run.
 - Events and starting data in JSON files.
 - Save as one JSON file per game.
+
+### Libraries (reuse, don't build)
+
+| Need | Choice | When |
+| --- | --- | --- |
+| Seeded RNG | Keep the existing mulberry32 in src/sim/rng.ts (stores state for saves) | Done |
+| Immutable state updates | Immer | Optional; adopt if sim updates get verbose |
+| Event text and choices | Ink (inkjs); evaluate at the start of Week 4 against plain JSON | Week 4 |
+| UI components | React with Radix UI or shadcn/ui | Week 3 |
+| Ledger tables | TanStack Table | Week 3 |
+| Charts (net worth over time) | Recharts | Week 3 or later |
+| Balancing analysis | Harness writes CSV; analyze with DuckDB or pandas outside the game | Week 6 |
+| Historical calibration | Bank of England "A millennium of macroeconomic data" (interest rates, prices) | Week 6 to 7 |
+| Desktop and Steam | Tauri or Electron, plus steamworks.js | After the prototype |
+
+Not using: a full game engine (Godot, Unity, Phaser), an off-the-shelf economic sim, or an AI model inside the shipped game.
 
 UI: four panels (News, Ledger, Family, Decisions) plus End Turn. Everything is a click: no dragging, no hover-only information, large targets. Must be fully playable on a trackpad.
 

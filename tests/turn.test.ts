@@ -77,7 +77,8 @@ describe("endTurn: defaults", () => {
   });
 
   it("never touches a defaulted loan again", () => {
-    let s = endTurn(newGame(gameData), [lendFair], fixedRng(0), gameData);
+    // Default the loan, then roll high so the mood stays calm and no withdrawals move cash.
+    let s = endTurn(newGame(gameData), [lendFair], fixedRng(0, 0.999999), gameData);
     const cash = s.house.cash;
     s = endTurn(s, [], fixedRng(0), gameData);
     expect(s.house.cash).toBe(cash);

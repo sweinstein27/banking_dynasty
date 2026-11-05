@@ -2,6 +2,7 @@ import { applyDecision } from "./decisions";
 import { addEntry } from "./ledger";
 import { defaultChance, quarterlyInterest } from "./loans";
 import type { Rng } from "./rng";
+import { applyWithdrawals, nextSentiment } from "./sentiment";
 import type { GameData } from "./tuning";
 import type { Decision, GameState, Quarter } from "./types";
 
@@ -17,7 +18,8 @@ export function loanBook(state: GameState): number {
 /**
  * Resolves one quarter:
  * 1. apply decisions, 2. roll defaults, 3. collect interest from survivors,
- * 4. repay loans that reached their term, 5. advance the calendar.
+ * 4. repay loans that reached their term, 5. depositors withdraw for the current mood,
+ * 6. roll next quarter's mood, 7. advance the calendar.
  * Throws if a decision is invalid; callers should check with applyDecision first.
  */
 export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data: GameData): GameState {
@@ -52,6 +54,9 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
       addEntry(next, "loans", "repayment", -loan.principal, note);
     }
   }
+
+  applyWithdrawals(next, data.tuning);
+  world.sentiment = nextSentiment(world.sentiment, rng.next(), data.tuning);
 
   next.actions_this_turn = 0;
   world.turn += 1;

@@ -17,6 +17,18 @@
     "uneasy": 2,
     "panic": 5
   },
+  "sentiment": {
+    "transitions": {
+      "calm": { "uneasy": 0.08 },
+      "uneasy": { "calm": 0.3, "panic": 0.1 },
+      "panic": { "uneasy": 0.4 }
+    },
+    "withdrawal_share": {
+      "calm": 0,
+      "uneasy": 0.02,
+      "panic": 0
+    }
+  },
   "loans": {
     "p0": 0.04,
     "term_quarters": 4,
