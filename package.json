@@ -10,7 +10,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.ui.json",
     "play": "tsx scripts/play.ts",
-    "find-panic-seed": "tsx scripts/find-panic-seed.ts"
+    "find-panic-seed": "tsx scripts/find-panic-seed.ts",
+    "harness": "tsx scripts/harness.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
