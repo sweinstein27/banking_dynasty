@@ -56,7 +56,7 @@ export interface GameState {
   house: House;
   loans: Loan[];
   ledger: LedgerEntry[];
-  next_id: number;
+  next_ledger_id: number;
 }
 
 export interface LendDecision {

@@ -22,7 +22,7 @@ export function newGame(data: GameData): GameState {
     },
     loans: [],
     ledger: [],
-    next_id: 1,
+    next_ledger_id: 1,
   };
   addEntry(state, "cash", "opening", s.cash, "Opening cash");
   addEntry(state, "deposits", "opening", s.deposits, "Opening deposits owed");

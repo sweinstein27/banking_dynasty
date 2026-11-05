@@ -9,7 +9,7 @@ export function addEntry(
   note: string,
 ): void {
   state.ledger.push({
-    id: state.next_id++,
+    id: state.next_ledger_id++,
     turn: state.world.turn,
     account,
     category,

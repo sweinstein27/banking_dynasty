@@ -31,7 +31,7 @@ export function lend(state: GameState, d: LendDecision, data: GameData): LendRes
   const next = structuredClone(state);
   const names = data.borrower_names;
   const loan: Loan = {
-    id: next.next_id++,
+    id: next.loans.length + 1,
     borrower_name: names.length ? names[next.loans.length % names.length]! : `Borrower ${next.loans.length + 1}`,
     principal: d.amount,
     rate: d.rate,
