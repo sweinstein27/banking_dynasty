@@ -96,7 +96,7 @@ describe("lend", () => {
 
   it("refuses amounts below the minimum or not whole", () => {
     const s0 = newGame(gameData);
-    expect(checkLend(s0, { ...good, amount: 999 }, tuning)).toMatch(/at least/);
+    expect(checkLend(s0, { ...good, amount: 999 }, tuning)).toBe("Amount must be at least 1,000 fl.");
     expect(checkLend(s0, { ...good, amount: 1500.5 }, tuning)).toMatch(/whole/);
   });
 

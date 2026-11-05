@@ -1,8 +1,7 @@
+import { fl } from "./format";
 import type { GameData } from "./tuning";
 import type { GameState, LedgerEntry, NewsItem, NewsKind } from "./types";
 
-// Amounts read "1,000 fl.", so a sentence ending on an amount needs no extra full stop.
-const fl = (n: number) => `${n.toLocaleString("en-US")} fl.`;
 
 /**
  * The news for the quarter that turned `before` into `after`, read from that quarter's ledger

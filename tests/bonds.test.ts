@@ -129,7 +129,7 @@ describe("buyBond", () => {
     const s = newGame(gameData);
     s.house.reserve = 95000;
     expect(checkBuyBond(s, buy("bavaria", 5000), gameData)).toBeNull();
-    expect(checkBuyBond(s, buy("bavaria", 5001), gameData)).toMatch(/above the reserve/);
+    expect(checkBuyBond(s, buy("bavaria", 5001), gameData)).toMatch(/above the reserve \(cost 5,001 fl\., free 5,000 fl\.\)/);
     s.house.cash = 0;
     s.house.reserve = 0;
     expect(checkBuyBond(s, buy("bavaria"), gameData)).toMatch(/above the reserve/);

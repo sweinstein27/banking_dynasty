@@ -1,3 +1,4 @@
+import { fl } from "./format";
 import { checkActionLeft, type DecisionResult } from "./actions";
 import { addEntry } from "./ledger";
 import type { Tuning } from "./tuning";
@@ -14,7 +15,7 @@ export function checkSetReserve(state: GameState, d: SetReserveDecision, tuning:
   if (noAction) return noAction;
   if (!Number.isInteger(d.amount)) return "Reserve must be whole gulden";
   if (d.amount < 0) return "Reserve cannot be negative";
-  if (d.amount === state.house.reserve) return `Reserve is already ${d.amount}`;
+  if (d.amount === state.house.reserve) return `Reserve is already ${fl(d.amount)}`;
   return null;
 }
 

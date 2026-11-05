@@ -1,3 +1,4 @@
+import { fl } from "./format";
 import { checkActionLeft, type DecisionResult } from "./actions";
 import { addEntry } from "./ledger";
 import { freeCash } from "./reserves";
@@ -12,7 +13,7 @@ export function checkLend(state: GameState, d: LendDecision, tuning: Tuning): st
   const noAction = checkActionLeft(state, tuning);
   if (noAction) return noAction;
   if (!Number.isInteger(d.amount)) return "Amount must be whole gulden";
-  if (d.amount < t.min_amount) return `Amount must be at least ${t.min_amount}`;
+  if (d.amount < t.min_amount) return `Amount must be at least ${fl(t.min_amount)}`;
   if (d.amount > freeCash(state)) return notEnoughCash(state);
   if (!(d.rate > 0)) return "Rate must be above zero";
   if (d.rate > tier.max_rate) return `A ${d.tier} borrower will not pay more than ${(tier.max_rate * 100).toFixed(1)}%`;
@@ -57,6 +58,6 @@ export function defaultChance(quality: number, sentiment: Sentiment, tuning: Tun
 
 function notEnoughCash(state: GameState): string {
   const { cash, reserve } = state.house;
-  if (reserve === 0) return `Not enough cash (have ${cash})`;
-  return `Not enough cash above the reserve (have ${cash}, reserve ${reserve}, free ${freeCash(state)})`;
+  if (reserve === 0) return `Not enough cash (have ${fl(cash)})`;
+  return `Not enough cash above the reserve (have ${fl(cash)}, reserve ${fl(reserve)}, free ${fl(freeCash(state))})`;
 }

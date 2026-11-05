@@ -1,3 +1,4 @@
+import { fl } from "./format";
 import { checkActionLeft, type DecisionResult } from "./actions";
 import { addEntry } from "./ledger";
 import { freeCash } from "./reserves";
@@ -34,8 +35,8 @@ export function checkInvestVenture(state: GameState, d: InvestVentureDecision, d
   if (noAction) return noAction;
   if (state.world.year < type.unlock_year) return `No ${type.name.toLowerCase()} can be backed before ${type.unlock_year}`;
   if (!Number.isInteger(d.amount)) return "Amount must be whole gulden";
-  if (d.amount < t.ventures.min_amount) return `Amount must be at least ${t.ventures.min_amount}`;
-  if (d.amount > freeCash(state)) return `Not enough cash above the reserve (free ${freeCash(state)})`;
+  if (d.amount < t.ventures.min_amount) return `Amount must be at least ${fl(t.ventures.min_amount)}`;
+  if (d.amount > freeCash(state)) return `Not enough cash above the reserve (free ${fl(freeCash(state))})`;
   return null;
 }
 

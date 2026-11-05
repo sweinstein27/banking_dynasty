@@ -1,7 +1,8 @@
 // Display helpers. Every amount shows its unit.
+import { fl } from "../sim/format";
 import type { WorldState } from "../sim/types";
 
-export const fl = (n: number) => `${n.toLocaleString("en-US")} fl.`;
+export { fl };
 export const pct = (r: number) => `${(r * 100).toFixed(1)}%`;
 export const signedFl = (n: number) => `${n > 0 ? "+" : ""}${fl(n)}`;
 export const dateLabel = (w: Pick<WorldState, "year" | "quarter">) => `${w.year} Q${w.quarter}`;

@@ -1,3 +1,4 @@
+import { fl } from "./format";
 import { checkActionLeft, type DecisionResult } from "./actions";
 import { addEntry } from "./ledger";
 import { freeCash } from "./reserves";
@@ -47,9 +48,9 @@ export function checkBuyBond(state: GameState, d: BuyBondDecision, data: GameDat
   if (state.house.reputation < issuer.min_reputation)
     return `${issuer.name} will only deal with houses of reputation ${issuer.min_reputation} or more (yours is ${state.house.reputation})`;
   if (!Number.isInteger(d.face_value)) return "Face value must be whole gulden";
-  if (d.face_value < t.bonds.min_amount) return `Face value must be at least ${t.bonds.min_amount}`;
+  if (d.face_value < t.bonds.min_amount) return `Face value must be at least ${fl(t.bonds.min_amount)}`;
   const cost = bondCost(state, issuer, d.face_value, t);
-  if (cost > freeCash(state)) return `Not enough cash above the reserve (cost ${cost}, free ${freeCash(state)})`;
+  if (cost > freeCash(state)) return `Not enough cash above the reserve (cost ${fl(cost)}, free ${fl(freeCash(state))})`;
   return null;
 }
 

@@ -57,7 +57,8 @@ input {
 
 .start { max-width: 560px; margin: 3rem auto; padding: 0 1rem; }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 1rem; margin-top: 1rem; }
-.field { display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.6rem; }
+.field { display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.8rem; }
+.field label { display: flex; flex-direction: column; gap: 0.3rem; }
 
 .app { padding: 0.8rem; }
 .topbar {
@@ -95,4 +96,26 @@ input {
 .entries tr.queued td { background: #eef3f9; }
 
 .queued-list { padding-left: 1.4rem; }
-.end-turn { width: 100%; margin-top: 1.2rem; font-size: 1.2rem; min-height: 60px; }
+.end-turn { font-size: 1.15rem; min-height: 56px; min-width: 220px; }
+.topbar { position: sticky; top: 0; z-index: 5; }
+
+.decision-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin: 0.6rem 0; }
+.decision-buttons button { min-height: 64px; font-size: 1.05rem; }
+
+.overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.35); z-index: 10; }
+.dialog {
+  position: fixed; z-index: 11; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto;
+  background: var(--panel); border-radius: 10px; padding: 1.2rem; border: 1px solid var(--line);
+}
+.dialog h2 { border: none; }
+.dialog-buttons { justify-content: flex-end; margin-top: 1rem; }
+.dialog-buttons button { min-width: 140px; }
+
+.choices { display: flex; flex-direction: column; gap: 0.5rem; }
+.choice {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 0.15rem; text-align: left;
+  min-height: 56px; width: 100%; border: 2px solid var(--line);
+}
+.choice[data-state="on"] { border-color: var(--accent); background: #e6eef7; }
+.choice[data-state="on"]::before { content: "Selected"; font-size: 0.8rem; color: var(--accent); font-weight: bold; }
