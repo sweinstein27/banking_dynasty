@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { gameData } from "../data";
 import { actionsLeft } from "../sim/actions";
+import { inCrisis } from "../sim/crisis";
 import type { Decision, GameState } from "../sim/types";
-import { DECISION_LABELS, DecisionDialog, type DecisionKind } from "./DecisionDialogs";
+import { CRISIS_KINDS, DECISION_LABELS, DecisionDialog, type DecisionKind } from "./DecisionDialogs";
 import { fl, pct } from "./format";
 import type { Game, GameApi } from "./useGame";
 
@@ -25,6 +26,20 @@ export function DecisionsPanel({ api, game, disabled }: { api: GameApi; game: Ga
         ))}
       </div>
       {left === 0 && !disabled && <p className="muted">No actions left. End the turn to resolve the quarter.</p>}
+
+      {inCrisis(game.preview) && (
+        <div className="crisis">
+          <h3>Crisis measures</h3>
+          <p className="muted">Open while the market is uneasy, panicking, or under a panic warning. Each uses an action.</p>
+          <div className="decision-buttons">
+            {CRISIS_KINDS.map((k) => (
+              <button key={k} className="secondary" disabled={disabled || left === 0} onClick={() => setOpen(k)}>
+                {DECISION_LABELS[k]}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <h3>Queued this quarter</h3>
       {game.queued.length === 0 ? (
@@ -56,5 +71,13 @@ export function describe(d: Decision, state: GameState): string {
       return `Back a venture (${gameData.ventures.find((v) => v.id === d.venture)?.name ?? d.venture}) with ${fl(d.amount)}`;
     case "set_reserve":
       return `Set the reserve to ${fl(d.amount)}`;
+    case "borrow":
+      return `Borrow ${fl(d.amount)} from ${gameData.tuning.crisis.rival.name}`;
+    case "pay_slowly":
+      return "Pay depositors slowly this quarter";
+    case "suspend":
+      return "Suspend withdrawals this quarter";
+    case "call_loan":
+      return `Call in loan #${d.loan} (${state.loans.find((l) => l.id === d.loan)?.borrower_name ?? "unknown"})`;
   }
 }

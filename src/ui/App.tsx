@@ -54,6 +54,7 @@ export function App() {
       <header className="topbar">
         <div>
           <strong>{base.house.name}</strong>, {base.house.city}. {over ? `Run over after ${dateLabel(previousQuarter(base.world))}` : `${dateLabel(base.world)} (turn ${base.world.turn})`}. Market: <span className={`mood-${base.world.sentiment}`}>{base.world.sentiment}</span>. Base rate {(base.world.base_rate * 100).toFixed(1)}%. Seed {game.seed}.
+          {base.panic_warning && !over && <span className="warning-chip"> Panic in {base.panic_warning.turns_left} qtr</span>}
         </div>
         <div className="row topbar-buttons">
           <button className="secondary" onClick={save}>Save game</button>

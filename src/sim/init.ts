@@ -41,6 +41,8 @@ export function newGame(data: GameData, rng: Rng): GameState {
     risk_shift: {},
     trade_risk: 1,
     panic_warning: null,
+    debts: [],
+    withdrawal_policy: "normal",
     actions_this_turn: 0,
   };
   addEntry(state, "cash", "opening", s.cash, "Opening cash");

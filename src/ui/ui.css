@@ -125,3 +125,10 @@ input {
 .game-over { background: var(--panel); border: 3px solid var(--accent); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.8rem; }
 .game-over-bankrupt { border-color: var(--bad); }
 .final-worth { font-size: 1.6rem; font-weight: bold; }
+
+.warning-banner { background: #fbe9e7; border: 2px solid var(--bad); border-radius: 6px; padding: 0.6rem 0.8rem; color: var(--bad); font-weight: bold; }
+.warning-chip { margin-left: 0.6rem; background: var(--bad); color: #fff; border-radius: 4px; padding: 0.15rem 0.5rem; font-weight: bold; }
+.news-warning, .news-crisis { color: var(--warn); }
+.news-event strong { color: var(--accent); }
+.crisis { margin-top: 1rem; border: 2px solid var(--warn); border-radius: 8px; padding: 0.6rem 0.8rem; background: #fff8e8; }
+.holdings li.debt { color: var(--bad); }

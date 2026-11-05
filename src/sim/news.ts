@@ -52,6 +52,22 @@ export function quarterNews(before: GameState, after: GameState, data: GameData)
     add("withdrawal", `Depositors withdrew ${fl(withdrawn)} (${mood}).${run}`);
   }
 
+  if (after.withdrawal_policy === "slow") add("crisis", "You paid depositors only part of what they asked. They will be back, and the bourse noticed.");
+  if (after.withdrawal_policy === "suspended") add("crisis", "You suspended withdrawals. Depositors were turned away at the door, and the whole bourse is talking.");
+  for (const e of entries.filter((x) => x.account === "borrowings" && x.category === "borrowing")) {
+    const debt = after.debts.find((d) => e.note.startsWith(`Debt #${d.id}:`))!;
+    add("crisis", `You borrowed ${fl(e.amount)} from ${debt.lender} at ${(debt.rate * 100).toFixed(1)}%, due in ${debt.term_quarters} quarters.`);
+  }
+  for (const e of entries.filter((x) => x.account === "borrowings" && x.category === "debt_repayment")) {
+    const debt = after.debts.find((d) => e.note.startsWith(`Debt #${d.id}:`))!;
+    add("crisis", `You repaid ${fl(-e.amount)} to ${debt.lender}.`);
+  }
+  for (const loan of after.loans) {
+    if (loan.status !== "called" || before.loans.find((l) => l.id === loan.id)?.status === "called") continue;
+    const back = entries.find((e) => e.account === "cash" && e.category === "loan_called" && e.note.startsWith(`Loan #${loan.id}:`))?.amount ?? 0;
+    add("crisis", `You called in ${loan.borrower_name}'s loan of ${fl(loan.principal)} and recovered ${fl(back)} They will not ask again for a while.`);
+  }
+
   const sales = entries.filter((e) => e.account === "cash" && e.category === "forced_sale");
   if (sales.length) {
     const lost = -sum(entries.filter((e) => e.account !== "cash" && e.category === "forced_sale")) - sum(sales);
@@ -59,7 +75,7 @@ export function quarterNews(before: GameState, after: GameState, data: GameData)
   }
 
   if (before.house.status !== "bankrupt" && after.house.status === "bankrupt") {
-    add("bankruptcy", `${after.house.name} could not pay its depositors, even after selling its assets. The house is bankrupt.`);
+    add("bankruptcy", `${after.house.name} could not meet its obligations, even after selling its assets. The house is bankrupt.`);
   }
 
   const rep = after.house.reputation - before.house.reputation;

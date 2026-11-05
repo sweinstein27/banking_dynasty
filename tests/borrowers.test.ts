@@ -54,7 +54,7 @@ describe("maxRate", () => {
 
 describe("estimateRange", () => {
   const borrower = (quality: number, estimate_noise: number, reported = false): Borrower => ({
-    id: 1, name: "X", trade: "x", quality, market_quality: quality, estimate_noise, reported, repaid: 0, defaulted: 0, last_default_turn: null,
+    id: 1, name: "X", trade: "x", quality, market_quality: quality, estimate_noise, reported, repaid: 0, defaulted: 0, last_default_turn: null, away_until: null,
   });
 
   it("always contains the true quality, whatever the noise", () => {
@@ -114,7 +114,7 @@ describe("drawRequests", () => {
   it("keeps a defaulter away for defaulter_absence_quarters, then lets them ask again", () => {
     const s = fresh();
     const b = s.borrowers.find((x) => x.id === POOR)!;
-    b.last_default_turn = s.world.turn;
+    b.away_until = s.world.turn + t.defaulter_absence_quarters;
     const everyone = { ...gameData, tuning: { ...tuning, loans: { ...t, requests_per_quarter: 4 } } };
     expect(drawRequests(s, everyone, createRng(1)).map((r) => r.borrower_id)).not.toContain(POOR);
     s.world.turn += t.defaulter_absence_quarters;
@@ -164,7 +164,7 @@ describe("borrower records", () => {
     const s0 = decide(fresh(), { kind: "lend", borrower: POOR, amount: 5000, rate: 0.16 });
     const s = endTurn(s0, [], fixedRng(0, 0.999999), quiet);
     const b = s.borrowers.find((x) => x.id === POOR)!;
-    expect(b).toMatchObject({ defaulted: 1, last_default_turn: 1 });
+    expect(b).toMatchObject({ defaulted: 1, last_default_turn: 1, away_until: 1 + t.defaulter_absence_quarters });
     expect(b.market_quality).toBeCloseTo(0.3 - t.market.default_penalty);
     expect(b.quality).toBe(0.3);
   });

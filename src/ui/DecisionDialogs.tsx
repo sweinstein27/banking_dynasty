@@ -4,6 +4,7 @@ import { Dialog, ToggleGroup } from "radix-ui";
 import { useState, type ReactNode } from "react";
 import { gameData } from "../data";
 import { bondCost } from "../sim/bonds";
+import { borrowingRoom, callRecovery, debtInterest } from "../sim/crisis";
 import { bondOffers, lendOffers, ventureOffers, type LendOffer } from "../sim/offers";
 import { freeCash } from "../sim/reserves";
 import type { Decision, GameState } from "../sim/types";
@@ -17,7 +18,14 @@ export const DECISION_LABELS: Record<DecisionKind, string> = {
   buy_bond: "Buy state bonds",
   invest_venture: "Back a venture",
   set_reserve: "Set reserves",
+  borrow: "Borrow from the rival house",
+  pay_slowly: "Pay depositors slowly",
+  suspend: "Suspend withdrawals",
+  call_loan: "Call a loan in",
 };
+
+/** Decisions only open during a crisis: shown in their own section of the Decisions panel. */
+export const CRISIS_KINDS: DecisionKind[] = ["borrow", "pay_slowly", "suspend", "call_loan"];
 
 export function DecisionDialog({ kind, state, onClose, onSubmit }: {
   kind: DecisionKind | null;
@@ -40,6 +48,10 @@ export function DecisionDialog({ kind, state, onClose, onSubmit }: {
               {kind === "buy_bond" && <BondForm state={state} onSubmit={onSubmit} onDone={onClose} />}
               {kind === "invest_venture" && <VentureForm state={state} onSubmit={onSubmit} onDone={onClose} />}
               {kind === "set_reserve" && <ReserveForm state={state} onSubmit={onSubmit} onDone={onClose} />}
+              {kind === "borrow" && <BorrowForm state={state} onSubmit={onSubmit} onDone={onClose} />}
+              {kind === "pay_slowly" && <PayoutForm kind="pay_slowly" state={state} onSubmit={onSubmit} onDone={onClose} />}
+              {kind === "suspend" && <PayoutForm kind="suspend" state={state} onSubmit={onSubmit} onDone={onClose} />}
+              {kind === "call_loan" && <CallLoanForm state={state} onSubmit={onSubmit} onDone={onClose} />}
             </>
           )}
         </Dialog.Content>
@@ -271,6 +283,84 @@ function ReserveForm(props: FormProps) {
       <p>Loans, bonds and ventures cannot take cash below the reserve. Withdrawals are paid from it first. Current reserve: {fl(state.house.reserve)}</p>
       <AmountField label="New reserve (fl.)" text={amount} onText={setAmount} quick={quick} />
       <Footer error={error} canConfirm onConfirm={() => submit({ kind: "set_reserve", amount: parseAmount(amount) })} />
+    </>
+  );
+}
+
+function BorrowForm(props: FormProps) {
+  const { state } = props;
+  const { error, submit } = useSubmit(props);
+  const [amount, setAmount] = useState("");
+  const r = gameData.tuning.crisis.rival;
+  const room = borrowingRoom(state, gameData.tuning);
+  const quick: [string, number][] = [10000, 25000, room]
+    .filter((n, i, all) => n >= r.min_amount && n <= room && all.indexOf(n) === i)
+    .map((n) => [n === room ? `All they will lend (${fl(n)})` : fl(n), n]);
+  const n = parseAmount(amount);
+
+  return (
+    <>
+      <p>
+        {r.name} will lend up to {fl(r.max_outstanding)} in all, at {pct(r.rate)} a year. Interest is paid each quarter and the whole sum
+        falls due after {r.term_quarters} quarters. If you cannot pay it then, assets are sold, as for depositors. Borrowing from a rival costs{" "}
+        {r.reputation_cost} reputation.
+      </p>
+      <p>Room left to borrow: {fl(room)}</p>
+      <AmountField label="Amount (fl.)" text={amount} onText={setAmount} quick={quick} />
+      {Number.isFinite(n) && n > 0 && <p>Interest each quarter: {fl(debtInterest({ principal: n, rate: r.rate }))}</p>}
+      <Footer error={error} canConfirm onConfirm={() => submit({ kind: "borrow", amount: n })} />
+    </>
+  );
+}
+
+function PayoutForm({ kind, ...props }: FormProps & { kind: "pay_slowly" | "suspend" }) {
+  const { error, submit } = useSubmit(props);
+  const c = gameData.tuning.crisis;
+  return (
+    <>
+      {kind === "pay_slowly" ? (
+        <p>
+          This quarter, depositors are paid {pct(c.pay_slowly.share)} of what they ask. The rest stays owed. Costs{" "}
+          {c.pay_slowly.reputation_cost} reputation, and lower reputation means more withdrawals later.
+        </p>
+      ) : (
+        <p>
+          This quarter, depositors are paid nothing. Everything stays owed. Costs {c.suspend.reputation_cost} reputation, and lower
+          reputation means more withdrawals later.
+        </p>
+      )}
+      <p>Current reputation: {props.state.house.reputation} of 100</p>
+      <Footer error={error} canConfirm onConfirm={() => submit({ kind })} />
+    </>
+  );
+}
+
+function CallLoanForm(props: FormProps) {
+  const { state } = props;
+  const { error, submit } = useSubmit(props);
+  const [id, setId] = useState("");
+  const c = gameData.tuning.crisis.call_loan;
+  const active = state.loans.filter((l) => l.status === "active");
+
+  return (
+    <>
+      <p>
+        The borrower pays back {pct(c.recovery)} of the principal now and you forgive the rest. They will not ask the house for a loan for{" "}
+        {c.absence_quarters} quarters.
+      </p>
+      {active.length === 0 ? (
+        <p>You have no active loans to call in.</p>
+      ) : (
+        <Choices value={id} onChange={setId}>
+          {active.map((l) => (
+            <Choice key={l.id} value={String(l.id)}>
+              <strong>Loan #{l.id}, {l.borrower_name}</strong>
+              <span>{fl(l.principal)} at {pct(l.rate)}. Calling it in brings back {fl(callRecovery(l.principal, gameData.tuning))} now.</span>
+            </Choice>
+          ))}
+        </Choices>
+      )}
+      <Footer error={error} canConfirm={id !== ""} onConfirm={() => submit({ kind: "call_loan", loan: Number(id) })} />
     </>
   );
 }

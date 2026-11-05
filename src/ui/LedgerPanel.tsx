@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { gameData } from "../data";
 import { bondBook, bondValue, quarterlyCoupon } from "../sim/bonds";
 import { estimateRange } from "../sim/borrowers";
+import { debtBook, debtInterest } from "../sim/crisis";
 import { freeCash } from "../sim/reserves";
 import { loanBook, netWorth } from "../sim/turn";
 import type { GameState, LedgerEntry } from "../sim/types";
@@ -42,9 +43,10 @@ export function LedgerPanel({ base, preview }: { base: GameState; preview: GameS
       <table className="sheet">
         <tbody>
           <tr><th>Cash</th><td>{fl(house.cash)}</td><th>Deposits owed</th><td>{fl(house.deposits)}</td></tr>
-          <tr><th>Loans</th><td>{fl(loanBook(preview))}</td><th>Reserve</th><td>{fl(house.reserve)}</td></tr>
-          <tr><th>Bonds</th><td>{fl(bondBook(preview))}</td><th>Free cash</th><td>{fl(freeCash(preview))}</td></tr>
-          <tr><th>Ventures</th><td>{fl(ventureBook(preview))}</td><th>Net worth</th><td className="strong">{fl(netWorth(preview))}</td></tr>
+          <tr><th>Loans</th><td>{fl(loanBook(preview))}</td><th>Borrowings</th><td>{fl(debtBook(preview))}</td></tr>
+          <tr><th>Bonds</th><td>{fl(bondBook(preview))}</td><th>Reserve</th><td>{fl(house.reserve)}</td></tr>
+          <tr><th>Ventures</th><td>{fl(ventureBook(preview))}</td><th>Free cash</th><td>{fl(freeCash(preview))}</td></tr>
+          <tr><th>Reputation</th><td>{house.reputation} of 100</td><th>Net worth</th><td className="strong">{fl(netWorth(preview))}</td></tr>
         </tbody>
       </table>
 
@@ -95,14 +97,15 @@ function Holdings({ state }: { state: GameState }) {
   const loans = state.loans.filter((l) => l.status === "active");
   const bonds = state.bonds.filter((b) => b.status === "active");
   const ventures = state.ventures.filter((v) => v.status === "active");
+  const debts = state.debts.filter((d) => d.status === "active");
   const stateName = (id: string) => gameData.states.find((s) => s.id === id)?.name ?? id;
   const ventureName = (id: string) => gameData.ventures.find((v) => v.id === id)?.name ?? id;
 
   return (
     <>
       <h3>Holdings</h3>
-      {!loans.length && !bonds.length && !ventures.length ? (
-        <p className="muted">No loans, bonds or ventures.</p>
+      {!loans.length && !bonds.length && !ventures.length && !debts.length ? (
+        <p className="muted">No loans, bonds, ventures or debts.</p>
       ) : (
         <ul className="holdings">
           {loans.map((l) => (
@@ -118,6 +121,11 @@ function Holdings({ state }: { state: GameState }) {
           {ventures.map((v) => (
             <li key={`v${v.id}`}>
               Venture #{v.id}, {ventureName(v.type)}: {fl(v.invested)} locked, pays {fl(venturePayout(v))} in {quartersLeft(state, v)} qtr if it succeeds
+            </li>
+          ))}
+          {debts.map((d) => (
+            <li key={`d${d.id}`} className="debt">
+              Debt #{d.id}, owed to {d.lender}: {fl(d.principal)} at {pct(d.rate)}, interest {fl(debtInterest(d))} a quarter, due in {quartersLeft(state, d)} qtr
             </li>
           ))}
         </ul>

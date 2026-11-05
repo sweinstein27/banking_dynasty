@@ -21,6 +21,12 @@
     "random_chance": 0.25,
     "cooldown_quarters": 12
   },
+  "crisis": {
+    "rival": { "name": "Bankhaus Kessler", "rate": 0.12, "term_quarters": 4, "max_outstanding": 50000, "min_amount": 5000, "reputation_cost": 3 },
+    "pay_slowly": { "share": 0.5, "reputation_cost": 4 },
+    "suspend": { "reputation_cost": 12 },
+    "call_loan": { "recovery": 0.9, "absence_quarters": 8 }
+  },
   "actions_per_turn": 3,
   "sentiment_multiplier": {
     "calm": 1,

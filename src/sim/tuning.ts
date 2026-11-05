@@ -28,6 +28,16 @@ export interface Tuning {
     /** Quarters before the same random event can fire again, unless the event sets its own. */
     cooldown_quarters: number;
   };
+  /** Responses open to the house while the market is uneasy, panicking, or under a panic warning. */
+  crisis: {
+    /** Emergency loans from the rival house. */
+    rival: { name: string; rate: number; term_quarters: number; max_outstanding: number; min_amount: number; reputation_cost: number };
+    /** Pay depositors this share of what they ask this quarter. */
+    pay_slowly: { share: number; reputation_cost: number };
+    suspend: { reputation_cost: number };
+    /** A called loan returns this share of its principal now; the borrower stays away for absence_quarters. */
+    call_loan: { recovery: number; absence_quarters: number };
+  };
   /** Shared by every decision type. */
   actions_per_turn: number;
   sentiment_multiplier: Record<Sentiment, number>;

@@ -17,7 +17,7 @@ export function GameOver({ state, reason, seed, onNewGame, onSave }: {
       <h2>{reason === "bankrupt" ? "The house is bankrupt" : "The run is complete"}</h2>
       <p>
         {reason === "bankrupt"
-          ? `${state.house.name} could not pay its depositors in ${last}, even after selling its assets.`
+          ? `${state.house.name} could not meet its obligations in ${last}, even after selling its assets.`
           : `${state.house.name} has traded from 1815 to the end of 1850.`}
       </p>
       <p className="final-worth">Final net worth: {fl(worth)}</p>

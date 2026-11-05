@@ -41,7 +41,7 @@ export function ventureSalePrice(amount: number, tuning: Tuning): number {
  * earning. A holding sold down to nothing gets status `sold`. Returns the cash raised.
  * Mutates `state`; callers pass a draft copy.
  */
-export function raiseCash(state: GameState, needed: number, tuning: Tuning): number {
+export function raiseCash(state: GameState, needed: number, tuning: Tuning, purpose = "to meet withdrawals"): number {
   let raised = 0;
   for (const bond of state.bonds) {
     if (raised >= needed) break;
@@ -55,7 +55,7 @@ export function raiseCash(state: GameState, needed: number, tuning: Tuning): num
     state.house.cash += proceeds;
     raised += proceeds;
     const what = bond.status === "sold" ? "sold" : `${face} of face value sold, ${bond.face_value} kept`;
-    const note = `Bond #${bond.id} (${bond.issuer_state}) ${what}, at a discount to meet withdrawals`;
+    const note = `Bond #${bond.id} (${bond.issuer_state}) ${what}, at a discount ${purpose}`;
     addEntry(state, "cash", "forced_sale", proceeds, note);
     addEntry(state, "bonds", "forced_sale", -(bookBefore - bondValue(bond)), note);
   }
@@ -69,7 +69,7 @@ export function raiseCash(state: GameState, needed: number, tuning: Tuning): num
     state.house.cash += price;
     raised += price;
     const what = loan.status === "sold" ? "sold" : `${slice} of principal sold, ${loan.principal} kept`;
-    const note = `Loan #${loan.id} (${loan.borrower_name}) ${what}, at a discount to meet withdrawals`;
+    const note = `Loan #${loan.id} (${loan.borrower_name}) ${what}, at a discount ${purpose}`;
     addEntry(state, "cash", "forced_sale", price, note);
     addEntry(state, "loans", "forced_sale", -slice, note);
   }
@@ -83,7 +83,7 @@ export function raiseCash(state: GameState, needed: number, tuning: Tuning): num
     state.house.cash += price;
     raised += price;
     const what = v.status === "sold" ? "sold" : `${slice} of the stake sold, ${v.invested} kept`;
-    const note = `Venture #${v.id} (${v.type}) ${what}, at a discount to meet withdrawals`;
+    const note = `Venture #${v.id} (${v.type}) ${what}, at a discount ${purpose}`;
     addEntry(state, "cash", "forced_sale", price, note);
     addEntry(state, "ventures", "forced_sale", -slice, note);
   }
@@ -103,6 +103,7 @@ export interface WithdrawalOutcome {
  * Mutates `state`; callers pass a draft copy.
  */
 export function resolveWithdrawals(state: GameState, tuning: Tuning): WithdrawalOutcome {
+  if (state.house.status === "bankrupt") return { demanded: 0, raised: 0, bankrupt: true };
   const first = applyWithdrawals(state, tuning);
   if (!first) return { demanded: 0, raised: 0, bankrupt: false };
   const demanded = first.fromReserve + first.fromFreeCash + first.shortfall;

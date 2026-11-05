@@ -22,7 +22,7 @@ export function createBorrowers(data: GameData, rng: Rng): Borrower[] {
     const quality = round3(lo + rng.next() * (hi - lo));
     const market_quality = round3(clamp01(quality + (rng.next() * 2 - 1) * noise));
     const estimate_noise = round3(rng.next() * 2 - 1);
-    return { id: i + 1, name: b.name, trade: b.trade, quality, market_quality, estimate_noise, reported: false, repaid: 0, defaulted: 0, last_default_turn: null };
+    return { id: i + 1, name: b.name, trade: b.trade, quality, market_quality, estimate_noise, reported: false, repaid: 0, defaulted: 0, last_default_turn: null, away_until: null };
   });
 }
 
@@ -56,7 +56,7 @@ export function hasActiveLoan(state: GameState, borrowerId: number): boolean {
 
 /**
  * Next quarter's requests: up to requests_per_quarter borrowers, picked at random from those with
- * no active loan who are not staying away after a default. Each asks for an amount drawn between
+ * no active loan who are not staying away (after a default, or after the house called a loan in). Each asks for an amount drawn between
  * min and max (to the nearest 500 fl.), grown for every loan repaid, at the rate the market allows.
  * Two rolls per request. Returns the requests sorted by borrower id.
  */
@@ -64,7 +64,7 @@ export function drawRequests(state: GameState, data: GameData, rng: Rng): LoanRe
   const t = data.tuning.loans;
   const turn = state.world.turn;
   const pool = state.borrowers.filter(
-    (b) => !hasActiveLoan(state, b.id) && (b.last_default_turn === null || turn - b.last_default_turn >= t.defaulter_absence_quarters),
+    (b) => !hasActiveLoan(state, b.id) && (b.away_until === null || turn >= b.away_until),
   );
   const count = Math.min(pool.length, t.requests_per_quarter);
   const requests: LoanRequest[] = [];
@@ -88,6 +88,7 @@ export function recordDefault(state: GameState, loan: Loan, note: string, tuning
   if (!b) return;
   b.defaulted += 1;
   b.last_default_turn = state.world.turn;
+  b.away_until = state.world.turn + tuning.loans.defaulter_absence_quarters;
   b.market_quality = round3(clamp01(b.market_quality - tuning.loans.market.default_penalty));
 }
 

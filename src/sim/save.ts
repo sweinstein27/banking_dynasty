@@ -1,5 +1,6 @@
 // Save files: one JSON document per game. Pure string in, string out; the caller does the file I/O.
 import { bondBook } from "./bonds";
+import { debtBook } from "./crisis";
 import { applyDecisions } from "./decisions";
 import { accountBalance } from "./ledger";
 import type { GameData } from "./tuning";
@@ -7,7 +8,7 @@ import { loanBook } from "./turn";
 import type { Decision, GameState, LedgerAccount } from "./types";
 import { ventureBook } from "./ventures";
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 export interface SaveFile {
   version: number;
@@ -50,12 +51,13 @@ export function parseSave(text: string, data: GameData): ParseResult {
 
   const s = raw.state;
   if (!isObject(s) || !isObject(s.world) || !isObject(s.house)) return { ok: false, reason: "Save file has no game state" };
-  for (const key of ["loans", "bonds", "defaulted_states", "ventures", "ledger", "news", "fired_events", "borrowers", "requests"] as const) {
+  for (const key of ["loans", "bonds", "defaulted_states", "ventures", "ledger", "news", "fired_events", "borrowers", "requests", "debts"] as const) {
     if (!Array.isArray(s[key])) return { ok: false, reason: `Save file state is missing "${key}"` };
   }
   if (!isObject(s.risk_shift)) return { ok: false, reason: 'Save file state is missing "risk_shift"' };
   if (typeof s.trade_risk !== "number") return { ok: false, reason: 'Save file state is missing "trade_risk"' };
   if (!("panic_warning" in s)) return { ok: false, reason: 'Save file state is missing "panic_warning"' };
+  if (typeof s.withdrawal_policy !== "string") return { ok: false, reason: 'Save file state is missing "withdrawal_policy"' };
   for (const key of ["next_ledger_id", "actions_this_turn"] as const) {
     if (!Number.isInteger(s[key])) return { ok: false, reason: `Save file state is missing "${key}"` };
   }
@@ -69,6 +71,7 @@ export function parseSave(text: string, data: GameData): ParseResult {
     bonds: bondBook(state),
     ventures: ventureBook(state),
     deposits: state.house.deposits,
+    borrowings: debtBook(state),
   };
   for (const [account, balance] of Object.entries(books) as [LedgerAccount, number][]) {
     if (accountBalance(state, account) !== balance)

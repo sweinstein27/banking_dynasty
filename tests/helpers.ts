@@ -43,7 +43,7 @@ const testBorrowers: [number, string, number, number][] = [
 export function fresh(): GameState {
   const s = newGame(quiet, createRng(1));
   s.borrowers = testBorrowers.map(([id, name, quality]): Borrower => ({
-    id, name, trade: "test trade", quality, market_quality: quality, estimate_noise: 0, reported: false, repaid: 0, defaulted: 0, last_default_turn: null,
+    id, name, trade: "test trade", quality, market_quality: quality, estimate_noise: 0, reported: false, repaid: 0, defaulted: 0, last_default_turn: null, away_until: null,
   }));
   s.requests = testBorrowers.map(([id, , , max_rate]) => ({ borrower_id: id, amount: 10_000_000, max_rate }));
   return s;

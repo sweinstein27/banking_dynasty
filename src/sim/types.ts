@@ -26,7 +26,7 @@ export interface House {
 
 export type HouseStatus = "solvent" | "bankrupt";
 
-export type LoanStatus = "active" | "repaid" | "defaulted" | "sold";
+export type LoanStatus = "active" | "repaid" | "defaulted" | "sold" | "called";
 
 /** A merchant house that borrows from the player. Quality is hidden: the player sees estimateRange. */
 export interface Borrower {
@@ -44,6 +44,8 @@ export interface Borrower {
   repaid: number;
   defaulted: number;
   last_default_turn: number | null;
+  /** Asks for no loan before this turn (after a default, or after the house called a loan in). */
+  away_until: number | null;
 }
 
 /** A borrower asking the house for a loan this quarter. */
@@ -70,9 +72,9 @@ export interface Loan {
 }
 
 /** Which balance an entry moves. Summing entries per account reproduces that balance. */
-export type LedgerAccount = "cash" | "loans" | "bonds" | "ventures" | "deposits";
+export type LedgerAccount = "cash" | "loans" | "bonds" | "ventures" | "deposits" | "borrowings";
 
-export type LedgerCategory = "event" | "report" | "opening" | "loan_out" | "interest" | "default" | "repayment"
+export type LedgerCategory = "event" | "report" | "borrowing" | "debt_interest" | "debt_repayment" | "loan_called" | "opening" | "loan_out" | "interest" | "default" | "repayment"
   | "withdrawal"
   | "forced_sale"
   | "bond_purchase"
@@ -139,7 +141,8 @@ export type NewsKind =
   | "mood"
   | "event"
   | "reputation"
-  | "warning";
+  | "warning"
+  | "crisis";
 
 /** One message for the News panel, written when a quarter resolves. */
 export interface NewsItem {
@@ -155,6 +158,23 @@ export interface FiredEvent {
   id: string;
   /** The turn at whose end it fired; it describes the quarter that follows. */
   turn: number;
+}
+
+/** "slow" pays a share of what depositors ask this quarter; "suspended" pays nothing. */
+export type WithdrawalPolicy = "normal" | "slow" | "suspended";
+
+export type DebtStatus = "active" | "repaid";
+
+/** Money borrowed by the house. Interest is paid each quarter; the principal falls due at the end of the term. */
+export interface Debt {
+  id: number;
+  lender: string;
+  principal: number;
+  /** Annual rate. */
+  rate: number;
+  start_turn: number;
+  term_quarters: number;
+  status: DebtStatus;
 }
 
 export interface GameState {
@@ -180,6 +200,10 @@ export interface GameState {
   trade_risk: number;
   /** A panic is coming: the market stays uneasy for `turns_left` more quarters, then panics. */
   panic_warning: { turns_left: number } | null;
+  /** Money the house owes, such as emergency loans from the rival house. */
+  debts: Debt[];
+  /** How depositors are paid this quarter. Reset to "normal" when the turn ends. */
+  withdrawal_policy: WithdrawalPolicy;
   /** Decisions taken so far this turn. Reset when the turn ends. */
   actions_this_turn: number;
 }
@@ -222,4 +246,29 @@ export interface InvestVentureDecision {
   amount: number;
 }
 
-export type Decision = LendDecision | ReportDecision | SetReserveDecision | BuyBondDecision | InvestVentureDecision;
+/** Crisis response: borrow from the rival house. */
+export interface BorrowDecision {
+  kind: "borrow";
+  /** Whole gulden. */
+  amount: number;
+}
+
+/** Crisis response: pay depositors only part of what they ask this quarter. */
+export interface PaySlowlyDecision {
+  kind: "pay_slowly";
+}
+
+/** Crisis response: pay depositors nothing this quarter. */
+export interface SuspendDecision {
+  kind: "suspend";
+}
+
+/** Crisis response: call an active loan in early. */
+export interface CallLoanDecision {
+  kind: "call_loan";
+  loan: number;
+}
+
+export type CrisisDecision = BorrowDecision | PaySlowlyDecision | SuspendDecision | CallLoanDecision;
+
+export type Decision = LendDecision | ReportDecision | SetReserveDecision | BuyBondDecision | InvestVentureDecision | CrisisDecision;

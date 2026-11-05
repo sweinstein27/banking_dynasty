@@ -65,7 +65,11 @@ export function withdrawalDemand(deposits: number, sentiment: Sentiment, tuning:
  */
 export function applyWithdrawals(state: GameState, tuning: Tuning): WithdrawalResult | null {
   const { sentiment } = state.world;
-  const demand = withdrawalDemand(state.house.deposits, sentiment, tuning, state.house.reputation);
+  const asked = withdrawalDemand(state.house.deposits, sentiment, tuning, state.house.reputation);
+  const policy = state.withdrawal_policy;
+  // Paying slowly pays a share now; a suspension pays nothing. Either way the deposits stay owed.
+  const demand = policy === "suspended" ? 0 : policy === "slow" ? Math.round(asked * tuning.crisis.pay_slowly.share) : asked;
   if (demand === 0) return null;
-  return payWithdrawal(state, demand, `Depositors withdraw (${sentiment})`);
+  const how = policy === "slow" ? ", paid slowly" : "";
+  return payWithdrawal(state, demand, `Depositors withdraw (${sentiment}${how})`);
 }

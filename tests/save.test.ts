@@ -67,7 +67,7 @@ describe("parseSave refuses", () => {
   });
 
   it("another version", () => {
-    expect(reason({ ...good(), version: 1 })).toMatch(/Unsupported save version 1 \(expected 3\)/);
+    expect(reason({ ...good(), version: 1 })).toMatch(/Unsupported save version 1 \(expected 4\)/);
   });
 
   it("a bad RNG state", () => {

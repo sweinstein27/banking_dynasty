@@ -5,6 +5,7 @@ import { newGame } from "../src/sim/init";
 import { actionsLeft } from "../src/sim/actions";
 import { bondBook, bondValue, quarterlyCoupon } from "../src/sim/bonds";
 import { bondOffers, lendOffers, ventureOffers } from "../src/sim/offers";
+import { borrowingRoom, debtBook, inCrisis } from "../src/sim/crisis";
 import { applyDecision } from "../src/sim/decisions";
 import { freeCash } from "../src/sim/reserves";
 import { createRng } from "../src/sim/rng";
@@ -55,7 +56,7 @@ const pct = (r: number) => `${(r * 100).toFixed(1)}%`;
 function printStatus(s: GameState) {
   const { world, house } = s;
   console.log(`\n=== ${house.name}, ${house.city}. ${world.year} Q${world.quarter} (turn ${world.turn}) ===`);
-  console.log(`Cash ${fl(house.cash)}  Loans ${fl(loanBook(s))}  Bonds ${fl(bondBook(s))}  Ventures ${fl(ventureBook(s))}  Deposits ${fl(house.deposits)}  Net worth ${fl(netWorth(s))}`);
+  console.log(`Cash ${fl(house.cash)}  Loans ${fl(loanBook(s))}  Bonds ${fl(bondBook(s))}  Ventures ${fl(ventureBook(s))}  Deposits ${fl(house.deposits)}  Borrowings ${fl(debtBook(s))}  Net worth ${fl(netWorth(s))}`);
   console.log(`Reserve ${fl(house.reserve)}  Free cash ${fl(freeCash(s))}`);
   console.log(`Sentiment ${world.sentiment}  Base rate ${pct(world.base_rate)}  Actions left ${actionsLeft(s, tuning)}`);
   if (s.panic_warning) console.log(`WARNING: panic expected in ${s.panic_warning.turns_left} quarter(s).`);
@@ -141,6 +142,24 @@ async function askVenture(preview: GameState): Promise<Decision | null> {
   return { kind: "invest_venture", venture: v.id, amount };
 }
 
+async function askCrisis(preview: GameState): Promise<Decision | null> {
+  if (!inCrisis(preview)) return console.log("Crisis measures are only open while the market is uneasy, panicking, or under a panic warning."), null;
+  const c = tuning.crisis;
+  console.log(`  b) Borrow from ${c.rival.name} at ${pct(c.rival.rate)}, due in ${c.rival.term_quarters} qtr (room ${fl(borrowingRoom(preview, tuning))}, reputation -${c.rival.reputation_cost})`);
+  console.log(`  s) Pay depositors slowly this quarter (${pct(c.pay_slowly.share)} of what they ask, reputation -${c.pay_slowly.reputation_cost})`);
+  console.log(`  x) Suspend withdrawals this quarter (reputation -${c.suspend.reputation_cost})`);
+  console.log(`  c) Call a loan in (recover ${pct(c.call_loan.recovery)} now, the borrower stays away ${c.call_loan.absence_quarters} qtr)`);
+  const pick = (await ask("Measure (b/s/x/c): "))?.trim();
+  if (pick === "b") return { kind: "borrow", amount: Number(await ask("Amount in gulden: ")) };
+  if (pick === "s") return { kind: "pay_slowly" };
+  if (pick === "x") return { kind: "suspend" };
+  if (pick === "c") {
+    printHoldings(preview);
+    return { kind: "call_loan", loan: Number(await ask("Loan number: ")) };
+  }
+  return console.log("Unknown measure."), null;
+}
+
 async function askReserve(preview: GameState): Promise<Decision> {
   console.log(`Current reserve: ${fl(preview.house.reserve)} Lending cannot take cash below it; withdrawals draw on it first.`);
   const amount = Number(await ask("New reserve in gulden: "));
@@ -158,10 +177,10 @@ async function main() {
 
     while (!ended) {
       printStatus(preview);
-      const choice = (await ask("[1] Lend  [2] Report  [3] Buy bonds  [4] Back venture  [5] Set reserve  [6] View holdings  [7] End turn  [q] Quit: "))?.trim();
+      const choice = (await ask("[1] Lend  [2] Report  [3] Buy bonds  [4] Back venture  [5] Set reserve  [6] View holdings  [7] End turn  [8] Crisis measures  [q] Quit: "))?.trim();
       if (choice === null || choice === undefined || choice === "q") return;
-      if (choice === "1" || choice === "2" || choice === "3" || choice === "4" || choice === "5") {
-        const askFor = { "1": askLend, "2": askReport, "3": askBond, "4": askVenture, "5": askReserve }[choice];
+      if (choice === "1" || choice === "2" || choice === "3" || choice === "4" || choice === "5" || choice === "8") {
+        const askFor = { "1": askLend, "2": askReport, "3": askBond, "4": askVenture, "5": askReserve, "8": askCrisis }[choice];
         const d = await askFor(preview);
         if (!d) continue;
         const r = applyDecision(preview, d, gameData);
@@ -173,7 +192,8 @@ async function main() {
           else if (d.kind === "report") console.log("Report received.");
           else if (d.kind === "buy_bond") console.log("Bonds bought.");
           else if (d.kind === "invest_venture") console.log("Venture backed.");
-          else console.log(`Reserve set to ${fl(d.amount)}`);
+          else if (d.kind === "set_reserve") console.log(`Reserve set to ${fl(d.amount)}`);
+          else console.log("Crisis measure taken.");
         }
       } else if (choice === "6") printHoldings(preview);
       else if (choice === "7") ended = true;
@@ -186,7 +206,7 @@ async function main() {
     if (news.length) console.log("\n--- News ---\n" + news.map((n) => `  ${n.title ? `${n.title.toUpperCase()}. ` : ""}${n.text}`).join("\n"));
     if (state.house.status === "bankrupt") {
       console.log("\n*** HOUSE BANKRUPT ***");
-      console.log(`${state.house.name} could not pay its depositors, even after selling its assets. The run is over.`);
+      console.log(`${state.house.name} could not meet its obligations, even after selling its assets. The run is over.`);
       printStatus(state);
       return;
     }
