@@ -2,6 +2,7 @@ import type { DecisionResult } from "./actions";
 import { buyBond } from "./bonds";
 import { buyReport } from "./borrowers";
 import { applyCrisis } from "./crisis";
+import { investFamily } from "./family";
 import { lend } from "./loans";
 import { setReserve } from "./reserves";
 import { investVenture } from "./ventures";
@@ -21,6 +22,8 @@ export function applyDecision(state: GameState, d: Decision, data: GameData): De
       return buyBond(state, d, data);
     case "invest_venture":
       return investVenture(state, d, data);
+    case "invest_family":
+      return investFamily(state, d, data);
     case "borrow":
     case "pay_slowly":
     case "suspend":

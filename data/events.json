@@ -208,6 +208,24 @@
     "effects": [{ "kind": "cash", "amount": -1500 }]
   },
   {
+    "id": "heir-talent",
+    "title": "Unexpected talent",
+    "text": "One of the children astonishes their tutors. The house may have found its next great banker.",
+    "historical": false,
+    "weight": 1,
+    "conditions": { "has_heirs": true },
+    "effects": [{ "kind": "heir_talent", "gain": 2 }]
+  },
+  {
+    "id": "heir-illness",
+    "title": "Fever in the house",
+    "text": "A child of the house falls gravely ill. Doctors are fetched from Mainz and Heidelberg, and the child recovers, but the fees are steep.",
+    "historical": false,
+    "weight": 1,
+    "conditions": { "has_heirs": true },
+    "effects": [{ "kind": "cash", "amount": -500 }]
+  },
+  {
     "id": "naples-doubts",
     "title": "Doubts about Naples",
     "text": "Letters from Naples speak of an empty treasury and unpaid troops. Neapolitan bonds are harder to sell.",

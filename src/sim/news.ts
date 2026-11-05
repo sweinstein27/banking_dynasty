@@ -1,4 +1,4 @@
-import { ageIn } from "./family";
+import { ageIn, STATS } from "./family";
 import { fl } from "./format";
 import type { GameData } from "./tuning";
 import type { GameState, LedgerEntry, NewsItem, NewsKind } from "./types";
@@ -92,6 +92,14 @@ export function quarterNews(before: GameState, after: GameState, data: GameData)
     const who = cousin ? `With no heir left, a distant cousin, ${heir.name}, aged ${ageIn(heir, year)}, comes to take over.` : `${heir.name}, aged ${ageIn(heir, year)}, takes over the house.`;
     const how = sc.trained ? "" : " Untrained and unready, the new head will need time, and the bourse knows it.";
     add("family", `${dead.name} has died, aged ${ageIn(dead, year)}. ${who}${how}`);
+  }
+  // Stats that rose this quarter (education, or an event), for living people already in the house.
+  for (const p of after.people) {
+    const was = before.people.find((x) => x.id === p.id);
+    if (!was || p.death_year !== null) continue;
+    for (const stat of STATS) {
+      if (p[stat] > was[stat]) add("family", `${p.name}'s ${stat} rises to ${p[stat]} (was ${was[stat]}).`);
+    }
   }
   for (const p of after.people.slice(before.people.length)) {
     if (after.successions.some((sc) => sc.to === p.id && !before.successions.includes(sc))) continue;

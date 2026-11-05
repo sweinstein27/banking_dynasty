@@ -101,7 +101,7 @@ export interface Loan {
 /** Which balance an entry moves. Summing entries per account reproduces that balance. */
 export type LedgerAccount = "cash" | "loans" | "bonds" | "ventures" | "deposits" | "borrowings";
 
-export type LedgerCategory = "event" | "report" | "borrowing" | "debt_interest" | "debt_repayment" | "loan_called" | "opening" | "loan_out" | "interest" | "default" | "repayment"
+export type LedgerCategory = "event" | "report" | "family" | "borrowing" | "debt_interest" | "debt_repayment" | "loan_called" | "opening" | "loan_out" | "interest" | "default" | "repayment"
   | "withdrawal"
   | "forced_sale"
   | "bond_purchase"
@@ -300,6 +300,12 @@ export interface CallLoanDecision {
   loan: number;
 }
 
+/** Invest in the family: educate one heir in one stat, give to charity, or act as a patron. */
+export type InvestFamilyDecision =
+  | { kind: "invest_family"; form: "educate"; heir: number; stat: "acumen" | "prudence" | "connections" }
+  | { kind: "invest_family"; form: "charity" }
+  | { kind: "invest_family"; form: "patronage" };
+
 export type CrisisDecision = BorrowDecision | PaySlowlyDecision | SuspendDecision | CallLoanDecision;
 
-export type Decision = LendDecision | ReportDecision | SetReserveDecision | BuyBondDecision | InvestVentureDecision | CrisisDecision;
+export type Decision = LendDecision | ReportDecision | SetReserveDecision | BuyBondDecision | InvestVentureDecision | InvestFamilyDecision | CrisisDecision;

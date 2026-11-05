@@ -3,6 +3,7 @@
 import { addEntry } from "./ledger";
 import type { Rng } from "./rng";
 import { recordDefault } from "./borrowers";
+import { heirsOf, heirTalent } from "./family";
 import { startPanicWarning } from "./sentiment";
 import type { EventConditions, EventEffect, GameData, GameEvent, Tuning } from "./tuning";
 import type { GameState, Quarter, Sentiment } from "./types";
@@ -27,6 +28,7 @@ export function conditionsMet(state: GameState, c: EventConditions, date: Quarte
   if (c.min_reputation !== undefined && state.house.reputation < c.min_reputation) return false;
   if (c.max_reputation !== undefined && state.house.reputation > c.max_reputation) return false;
   if (c.has_active_loans !== undefined && state.loans.some((l) => l.status === "active") !== c.has_active_loans) return false;
+  if (c.has_heirs !== undefined && (heirsOf(state).length > 0) !== c.has_heirs) return false;
   if (c.holds_bonds_of && !state.bonds.some((b) => b.status === "active" && b.issuer_state === c.holds_bonds_of)) return false;
   return true;
 }
@@ -48,6 +50,9 @@ function applyEffect(state: GameState, e: EventEffect, note: string, rng: Rng, t
       return;
     case "panic_warning":
       startPanicWarning(state, e.quarters);
+      return;
+    case "heir_talent":
+      heirTalent(state, e.gain, rng, tuning);
       return;
     case "reputation":
       house.reputation = Math.min(100, Math.max(0, Math.round(house.reputation + e.delta)));
@@ -148,7 +153,8 @@ export function checkEventData(data: GameData): string[] {
       else if (e.kind === "cash" && (e.amount === undefined) === (e.share === undefined)) p("cash effects need exactly one of amount or share");
       else if (e.kind === "trade_risk" && !(e.factor > 0)) p("trade_risk needs a factor above zero");
       else if (e.kind === "panic_warning" && !(Number.isInteger(e.quarters) && e.quarters >= 1)) p("panic_warning needs a whole number of quarters, at least 1");
-      else if (!["set_sentiment", "reputation", "cash", "loan_default", "state_risk", "trade_risk", "panic_warning"].includes(e.kind)) p(`unknown effect "${(e as { kind: string }).kind}"`);
+      else if (e.kind === "heir_talent" && !(Number.isInteger(e.gain) && e.gain >= 1)) p("heir_talent needs a whole gain of at least 1");
+      else if (!["set_sentiment", "reputation", "cash", "loan_default", "state_risk", "trade_risk", "panic_warning", "heir_talent"].includes(e.kind)) p(`unknown effect "${(e as { kind: string }).kind}"`);
     }
   }
   return problems;

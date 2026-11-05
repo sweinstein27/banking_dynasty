@@ -5,6 +5,7 @@ import { useState, type ReactNode } from "react";
 import { gameData } from "../data";
 import { bondCost } from "../sim/bonds";
 import { borrowingRoom, callRecovery, debtInterest } from "../sim/crisis";
+import { ageIn, headOf, heirsOf, STATS, type Stat } from "../sim/family";
 import { bondOffers, lendOffers, ventureOffers, type LendOffer } from "../sim/offers";
 import { freeCash } from "../sim/reserves";
 import type { Decision, GameState } from "../sim/types";
@@ -18,6 +19,7 @@ export const DECISION_LABELS: Record<DecisionKind, string> = {
   buy_bond: "Buy state bonds",
   invest_venture: "Back a venture",
   set_reserve: "Set reserves",
+  invest_family: "Invest in the family",
   borrow: "Borrow from the rival house",
   pay_slowly: "Pay depositors slowly",
   suspend: "Suspend withdrawals",
@@ -48,6 +50,7 @@ export function DecisionDialog({ kind, state, onClose, onSubmit }: {
               {kind === "buy_bond" && <BondForm state={state} onSubmit={onSubmit} onDone={onClose} />}
               {kind === "invest_venture" && <VentureForm state={state} onSubmit={onSubmit} onDone={onClose} />}
               {kind === "set_reserve" && <ReserveForm state={state} onSubmit={onSubmit} onDone={onClose} />}
+              {kind === "invest_family" && <InvestFamilyForm state={state} onSubmit={onSubmit} onDone={onClose} />}
               {kind === "borrow" && <BorrowForm state={state} onSubmit={onSubmit} onDone={onClose} />}
               {kind === "pay_slowly" && <PayoutForm kind="pay_slowly" state={state} onSubmit={onSubmit} onDone={onClose} />}
               {kind === "suspend" && <PayoutForm kind="suspend" state={state} onSubmit={onSubmit} onDone={onClose} />}
@@ -361,6 +364,77 @@ function CallLoanForm(props: FormProps) {
         </Choices>
       )}
       <Footer error={error} canConfirm={id !== ""} onConfirm={() => submit({ kind: "call_loan", loan: Number(id) })} />
+    </>
+  );
+}
+
+const STAT_HELP: Record<Stat, string> = {
+  acumen: "Acumen: ventures fail less often",
+  prudence: "Prudence: sharper estimates of borrowers",
+  connections: "Connections: states sell bonds at a lower reputation",
+};
+
+function InvestFamilyForm(props: FormProps) {
+  const { state } = props;
+  const { error, submit } = useSubmit(props);
+  const [form, setForm] = useState<"" | "educate" | "charity" | "patronage">("");
+  const [heir, setHeir] = useState("");
+  const [stat, setStat] = useState<"" | Stat>("");
+  const inv = gameData.tuning.family.invest;
+  const head = headOf(state);
+  const heirs = heirsOf(state);
+  const chosen = heirs.find((p) => String(p.id) === heir);
+  const ready = form === "charity" || form === "patronage" || (form === "educate" && chosen !== undefined && stat !== "");
+
+  return (
+    <>
+      <h3>How</h3>
+      <Choices value={form} onChange={(v) => setForm(v as typeof form)}>
+        <Choice value="educate" disabled={heirs.length === 0}>
+          <strong>Educate an heir ({fl(inv.educate.cost)})</strong>
+          <span>Tutors raise one of an heir's stats by {inv.educate.gain}. A trained heir makes a smooth succession.</span>
+        </Choice>
+        <Choice value="charity">
+          <strong>Charity ({fl(inv.charity.cost)})</strong>
+          <span>A gift to the poor of Frankfurt: reputation +{inv.charity.reputation}.</span>
+        </Choice>
+        <Choice value="patronage">
+          <strong>Patronage ({fl(inv.patronage.cost)})</strong>
+          <span>
+            Sponsor the arts: {head?.name ?? "the head"}'s connections +{inv.patronage.connections}, reputation +{inv.patronage.reputation}.
+          </span>
+        </Choice>
+      </Choices>
+      {form === "educate" && (
+        <>
+          <h3>Heir</h3>
+          <Choices value={heir} onChange={setHeir}>
+            {heirs.map((p) => (
+              <Choice key={p.id} value={String(p.id)}>
+                <strong>{p.name}, aged {ageIn(p, state.world.year)}</strong>
+                <span>Acumen {p.acumen}, prudence {p.prudence}, connections {p.connections}</span>
+              </Choice>
+            ))}
+          </Choices>
+          <h3>Subject</h3>
+          <Choices value={stat} onChange={(v) => setStat(v as Stat)}>
+            {STATS.map((k) => (
+              <Choice key={k} value={k}>
+                <strong>{STAT_HELP[k]}</strong>
+                {chosen && <span>Now {chosen[k]} of {gameData.tuning.family.max_stat}</span>}
+              </Choice>
+            ))}
+          </Choices>
+        </>
+      )}
+      <Footer
+        error={error}
+        canConfirm={ready}
+        onConfirm={() => {
+          if (form === "educate" && chosen && stat) submit({ kind: "invest_family", form, heir: chosen.id, stat });
+          else if (form === "charity" || form === "patronage") submit({ kind: "invest_family", form });
+        }}
+      />
     </>
   );
 }

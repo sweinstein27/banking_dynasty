@@ -40,6 +40,14 @@ export interface Tuning {
     };
     /** At each year end, a head of these ages with fewer than max_heirs heirs has this chance of a child. */
     births: { min_head_age: number; max_head_age: number; max_heirs: number; chance: number };
+    /** The three forms of investing in the family, each one action. */
+    invest: {
+      /** One heir's chosen stat rises by gain, up to max_stat. */
+      educate: { cost: number; gain: number };
+      charity: { cost: number; reputation: number };
+      /** The head's Connections and the house's reputation rise. */
+      patronage: { cost: number; connections: number; reputation: number };
+    };
   };
   /** Last quarter of the run. Once it has been played the run is finished. */
   end: {
@@ -144,6 +152,8 @@ export interface EventConditions {
   has_active_loans?: boolean;
   /** Id of a state whose bonds the house holds. */
   holds_bonds_of?: string;
+  /** The head has at least one living heir. */
+  has_heirs?: boolean;
 }
 
 export type EventEffect =
@@ -157,7 +167,9 @@ export type EventEffect =
   /** Multiplies every loan's default chance from now on (0.8 makes trade lending safer). */
   | { kind: "trade_risk"; factor: number }
   /** Starts a countdown to a panic in `quarters` quarters, unless one is running or the market already panics. */
-  | { kind: "panic_warning"; quarters: number };
+  | { kind: "panic_warning"; quarters: number }
+  /** One living heir, picked at random, gains `gain` in one stat, also picked at random (up to max_stat). */
+  | { kind: "heir_talent"; gain: number };
 
 /** One record in data/events.json. Historical events fire once at their date; random ones by weight. */
 export interface GameEvent {

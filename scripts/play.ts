@@ -6,6 +6,7 @@ import { actionsLeft } from "../src/sim/actions";
 import { bondBook, bondValue, quarterlyCoupon } from "../src/sim/bonds";
 import { bondOffers, lendOffers, ventureOffers } from "../src/sim/offers";
 import { borrowingRoom, debtBook, inCrisis } from "../src/sim/crisis";
+import { ageIn, headOf, heirsOf, STATS } from "../src/sim/family";
 import { applyDecision } from "../src/sim/decisions";
 import { freeCash } from "../src/sim/reserves";
 import { createRng } from "../src/sim/rng";
@@ -160,6 +161,32 @@ async function askCrisis(preview: GameState): Promise<Decision | null> {
   return console.log("Unknown measure."), null;
 }
 
+async function askFamily(preview: GameState): Promise<Decision | null> {
+  const inv = tuning.family.invest;
+  printFamily(preview);
+  console.log(`  e) Educate an heir (${fl(inv.educate.cost)}, one stat +${inv.educate.gain})`);
+  console.log(`  c) Charity (${fl(inv.charity.cost)}, reputation +${inv.charity.reputation})`);
+  console.log(`  p) Patronage (${fl(inv.patronage.cost)}, head's connections +${inv.patronage.connections}, reputation +${inv.patronage.reputation})`);
+  const pick = (await ask("Form (e/c/p): "))?.trim();
+  if (pick === "c") return { kind: "invest_family", form: "charity" };
+  if (pick === "p") return { kind: "invest_family", form: "patronage" };
+  if (pick !== "e") return console.log("Unknown form."), null;
+  const heirs = heirsOf(preview);
+  const heir = heirs[Number(await ask(`Heir (1-${heirs.length}): `)) - 1];
+  if (!heir) return console.log("Unknown heir."), null;
+  const stat = STATS[Number(await ask("Stat: 1) acumen 2) prudence 3) connections: ")) - 1];
+  if (!stat) return console.log("Unknown stat."), null;
+  return { kind: "invest_family", form: "educate", heir: heir.id, stat };
+}
+
+function printFamily(s: GameState) {
+  const year = s.world.year;
+  const head = headOf(s);
+  const stats = (p: { acumen: number; prudence: number; connections: number }) => `acumen ${p.acumen}, prudence ${p.prudence}, connections ${p.connections}`;
+  if (head) console.log(`Head: ${head.name}, aged ${ageIn(head, year)}, ${stats(head)}`);
+  heirsOf(s).forEach((p, i) => console.log(`  Heir ${i + 1}) ${p.name}, aged ${ageIn(p, year)}, ${stats(p)}`));
+}
+
 async function askReserve(preview: GameState): Promise<Decision> {
   console.log(`Current reserve: ${fl(preview.house.reserve)} Lending cannot take cash below it; withdrawals draw on it first.`);
   const amount = Number(await ask("New reserve in gulden: "));
@@ -177,10 +204,10 @@ async function main() {
 
     while (!ended) {
       printStatus(preview);
-      const choice = (await ask("[1] Lend  [2] Report  [3] Buy bonds  [4] Back venture  [5] Set reserve  [6] View holdings  [7] End turn  [8] Crisis measures  [q] Quit: "))?.trim();
+      const choice = (await ask("[1] Lend  [2] Report  [3] Buy bonds  [4] Back venture  [5] Set reserve  [6] View holdings  [7] End turn  [8] Crisis measures  [9] Invest in family  [q] Quit: "))?.trim();
       if (choice === null || choice === undefined || choice === "q") return;
-      if (choice === "1" || choice === "2" || choice === "3" || choice === "4" || choice === "5" || choice === "8") {
-        const askFor = { "1": askLend, "2": askReport, "3": askBond, "4": askVenture, "5": askReserve, "8": askCrisis }[choice];
+      if (choice === "1" || choice === "2" || choice === "3" || choice === "4" || choice === "5" || choice === "8" || choice === "9") {
+        const askFor = { "1": askLend, "2": askReport, "3": askBond, "4": askVenture, "5": askReserve, "8": askCrisis, "9": askFamily }[choice];
         const d = await askFor(preview);
         if (!d) continue;
         const r = applyDecision(preview, d, gameData);
@@ -193,6 +220,7 @@ async function main() {
           else if (d.kind === "buy_bond") console.log("Bonds bought.");
           else if (d.kind === "invest_venture") console.log("Venture backed.");
           else if (d.kind === "set_reserve") console.log(`Reserve set to ${fl(d.amount)}`);
+          else if (d.kind === "invest_family") console.log("Money spent on the family.");
           else console.log("Crisis measure taken.");
         }
       } else if (choice === "6") printHoldings(preview);

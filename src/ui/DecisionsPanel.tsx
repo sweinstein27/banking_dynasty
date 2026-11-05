@@ -7,7 +7,7 @@ import { CRISIS_KINDS, DECISION_LABELS, DecisionDialog, type DecisionKind } from
 import { fl, pct } from "./format";
 import type { Game, GameApi } from "./useGame";
 
-const KINDS: DecisionKind[] = ["lend", "report", "buy_bond", "invest_venture", "set_reserve"];
+const KINDS: DecisionKind[] = ["lend", "report", "buy_bond", "invest_venture", "set_reserve", "invest_family"];
 
 export function DecisionsPanel({ api, game, disabled }: { api: GameApi; game: Game; disabled: boolean }) {
   const { tuning } = gameData;
@@ -71,6 +71,12 @@ export function describe(d: Decision, state: GameState): string {
       return `Back a venture (${gameData.ventures.find((v) => v.id === d.venture)?.name ?? d.venture}) with ${fl(d.amount)}`;
     case "set_reserve":
       return `Set the reserve to ${fl(d.amount)}`;
+    case "invest_family": {
+      const cost = fl(gameData.tuning.family.invest[d.form].cost);
+      if (d.form === "charity") return `Give ${cost} to charity`;
+      if (d.form === "patronage") return `Spend ${cost} on patronage`;
+      return `Educate ${state.people.find((p) => p.id === d.heir)?.name ?? "an heir"} in ${d.stat} (${cost})`;
+    }
     case "borrow":
       return `Borrow ${fl(d.amount)} from ${gameData.tuning.crisis.rival.name}`;
     case "pay_slowly":

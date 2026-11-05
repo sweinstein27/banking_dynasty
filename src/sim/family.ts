@@ -1,7 +1,11 @@
 // The family: the head of house, whose stats shape the business, and the heirs who will follow.
+import { checkActionLeft, type DecisionResult } from "./actions";
+import { fl } from "./format";
+import { addEntry } from "./ledger";
+import { freeCash } from "./reserves";
 import type { Rng } from "./rng";
 import type { GameData, Tuning } from "./tuning";
-import type { GameState, Person } from "./types";
+import type { GameState, InvestFamilyDecision, Person } from "./types";
 
 export type Stat = "acumen" | "prudence" | "connections";
 export const STATS: Stat[] = ["acumen", "prudence", "connections"];
@@ -149,4 +153,66 @@ export function acumenFactor(acumen: number, tuning: Tuning): number {
 export function connectionsBonus(connections: number, tuning: Tuning): number {
   const f = tuning.family;
   return f.connections_step * (connections - f.neutral_stat);
+}
+
+/** What a form of family investment costs, in whole gulden. */
+export function investCost(form: InvestFamilyDecision["form"], tuning: Tuning): number {
+  return tuning.family.invest[form].cost;
+}
+
+/** Returns why an invest_family decision is invalid, or null if it can go ahead. */
+export function checkInvestFamily(state: GameState, d: InvestFamilyDecision, tuning: Tuning): string | null {
+  const noAction = checkActionLeft(state, tuning);
+  if (noAction) return noAction;
+  const max = tuning.family.max_stat;
+  if (d.form === "educate") {
+    if (!STATS.includes(d.stat)) return `Unknown stat "${d.stat}"`;
+    const heir = heirsOf(state).find((p) => p.id === d.heir);
+    if (!heir) return `No living heir #${d.heir}`;
+    if (heir[d.stat] >= max) return `${heir.name}'s ${d.stat} is already ${max}`;
+  } else if (d.form === "patronage") {
+    const head = headOf(state);
+    if (head && head.connections >= max) return `${head.name}'s connections are already ${max}`;
+  } else if (d.form !== "charity") return `Unknown form of investment "${(d as { form: string }).form}"`;
+  const cost = investCost(d.form, tuning);
+  if (cost > freeCash(state)) return `Not enough cash above the reserve (cost ${fl(cost)}, free ${fl(freeCash(state))})`;
+  return null;
+}
+
+/** Invests in the family. Returns a new state; the input is not changed. */
+export function investFamily(state: GameState, d: InvestFamilyDecision, data: GameData): DecisionResult {
+  const t = data.tuning;
+  const reason = checkInvestFamily(state, d, t);
+  if (reason) return { ok: false, reason };
+  const next = structuredClone(state);
+  const inv = t.family.invest;
+  const cost = investCost(d.form, t);
+  const raise = (n: number) => (next.house.reputation = Math.min(100, next.house.reputation + n));
+  let note: string;
+  if (d.form === "educate") {
+    const heir = next.people.find((p) => p.id === d.heir)!;
+    heir[d.stat] = Math.min(t.family.max_stat, heir[d.stat] + inv.educate.gain);
+    note = `Tutors for ${heir.name} (${d.stat})`;
+  } else if (d.form === "charity") {
+    raise(inv.charity.reputation);
+    note = "Gift to the poor of Frankfurt";
+  } else {
+    const head = headOf(next);
+    if (head) head.connections = Math.min(t.family.max_stat, head.connections + inv.patronage.connections);
+    raise(inv.patronage.reputation);
+    note = "Patronage of the arts";
+  }
+  next.house.cash -= cost;
+  next.actions_this_turn += 1;
+  addEntry(next, "cash", "family", -cost, note);
+  return { ok: true, state: next };
+}
+
+/** heir_talent: one living heir, picked at random, gains in one random stat. Two rolls, none if no heir. Mutates `state`. */
+export function heirTalent(state: GameState, gain: number, rng: Rng, tuning: Tuning): void {
+  const heirs = heirsOf(state);
+  if (!heirs.length) return;
+  const heir = heirs[Math.floor(rng.next() * heirs.length)]!;
+  const stat = STATS[Math.floor(rng.next() * STATS.length)]!;
+  heir[stat] = Math.min(tuning.family.max_stat, heir[stat] + gain);
 }
