@@ -45,7 +45,7 @@ export interface Loan {
 /** Which balance an entry moves. Summing entries per account reproduces that balance. */
 export type LedgerAccount = "cash" | "loans" | "bonds" | "ventures" | "deposits";
 
-export type LedgerCategory = "opening" | "loan_out" | "interest" | "default" | "repayment"
+export type LedgerCategory = "event" | "opening" | "loan_out" | "interest" | "default" | "repayment"
   | "withdrawal"
   | "forced_sale"
   | "bond_purchase"
@@ -109,14 +109,24 @@ export type NewsKind =
   | "withdrawal"
   | "forced_sale"
   | "bankruptcy"
-  | "mood";
+  | "mood"
+  | "event"
+  | "reputation";
 
 /** One message for the News panel, written when a quarter resolves. */
 export interface NewsItem {
   /** The turn whose resolution produced it. */
   turn: number;
   kind: NewsKind;
+  /** Headline, for events. */
+  title?: string;
   text: string;
+}
+
+export interface FiredEvent {
+  id: string;
+  /** The turn at whose end it fired; it describes the quarter that follows. */
+  turn: number;
 }
 
 export interface GameState {
@@ -131,6 +141,10 @@ export interface GameState {
   next_ledger_id: number;
   /** Every quarter's news, oldest first. */
   news: NewsItem[];
+  /** Events that have fired, in order. The spec's event.fired_turn. */
+  fired_events: FiredEvent[];
+  /** Change to each state's risk caused by events, by state id. Missing means no change. */
+  risk_shift: Record<string, number>;
   /** Decisions taken so far this turn. Reset when the turn ends. */
   actions_this_turn: number;
 }

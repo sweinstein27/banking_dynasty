@@ -108,3 +108,26 @@ export function aggressiveDecisions(state: GameState): Decision[] {
   }
   return decisions;
 }
+
+/** Seed for the panic golden run, picked with `npm run find-panic-seed`; see docs/decisions.md. */
+export const PANIC_SEED = 1026;
+
+/**
+ * What the panic golden run must exercise: a panic with a bank run, forced sales of both bonds and
+ * loans, a state default, and survival to the last turn. Shared by the golden test and the seed search.
+ */
+export function panicCoverage(result: ReturnType<typeof play>, turns: number) {
+  const { state, sentimentByTurn } = result;
+  const sales = (account: string) => state.ledger.filter((e) => e.category === "forced_sale" && e.account === account).length;
+  const checks = {
+    panic: sentimentByTurn.includes("panic"),
+    run: state.ledger.some((e) => e.category === "withdrawal" && e.note.includes("(panic)")),
+    bond_sales: sales("bonds") > 0,
+    loan_sales: sales("loans") > 0,
+    state_default: state.defaulted_states.length > 0,
+    survives: state.house.status === "solvent" && sentimentByTurn.length === turns,
+  };
+  /** Richer runs score higher: panic quarters plus forced sales. */
+  const score = sentimentByTurn.filter((s) => s === "panic").length + sales("bonds") + sales("loans") + sales("ventures");
+  return { ok: Object.values(checks).every(Boolean), checks, score };
+}

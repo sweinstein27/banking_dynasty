@@ -13,6 +13,12 @@ export function bondPrice(risk: number, sentiment: Sentiment, tuning: Tuning): n
   return Math.round(Math.max(t.price_floor, raw) * 10000) / 10000;
 }
 
+/** A state's risk now: its base risk from data/states.json plus any shift from events, kept within 0 to 1. */
+export function stateRisk(state: GameState, issuer: BondIssuer): number {
+  const shifted = issuer.risk + (state.risk_shift[issuer.id] ?? 0);
+  return Math.round(Math.min(1, Math.max(0, shifted)) * 1000) / 1000;
+}
+
 /** Book value of a holding at its last mark, in whole gulden. */
 export function bondValue(bond: Pick<Bond, "face_value" | "price">): number {
   return Math.round(bond.face_value * bond.price);
@@ -34,7 +40,7 @@ export function bondDefaultChance(risk: number, sentiment: Sentiment, tuning: Tu
 
 /** What buying `face_value` of a state's bonds costs now, in whole gulden. */
 export function bondCost(state: GameState, issuer: BondIssuer, face_value: number, tuning: Tuning): number {
-  return Math.round(face_value * bondPrice(issuer.risk, state.world.sentiment, tuning));
+  return Math.round(face_value * bondPrice(stateRisk(state, issuer), state.world.sentiment, tuning));
 }
 
 /** Returns why a buy_bond decision is invalid, or null if it can go ahead. */
@@ -66,8 +72,8 @@ export function buyBond(state: GameState, d: BuyBondDecision, data: GameData): D
     issuer_state: issuer.id,
     face_value: d.face_value,
     coupon: issuer.coupon,
-    price: bondPrice(issuer.risk, next.world.sentiment, data.tuning),
-    risk: issuer.risk,
+    price: bondPrice(stateRisk(next, issuer), next.world.sentiment, data.tuning),
+    risk: stateRisk(next, issuer),
     purchase_turn: next.world.turn,
     status: "active",
   };
@@ -92,7 +98,7 @@ export function resolveBonds(state: GameState, rng: Rng, data: GameData): void {
     const held = state.bonds.filter((b) => b.status === "active" && b.issuer_state === issuer.id);
     if (!held.length) continue;
 
-    if (rng.next() < bondDefaultChance(issuer.risk, sentiment, data.tuning)) {
+    if (rng.next() < bondDefaultChance(stateRisk(state, issuer), sentiment, data.tuning)) {
       state.defaulted_states.push(issuer.id);
       for (const b of held) {
         addEntry(state, "bonds", "bond_default", -bondValue(b), `Bond #${b.id}: ${issuer.name} defaulted`);
@@ -110,7 +116,8 @@ export function resolveBonds(state: GameState, rng: Rng, data: GameData): void {
 }
 
 /**
- * Marks every active holding to the price for the current mood, writing a revaluation entry
+ * Marks every active holding to the price for the current mood and its state's current risk
+ * (which events can shift), writing a revaluation entry
  * for each change in book value. Call after the mood for the next quarter is set.
  * Mutates `state`; callers pass a draft copy.
  */
@@ -118,6 +125,8 @@ export function markBonds(state: GameState, data: GameData): void {
   for (const b of state.bonds) {
     if (b.status !== "active") continue;
     const before = bondValue(b);
+    const issuer = data.states.find((s) => s.id === b.issuer_state);
+    if (issuer) b.risk = stateRisk(state, issuer);
     b.price = bondPrice(b.risk, state.world.sentiment, data.tuning);
     const change = bondValue(b) - before;
     if (change !== 0) {

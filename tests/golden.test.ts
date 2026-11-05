@@ -10,11 +10,9 @@ import { bondBook } from "../src/sim/bonds";
 import { accountBalance } from "../src/sim/ledger";
 import { loanBook } from "../src/sim/turn";
 import { ventureBook } from "../src/sim/ventures";
-import { aggressiveDecisions, economyDecisions, play as playWith, scriptedDecisions, type Strategy } from "./strategies";
+import { aggressiveDecisions, economyDecisions, PANIC_SEED, panicCoverage, play as playWith, scriptedDecisions, type Strategy } from "./strategies";
 
 const SEED = 1815;
-/** Picked by searching seeds 1 to 3,000 with aggressiveDecisions; see docs/decisions.md. */
-const PANIC_SEED = 76;
 const TURNS = 20;
 
 const play = (strategy: Strategy = scriptedDecisions, seed = SEED) => playWith(strategy, seed, TURNS);
@@ -115,14 +113,9 @@ describe("golden run: panic", () => {
   });
 
   it("still covers what it was chosen for: panic, a run, forced sales, a default, survival", () => {
-    const { state, sentimentByTurn } = run();
-    expect(sentimentByTurn).toContain("panic");
-    expect(state.ledger.some((e) => e.category === "withdrawal" && e.note.includes("(panic)"))).toBe(true);
-    expect(salesOf(state, "bonds")).toBeGreaterThan(0);
-    expect(salesOf(state, "loans")).toBeGreaterThan(0);
-    expect(state.defaulted_states.length).toBeGreaterThan(0);
-    expect(state.house.status).toBe("solvent");
-    expect(sentimentByTurn).toHaveLength(TURNS);
+    expect(panicCoverage(run(), TURNS).checks).toEqual({
+      panic: true, run: true, bond_sales: true, loan_sales: true, state_default: true, survives: true,
+    });
   });
 
   it("matches the recorded result", () => {

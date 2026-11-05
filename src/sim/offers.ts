@@ -1,5 +1,5 @@
 // What each decision can be made with right now, for the terminal and the UI to list.
-import { bondPrice } from "./bonds";
+import { bondPrice, stateRisk } from "./bonds";
 import type { GameData, Tuning } from "./tuning";
 import type { GameState, TierName } from "./types";
 import { ventureFailureChance } from "./ventures";
@@ -51,8 +51,8 @@ export function bondOffers(state: GameState, data: GameData): BondOffer[] {
       id: st.id,
       name: st.name,
       coupon: st.coupon,
-      risk: st.risk,
-      price: bondPrice(st.risk, state.world.sentiment, data.tuning),
+      risk: stateRisk(state, st),
+      price: bondPrice(stateRisk(state, st), state.world.sentiment, data.tuning),
       blocked,
     };
   });

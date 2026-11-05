@@ -130,7 +130,7 @@ describe("endTurn: ventures", () => {
     for (let i = 1; i < mill.term_quarters - 1; i++) s = endTurn(s, [], counting, gameData);
     expect(s.ventures[0]!.status).toBe("active");
     expect(s.house.cash).toBe(cash);
-    expect(calls).toBe(mill.term_quarters - 2); // only the mood rolls
+    expect(calls).toBe(2 * (mill.term_quarters - 2)); // only the mood and random-event rolls
     expect(quartersLeft(s, s.ventures[0]!)).toBe(1);
   });
 

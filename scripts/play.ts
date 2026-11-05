@@ -165,7 +165,7 @@ async function main() {
     state = endTurn(state, queued, rng, gameData);
     printLedger(state.ledger.filter((e) => e.turn === turn && e.category !== "opening"));
     const news = state.news.filter((n) => n.turn === turn);
-    if (news.length) console.log("\n--- News ---\n" + news.map((n) => `  ${n.text}`).join("\n"));
+    if (news.length) console.log("\n--- News ---\n" + news.map((n) => `  ${n.title ? `${n.title.toUpperCase()}. ` : ""}${n.text}`).join("\n"));
     if (state.house.status === "bankrupt") {
       console.log("\n*** HOUSE BANKRUPT ***");
       console.log(`${state.house.name} could not pay its depositors, even after selling its assets. The run is over.`);

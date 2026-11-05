@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.ui.json",
-    "play": "tsx scripts/play.ts"
+    "play": "tsx scripts/play.ts",
+    "find-panic-seed": "tsx scripts/find-panic-seed.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

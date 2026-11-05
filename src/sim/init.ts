@@ -29,6 +29,8 @@ export function newGame(data: GameData): GameState {
     ledger: [],
     next_ledger_id: 1,
     news: [],
+    fired_events: [],
+    risk_shift: {},
     actions_this_turn: 0,
   };
   addEntry(state, "cash", "opening", s.cash, "Opening cash");

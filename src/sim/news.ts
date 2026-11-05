@@ -15,6 +15,11 @@ export function quarterNews(before: GameState, after: GameState, data: GameData)
   const add = (kind: NewsKind, text: string) => news.push({ turn, kind, text });
   const sum = (list: LedgerEntry[]) => list.reduce((s, e) => s + e.amount, 0);
 
+  for (const f of after.fired_events.slice(before.fired_events.length)) {
+    const ev = data.events.find((e) => e.id === f.id);
+    if (ev) news.push({ turn, kind: "event", title: ev.title, text: ev.text });
+  }
+
   for (const loan of after.loans) {
     if (loan.status !== "defaulted" || before.loans.find((l) => l.id === loan.id)?.status === "defaulted") continue;
     add("loan_default", `${loan.borrower_name} defaulted, losing the full principal of ${fl(loan.principal)}`);
@@ -55,6 +60,11 @@ export function quarterNews(before: GameState, after: GameState, data: GameData)
 
   if (before.house.status !== "bankrupt" && after.house.status === "bankrupt") {
     add("bankruptcy", `${after.house.name} could not pay its depositors, even after selling its assets. The house is bankrupt.`);
+  }
+
+  const rep = after.house.reputation - before.house.reputation;
+  if (rep !== 0) {
+    add("reputation", `The house's reputation ${rep > 0 ? "rises" : "falls"} to ${after.house.reputation} (was ${before.house.reputation}).`);
   }
 
   if (after.world.sentiment !== before.world.sentiment) {

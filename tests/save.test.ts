@@ -3,7 +3,7 @@ import { gameData } from "../src/data";
 import { applyDecisions } from "../src/sim/decisions";
 import { newGame } from "../src/sim/init";
 import { createRng } from "../src/sim/rng";
-import { parseSave, toSave } from "../src/sim/save";
+import { parseSave, SAVE_VERSION, toSave } from "../src/sim/save";
 import { endTurn } from "../src/sim/turn";
 import type { Decision, GameState } from "../src/sim/types";
 import { aggressiveDecisions, play } from "./strategies";
@@ -28,7 +28,7 @@ describe("save and load", () => {
   it("round-trips a new game", () => {
     const s = newGame(gameData);
     const save = parsed(toSave(s, 42, createRng(42).state, []));
-    expect(save).toEqual({ version: 1, seed: 42, rng_state: 42, state: s, queued: [] });
+    expect(save).toEqual({ version: SAVE_VERSION, seed: 42, rng_state: 42, state: s, queued: [] });
   });
 
   it("resumes mid-run, with queued decisions, exactly as an unbroken run", () => {
@@ -66,7 +66,7 @@ describe("parseSave refuses", () => {
   });
 
   it("another version", () => {
-    expect(reason({ ...good(), version: 2 })).toMatch(/Unsupported save version 2/);
+    expect(reason({ ...good(), version: 1 })).toMatch(/Unsupported save version 1 \(expected 2\)/);
   });
 
   it("a bad RNG state", () => {

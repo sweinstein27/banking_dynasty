@@ -189,14 +189,14 @@ describe("endTurn: bonds", () => {
     let calls = 0;
     const rng = { next: () => (calls++, 0.999999) };
     endTurn(newGame(gameData), [buy("bavaria"), buy("bavaria", 2000), buy("austria")], rng, gameData);
-    expect(calls).toBe(2 + 1); // bavaria, austria, then the mood
+    expect(calls).toBe(2 + 2); // bavaria, austria, then the mood and the random-event roll
   });
 
   it("never rolls or pays again for a defaulted holding", () => {
     let s = endTurn(newGame(gameData), [buy("naples")], fixedRng(0, 0.999999), gameData);
     let calls = 0;
     s = endTurn(s, [], { next: () => (calls++, 0.999999) }, gameData);
-    expect(calls).toBe(1);
+    expect(calls).toBe(2); // the mood and the random-event roll
     expect(s.ledger.filter((e) => e.category === "coupon")).toHaveLength(0);
   });
 });

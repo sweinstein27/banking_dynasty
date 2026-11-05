@@ -16,6 +16,10 @@
     "year": 1850,
     "quarter": 4
   },
+  "events": {
+    "random_chance": 0.25,
+    "cooldown_quarters": 12
+  },
   "actions_per_turn": 3,
   "sentiment_multiplier": {
     "calm": 1,

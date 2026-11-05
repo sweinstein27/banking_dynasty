@@ -69,10 +69,10 @@ describe("endTurn: sentiment", () => {
     expect(s.world.sentiment).toBe("uneasy");
   });
 
-  it("draws exactly one roll for the mood when there are no loans", () => {
+  it("draws one roll for the mood and one for random events when there are no loans", () => {
     let calls = 0;
     endTurn(newGame(gameData), [], { next: () => (calls++, 0.5) }, gameData);
-    expect(calls).toBe(1);
+    expect(calls).toBe(2);
   });
 
   it("does not change the input state", () => {

@@ -25,6 +25,12 @@ export interface Tuning {
     year: number;
     quarter: Quarter;
   };
+  events: {
+    /** Chance each quarter that one random event fires. */
+    random_chance: number;
+    /** Quarters before the same random event can fire again, unless the event sets its own. */
+    cooldown_quarters: number;
+  };
   /** Shared by every decision type. */
   actions_per_turn: number;
   sentiment_multiplier: Record<Sentiment, number>;
@@ -71,6 +77,45 @@ export interface GameData {
   states: BondIssuer[];
   /** Kinds of venture the house can back, from data/ventures.json. */
   ventures: VentureType[];
+  /** Historical and random events, from data/events.json. */
+  events: GameEvent[];
+}
+
+/** All must hold for an event to fire. Years refer to the quarter the event describes. */
+export interface EventConditions {
+  min_year?: number;
+  max_year?: number;
+  sentiment?: Sentiment[];
+  min_reputation?: number;
+  max_reputation?: number;
+  has_active_loans?: boolean;
+  /** Id of a state whose bonds the house holds. */
+  holds_bonds_of?: string;
+}
+
+export type EventEffect =
+  | { kind: "set_sentiment"; sentiment: Sentiment }
+  | { kind: "reputation"; delta: number }
+  /** Cash gained (positive) or lost (negative): a fixed amount, or a share of current cash. */
+  | { kind: "cash"; amount?: number; share?: number }
+  /** One active loan, picked at random, defaults. */
+  | { kind: "loan_default" }
+  | { kind: "state_risk"; state: string; delta: number };
+
+/** One record in data/events.json. Historical events fire once at their date; random ones by weight. */
+export interface GameEvent {
+  id: string;
+  title: string;
+  text: string;
+  historical: boolean;
+  /** Historical events: the quarter they describe. */
+  year?: number;
+  quarter?: Quarter;
+  /** Random events: relative chance of being picked among those eligible. */
+  weight?: number;
+  cooldown_quarters?: number;
+  conditions: EventConditions;
+  effects: EventEffect[];
 }
 
 export interface VentureType {
