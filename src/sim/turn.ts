@@ -35,7 +35,7 @@ export function loanBook(state: GameState): number {
  * 9. fire events for next quarter (they can override the mood), then the family's quarter (the
  * head may die and an heir succeed; at year end a child may be born), 10. mark bonds to that mood's
  * prices and each state's risk, 11. draw next quarter's loan requests, 12. write the quarter's
- * news, 13. advance the calendar.
+ * news, 13. at year end, record the year's net worth, 14. advance the calendar.
  * Throws if the run is over (bankrupt, or past tuning.end), or if a decision is invalid (check with applyDecision first).
  */
 export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data: GameData): GameState {
@@ -85,6 +85,8 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
   markBonds(next, data);
   next.requests = drawRequests(next, data, rng);
   next.news.push(...quarterNews(state, next, data));
+
+  if (world.quarter === 4) next.year_ends.push({ year: world.year, net_worth: netWorth(next), reputation: house.reputation });
 
   next.actions_this_turn = 0;
   next.withdrawal_policy = "normal";

@@ -2,9 +2,10 @@
 import { createInterface } from "node:readline";
 import { gameData } from "../src/data";
 import { newGame } from "../src/sim/init";
-import { actionsLeft } from "../src/sim/actions";
+import { actionsLeft, runOver } from "../src/sim/actions";
 import { bondBook, bondValue, quarterlyCoupon } from "../src/sim/bonds";
 import { bondOffers, lendOffers, ventureOffers } from "../src/sim/offers";
+import { chronicle } from "../src/sim/chronicle";
 import { borrowingRoom, debtBook, inCrisis } from "../src/sim/crisis";
 import { ageIn, headOf, heirsOf, STATS } from "../src/sim/family";
 import { applyDecision } from "../src/sim/decisions";
@@ -197,7 +198,7 @@ async function main() {
   console.log(`Banking Dynasty, terminal mode. Seed ${seed}.`);
   let state = newGame(gameData, rng);
 
-  while (state.world.turn <= maxTurns) {
+  while (state.world.turn <= maxTurns && !runOver(state, tuning)) {
     const queued: Decision[] = [];
     let preview = state;
     let ended = false;
@@ -236,12 +237,19 @@ async function main() {
       console.log("\n*** HOUSE BANKRUPT ***");
       console.log(`${state.house.name} could not meet its obligations, even after selling its assets. The run is over.`);
       printStatus(state);
+      printChronicle(state);
       return;
     }
   }
 
   printStatus(state);
-  console.log(`\nFinished ${maxTurns} turns. Final net worth ${fl(netWorth(state))}`);
+  console.log(`\nFinished ${state.world.turn - 1} turns. Final net worth ${fl(netWorth(state))}`);
+  printChronicle(state);
+}
+
+function printChronicle(s: GameState) {
+  console.log("\n--- The chronicle of the house ---\n");
+  console.log(chronicle(s, gameData).join("\n\n"));
 }
 
 main().finally(() => rl.close());

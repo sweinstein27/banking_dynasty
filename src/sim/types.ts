@@ -46,6 +46,12 @@ export interface Person {
   inexperienced_until: number | null;
 }
 
+export interface YearEnd {
+  year: number;
+  net_worth: number;
+  reputation: number;
+}
+
 /** A change of head of house, for the news and the family chronicle. */
 export interface Succession {
   turn: number;
@@ -217,6 +223,8 @@ export interface GameState {
   /** The family, living and dead, in order of joining the house (the founding head first). */
   people: Person[];
   successions: Succession[];
+  /** The books at the end of each year, for the chronicle (and later the year-end report). */
+  year_ends: YearEnd[];
   /** This quarter's loan requests, drawn at the end of the previous turn. */
   requests: LoanRequest[];
   ledger: LedgerEntry[];
