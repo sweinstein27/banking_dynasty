@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { gameData } from "../data";
 import { actionsLeft } from "../sim/actions";
-import type { Decision } from "../sim/types";
+import type { Decision, GameState } from "../sim/types";
 import { DECISION_LABELS, DecisionDialog, type DecisionKind } from "./DecisionDialogs";
 import { fl, pct } from "./format";
 import type { Game, GameApi } from "./useGame";
 
-const KINDS: DecisionKind[] = ["lend", "buy_bond", "invest_venture", "set_reserve"];
+const KINDS: DecisionKind[] = ["lend", "report", "buy_bond", "invest_venture", "set_reserve"];
 
 export function DecisionsPanel({ api, game, disabled }: { api: GameApi; game: Game; disabled: boolean }) {
   const { tuning } = gameData;
@@ -32,7 +32,7 @@ export function DecisionsPanel({ api, game, disabled }: { api: GameApi; game: Ga
       ) : (
         <>
           <ol className="queued-list">
-            {game.queued.map((d, i) => <li key={i}>{describe(d)}</li>)}
+            {game.queued.map((d, i) => <li key={i}>{describe(d, game.base)}</li>)}
           </ol>
           <button className="secondary" onClick={api.clearQueue} disabled={disabled}>Clear queued actions</button>
         </>
@@ -43,14 +43,17 @@ export function DecisionsPanel({ api, game, disabled }: { api: GameApi; game: Ga
   );
 }
 
-export function describe(d: Decision): string {
+export function describe(d: Decision, state: GameState): string {
+  const borrower = (id: number) => state.borrowers.find((b) => b.id === id)?.name ?? `borrower #${id}`;
   switch (d.kind) {
     case "lend":
-      return `Lend ${fl(d.amount)} to a ${d.tier} borrower at ${pct(d.rate)}`;
+      return `Lend ${fl(d.amount)} to ${borrower(d.borrower)} at ${pct(d.rate)}`;
+    case "report":
+      return `Buy a report on ${borrower(d.borrower)}`;
     case "buy_bond":
       return `Buy ${fl(d.face_value)} face of ${gameData.states.find((s) => s.id === d.state)?.name ?? d.state} bonds`;
     case "invest_venture":
-      return `Back a ${(gameData.ventures.find((v) => v.id === d.venture)?.name ?? d.venture).toLowerCase()} with ${fl(d.amount)}`;
+      return `Back a venture (${gameData.ventures.find((v) => v.id === d.venture)?.name ?? d.venture}) with ${fl(d.amount)}`;
     case "set_reserve":
       return `Set the reserve to ${fl(d.amount)}`;
   }

@@ -5,12 +5,12 @@ import { applyDecision } from "../src/sim/decisions";
 import { newGame } from "../src/sim/init";
 import { endTurn } from "../src/sim/turn";
 import type { GameState, Quarter } from "../src/sim/types";
-import { noDefaults } from "./helpers";
+import { fresh, noDefaults } from "./helpers";
 
 const { tuning } = gameData;
 
 function at(year: number, quarter: Quarter): GameState {
-  const s = newGame(gameData);
+  const s = fresh();
   s.world.year = year;
   s.world.quarter = quarter;
   return s;
@@ -18,7 +18,7 @@ function at(year: number, quarter: Quarter): GameState {
 
 describe("runOver", () => {
   it("is null for a new game", () => {
-    expect(runOver(newGame(gameData), tuning)).toBeNull();
+    expect(runOver(fresh(), tuning)).toBeNull();
   });
 
   it("is null while the last quarter is still to be played", () => {
@@ -38,7 +38,7 @@ describe("runOver", () => {
   });
 
   it("ends a full run from 1815 Q1 to 1850 Q4 after 144 turns", () => {
-    let s = newGame(gameData);
+    let s = fresh();
     let turns = 0;
     while (!runOver(s, tuning)) {
       s = endTurn(s, [], noDefaults, gameData);

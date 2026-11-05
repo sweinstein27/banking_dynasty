@@ -1,14 +1,14 @@
 [
-  "Weber und Sohn, cloth merchants",
-  "Hartmann, wine importer",
-  "Brenner Brothers, timber",
-  "Kessler, grain dealer",
-  "Lindner and Voss, silk",
-  "Ostermann, tobacco",
-  "Schaefer, ironmonger",
-  "Gebrueder Roth, river freight",
-  "Neumann, leather goods",
-  "Albrecht, colonial wares",
-  "Fuchs and Kramer, dyestuffs",
-  "Wagner, salt trader"
+  { "name": "Weber und Sohn", "trade": "cloth merchants", "quality": [0.55, 0.9] },
+  { "name": "Hartmann", "trade": "wine importer", "quality": [0.45, 0.85] },
+  { "name": "Brenner Brothers", "trade": "timber", "quality": [0.5, 0.85] },
+  { "name": "Brandt", "trade": "grain dealer", "quality": [0.4, 0.85] },
+  { "name": "Lindner and Voss", "trade": "silk", "quality": [0.35, 0.8] },
+  { "name": "Ostermann", "trade": "tobacco", "quality": [0.3, 0.75] },
+  { "name": "Schaefer", "trade": "ironmonger", "quality": [0.6, 0.95] },
+  { "name": "Gebrueder Roth", "trade": "river freight", "quality": [0.4, 0.8] },
+  { "name": "Neumann", "trade": "leather goods", "quality": [0.5, 0.85] },
+  { "name": "Albrecht", "trade": "colonial wares", "quality": [0.25, 0.75] },
+  { "name": "Fuchs and Kramer", "trade": "dyestuffs", "quality": [0.4, 0.8] },
+  { "name": "Wagner", "trade": "salt trader", "quality": [0.6, 0.95] }
 ]

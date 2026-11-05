@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { gameData } from "../src/data";
+import { FAIR, fresh, GOOD, POOR } from "./helpers";
 import { checkBuyBond } from "../src/sim/bonds";
 import { newGame } from "../src/sim/init";
 import { bondOffers, lendOffers, ventureOffers } from "../src/sim/offers";
@@ -8,31 +9,40 @@ import { checkInvestVenture } from "../src/sim/ventures";
 const { tuning } = gameData;
 
 describe("lendOffers", () => {
-  it("lists every tier from tuning with its quality and maximum rate", () => {
-    expect(lendOffers(tuning)).toEqual([
-      { tier: "poor", quality: 0.3, max_rate: 0.16 },
-      { tier: "fair", quality: 0.6, max_rate: 0.1 },
-      { tier: "good", quality: 0.9, max_rate: 0.06 },
-    ]);
+  it("lists this quarter's requests with name, amount, rate and estimate, never true quality", () => {
+    const s = fresh();
+    const offers = lendOffers(s, gameData);
+    expect(offers.map((o) => o.borrower_id)).toEqual(s.requests.map((r) => r.borrower_id));
+    const good = offers.find((o) => o.borrower_id === GOOD)!;
+    expect(good).toMatchObject({ name: "Good and Co.", trade: "test trade", amount: 10_000_000, max_rate: 0.06, reported: false, repaid: 0, defaulted: 0 });
+    expect(good.estimate.low).toBeLessThanOrEqual(0.9);
+    expect(good.estimate.high).toBeGreaterThanOrEqual(0.9);
+    for (const o of offers) expect(o).not.toHaveProperty("quality");
+  });
+
+  it("is empty when no one asks", () => {
+    const s = fresh();
+    s.requests = [];
+    expect(lendOffers(s, gameData)).toEqual([]);
   });
 });
 
 describe("bondOffers", () => {
   it("prices every state at par when calm", () => {
-    const offers = bondOffers(newGame(gameData), gameData);
+    const offers = bondOffers(fresh(), gameData);
     expect(offers.map((o) => o.id)).toEqual(gameData.states.map((s) => s.id));
     expect(offers.every((o) => o.price === 1)).toBe(true);
   });
 
   it("prices below par in a panic", () => {
-    const s = newGame(gameData);
+    const s = fresh();
     s.world.sentiment = "panic";
     const naples = bondOffers(s, gameData).find((o) => o.id === "naples")!;
     expect(naples.price).toBeLessThan(1);
   });
 
   it("blocks states above the house's reputation, matching what checkBuyBond refuses", () => {
-    const s = newGame(gameData);
+    const s = fresh();
     for (const o of bondOffers(s, gameData)) {
       const refused = checkBuyBond(s, { kind: "buy_bond", state: o.id, face_value: 10000 }, gameData);
       expect(o.blocked !== null).toBe(refused !== null);
@@ -41,7 +51,7 @@ describe("bondOffers", () => {
   });
 
   it("blocks a state that has defaulted", () => {
-    const s = newGame(gameData);
+    const s = fresh();
     s.defaulted_states.push("naples");
     expect(bondOffers(s, gameData).find((o) => o.id === "naples")!.blocked).toBe("Defaulted");
   });
@@ -49,14 +59,14 @@ describe("bondOffers", () => {
 
 describe("ventureOffers", () => {
   it("blocks railways before their unlock year and allows them after", () => {
-    const s = newGame(gameData);
+    const s = fresh();
     expect(ventureOffers(s, gameData).find((o) => o.id === "railway")!.blocked).toBe("Not before 1836");
     s.world.year = 1836;
     expect(ventureOffers(s, gameData).find((o) => o.id === "railway")!.blocked).toBeNull();
   });
 
   it("matches what checkInvestVenture refuses", () => {
-    const s = newGame(gameData);
+    const s = fresh();
     for (const o of ventureOffers(s, gameData)) {
       const refused = checkInvestVenture(s, { kind: "invest_venture", venture: o.id, amount: 10000 }, gameData);
       expect(o.blocked !== null).toBe(refused !== null);
@@ -64,7 +74,7 @@ describe("ventureOffers", () => {
   });
 
   it("scales the failure chance with the mood, capped at 1", () => {
-    const s = newGame(gameData);
+    const s = fresh();
     const calm = ventureOffers(s, gameData).find((o) => o.id === "mill")!.failure_chance;
     s.world.sentiment = "panic";
     const panic = ventureOffers(s, gameData).find((o) => o.id === "mill")!.failure_chance;

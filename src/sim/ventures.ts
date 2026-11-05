@@ -33,7 +33,7 @@ export function checkInvestVenture(state: GameState, d: InvestVentureDecision, d
   if (!type) return `Unknown venture "${d.venture}"`;
   const noAction = checkActionLeft(state, t);
   if (noAction) return noAction;
-  if (state.world.year < type.unlock_year) return `No ${type.name.toLowerCase()} can be backed before ${type.unlock_year}`;
+  if (state.world.year < type.unlock_year) return `${type.name} ventures cannot be backed before ${type.unlock_year}`;
   if (!Number.isInteger(d.amount)) return "Amount must be whole gulden";
   if (d.amount < t.ventures.min_amount) return `Amount must be at least ${fl(t.ventures.min_amount)}`;
   if (d.amount > freeCash(state)) return `Not enough cash above the reserve (free ${fl(freeCash(state))})`;

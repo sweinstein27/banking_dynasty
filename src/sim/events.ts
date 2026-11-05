@@ -2,7 +2,8 @@
 // mood roll, and describe the quarter that follows: their news is read at the start of that quarter.
 import { addEntry } from "./ledger";
 import type { Rng } from "./rng";
-import type { EventConditions, EventEffect, GameData, GameEvent } from "./tuning";
+import { recordDefault } from "./borrowers";
+import type { EventConditions, EventEffect, GameData, GameEvent, Tuning } from "./tuning";
 import type { GameState, Quarter, Sentiment } from "./types";
 
 export interface QuarterDate {
@@ -30,12 +31,12 @@ export function conditionsMet(state: GameState, c: EventConditions, date: Quarte
 }
 
 /** Applies one event's effects in order. Mutates `state`; callers pass a draft copy. */
-export function applyEffects(state: GameState, ev: GameEvent, rng: Rng): void {
+export function applyEffects(state: GameState, ev: GameEvent, rng: Rng, tuning: Tuning): void {
   const note = `Event: ${ev.title}`;
-  for (const e of ev.effects) applyEffect(state, e, note, rng);
+  for (const e of ev.effects) applyEffect(state, e, note, rng, tuning);
 }
 
-function applyEffect(state: GameState, e: EventEffect, note: string, rng: Rng): void {
+function applyEffect(state: GameState, e: EventEffect, note: string, rng: Rng, tuning: Tuning): void {
   const { house } = state;
   switch (e.kind) {
     case "set_sentiment":
@@ -57,8 +58,7 @@ function applyEffect(state: GameState, e: EventEffect, note: string, rng: Rng): 
       const active = state.loans.filter((l) => l.status === "active");
       if (!active.length) return;
       const loan = active[Math.floor(rng.next() * active.length)]!;
-      loan.status = "defaulted";
-      addEntry(state, "loans", "default", -loan.principal, `Loan #${loan.id}: ${loan.borrower_name} defaulted (${note})`);
+      recordDefault(state, loan, `Loan #${loan.id}: ${loan.borrower_name} defaulted (${note})`, tuning);
       return;
     }
     case "state_risk":
@@ -81,7 +81,7 @@ export function resolveEvents(state: GameState, rng: Rng, data: GameData): void 
   const date = nextQuarter(state.world);
   const fired = new Set(state.fired_events.map((f) => f.id));
   const fire = (ev: GameEvent) => {
-    applyEffects(state, ev, rng);
+    applyEffects(state, ev, rng, data.tuning);
     state.fired_events.push({ id: ev.id, turn: state.world.turn });
   };
 

@@ -15,7 +15,7 @@ import {
   ventureFailureChance,
   venturePayout,
 } from "../src/sim/ventures";
-import { fixedRng, noDefaults, noEvents } from "./helpers";
+import { fixedRng, fresh, GOOD, noDefaults, quiet } from "./helpers";
 
 const tuning = gameData.tuning;
 const type = (id: string) => gameData.ventures.find((v) => v.id === id)!;
@@ -36,8 +36,8 @@ function reconciles(s: GameState) {
 }
 
 /** Plays `n` quiet turns: nothing defaults, ventures succeed, the mood stays calm. */
-function quiet(s: GameState, n: number): GameState {
-  for (let i = 0; i < n; i++) s = endTurn(s, [], noDefaults, noEvents);
+function idle(s: GameState, n: number): GameState {
+  for (let i = 0; i < n; i++) s = endTurn(s, [], noDefaults, quiet);
   return s;
 }
 
@@ -68,7 +68,7 @@ describe("venture maths", () => {
 
 describe("investVenture", () => {
   it("locks cash into the venture and uses an action", () => {
-    const s0 = newGame(gameData);
+    const s0 = fresh();
     const s1 = applyOk(s0, invest("mill"));
     expect(s1.house.cash).toBe(s0.house.cash - 10000);
     expect(s1.ventures[0]).toMatchObject({ type: "mill", invested: 10000, status: "active", start_turn: 1 });
@@ -78,28 +78,28 @@ describe("investVenture", () => {
   });
 
   it("does not change the input state", () => {
-    const s0 = newGame(gameData);
+    const s0 = fresh();
     const before = structuredClone(s0);
     applyOk(s0, invest("mill"));
     expect(s0).toEqual(before);
   });
 
   it("refuses a railway before 1836, after the first German line opens, and allows it from then", () => {
-    const s = newGame(gameData);
+    const s = fresh();
     expect(checkInvestVenture(s, invest("railway"), gameData)).toMatch(/before 1836/);
     s.world.year = type("railway").unlock_year;
     expect(checkInvestVenture(s, invest("railway"), gameData)).toBeNull();
   });
 
   it("refuses unknown types, small or fractional amounts", () => {
-    const s = newGame(gameData);
+    const s = fresh();
     expect(checkInvestVenture(s, invest("canal"), gameData)).toMatch(/Unknown venture/);
     expect(checkInvestVenture(s, invest("mill", tuning.ventures.min_amount - 1), gameData)).toMatch(/at least/);
     expect(checkInvestVenture(s, invest("mill", 5000.5), gameData)).toMatch(/whole/);
   });
 
   it("refuses to spend below the reserve, and with zero cash", () => {
-    const s = newGame(gameData);
+    const s = fresh();
     s.house.reserve = 90000;
     expect(checkInvestVenture(s, invest("mill", 10000), gameData)).toBeNull();
     expect(checkInvestVenture(s, invest("mill", 10001), gameData)).toMatch(/above the reserve/);
@@ -108,26 +108,26 @@ describe("investVenture", () => {
   });
 
   it("shares the turn's actions with other decisions", () => {
-    let s = newGame(gameData);
+    let s = fresh();
     s = applyOk(s, invest("mill"));
     s = applyOk(s, { kind: "buy_bond", state: "bavaria", face_value: 5000 });
-    s = applyOk(s, { kind: "lend", amount: 5000, rate: 0.06, tier: "good" });
+    s = applyOk(s, { kind: "lend", amount: 5000, rate: 0.06, borrower: GOOD });
     expect(checkInvestVenture(s, invest("shipping"), gameData)).toMatch(/No actions left/);
   });
 
   it("returns a reason instead of throwing", () => {
-    expect(investVenture(newGame(gameData), invest("canal"), gameData).ok).toBe(false);
+    expect(investVenture(fresh(), invest("canal"), gameData).ok).toBe(false);
   });
 });
 
 describe("endTurn: ventures", () => {
   it("keeps capital locked, with no income and no roll, until the term", () => {
     const mill = type("mill");
-    let s = endTurn(newGame(gameData), [invest("mill")], noDefaults, noEvents);
+    let s = endTurn(fresh(), [invest("mill")], noDefaults, quiet);
     const cash = s.house.cash;
     let calls = 0;
     const counting = { next: () => (calls++, 0.999999) };
-    for (let i = 1; i < mill.term_quarters - 1; i++) s = endTurn(s, [], counting, noEvents);
+    for (let i = 1; i < mill.term_quarters - 1; i++) s = endTurn(s, [], counting, quiet);
     expect(s.ventures[0]!.status).toBe("active");
     expect(s.house.cash).toBe(cash);
     expect(calls).toBe(2 * (mill.term_quarters - 2)); // only the mood and random-event rolls
@@ -136,8 +136,8 @@ describe("endTurn: ventures", () => {
 
   it("pays out at the end of its term on success", () => {
     const mill = type("mill");
-    const s0 = newGame(gameData);
-    const s = quiet(endTurn(s0, [invest("mill")], noDefaults, noEvents), mill.term_quarters - 1);
+    const s0 = fresh();
+    const s = idle(endTurn(s0, [invest("mill")], noDefaults, quiet), mill.term_quarters - 1);
     expect(s.ventures[0]!.status).toBe("paid_out");
     expect(s.house.cash).toBe(s0.house.cash - 10000 + 14000);
     expect(netWorth(s)).toBe(netWorth(s0) + 4000);
@@ -146,10 +146,10 @@ describe("endTurn: ventures", () => {
 
   it("loses the whole stake on failure", () => {
     const shipping = type("shipping");
-    let s = newGame(gameData);
-    s = quiet(endTurn(s, [invest("shipping")], noDefaults, noEvents), shipping.term_quarters - 2);
+    let s = fresh();
+    s = idle(endTurn(s, [invest("shipping")], noDefaults, quiet), shipping.term_quarters - 2);
     const before = netWorth(s);
-    s = endTurn(s, [], fixedRng(0, 0.999999), noEvents); // venture fails, mood stays calm
+    s = endTurn(s, [], fixedRng(0, 0.999999), quiet); // venture fails, mood stays calm
     expect(s.ventures[0]!.status).toBe("failed");
     expect(netWorth(s)).toBe(before - 10000);
     reconciles(s);
@@ -157,23 +157,23 @@ describe("endTurn: ventures", () => {
 
   it("uses the mood at maturity: a roll that succeeds when calm fails in a panic", () => {
     const mill = type("mill");
-    let s = newGame(gameData);
-    s = quiet(endTurn(s, [invest("mill")], noDefaults, noEvents), mill.term_quarters - 2);
+    let s = fresh();
+    s = idle(endTurn(s, [invest("mill")], noDefaults, quiet), mill.term_quarters - 2);
     const roll = mill.failure_risk * 2; // above the calm chance, below the panic chance
-    const calm = endTurn(s, [], fixedRng(roll, 0.999999), noEvents);
+    const calm = endTurn(s, [], fixedRng(roll, 0.999999), quiet);
     const panicked = structuredClone(s);
     panicked.world.sentiment = "panic";
     panicked.house.deposits = 0; // no run, to isolate the venture
-    const panic = endTurn(panicked, [], fixedRng(roll, 0.999999), noEvents);
+    const panic = endTurn(panicked, [], fixedRng(roll, 0.999999), quiet);
     expect(calm.ventures[0]!.status).toBe("paid_out");
     expect(panic.ventures[0]!.status).toBe("failed");
   });
 
   it("never resolves a venture twice", () => {
     const mill = type("mill");
-    let s = quiet(endTurn(newGame(gameData), [invest("mill")], noDefaults, noEvents), mill.term_quarters - 1);
+    let s = idle(endTurn(fresh(), [invest("mill")], noDefaults, quiet), mill.term_quarters - 1);
     const cash = s.house.cash;
-    s = quiet(s, 3);
+    s = idle(s, 3);
     expect(s.house.cash).toBe(cash);
     expect(s.ledger.filter((e) => e.category === "venture_payout")).toHaveLength(2);
   });
@@ -181,9 +181,9 @@ describe("endTurn: ventures", () => {
 
 describe("forced sales of ventures", () => {
   it("come last, after bonds and loans, at the steepest discount", () => {
-    let s = newGame(gameData);
+    let s = fresh();
     s = applyOk(s, { kind: "buy_bond", state: "bavaria", face_value: 2000 });
-    s = applyOk(s, { kind: "lend", amount: 2000, rate: 0.06, tier: "good" });
+    s = applyOk(s, { kind: "lend", amount: 2000, rate: 0.06, borrower: GOOD });
     s = applyOk(s, invest("mill", 20000));
     s.ledger.push({ id: 0, turn: 1, account: "cash", category: "opening", amount: -s.house.cash, note: "test" });
     s.house.cash = 0;
@@ -198,7 +198,7 @@ describe("forced sales of ventures", () => {
 
   it("sell only the slice needed; the rest still pays out in proportion", () => {
     const mill = type("mill");
-    let s = newGame(gameData);
+    let s = fresh();
     s = applyOk(s, invest("mill", 20000));
     s.ledger.push({ id: 0, turn: 1, account: "cash", category: "opening", amount: -s.house.cash, note: "test" });
     s.house.cash = 0;
@@ -207,7 +207,7 @@ describe("forced sales of ventures", () => {
     expect(ventureSalePrice(20000 - kept, tuning)).toBeGreaterThanOrEqual(3000);
     s.house.deposits = 0;
     s.ledger.push({ id: 0, turn: 1, account: "deposits", category: "opening", amount: -accountBalance(s, "deposits"), note: "test" });
-    s = quiet(s, mill.term_quarters);
+    s = idle(s, mill.term_quarters);
     expect(s.ventures[0]!.status).toBe("paid_out");
     expect(s.ledger.find((e) => e.category === "venture_payout" && e.account === "cash")!.amount).toBe(
       venturePayout({ invested: kept, expected_return: mill.expected_return }),

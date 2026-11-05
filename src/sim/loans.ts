@@ -8,15 +8,18 @@ import type { GameState, LendDecision, Loan, Sentiment } from "./types";
 /** Returns why a lend decision is invalid, or null if it can go ahead. */
 export function checkLend(state: GameState, d: LendDecision, tuning: Tuning): string | null {
   const t = tuning.loans;
-  const tier = t.tiers[d.tier];
-  if (!tier) return `Unknown borrower tier "${d.tier}"`;
+  const b = state.borrowers.find((x) => x.id === d.borrower);
+  if (!b) return `Unknown borrower #${d.borrower}`;
   const noAction = checkActionLeft(state, tuning);
   if (noAction) return noAction;
+  const request = state.requests.find((r) => r.borrower_id === b.id);
+  if (!request) return `${b.name} is not asking for a loan this quarter`;
   if (!Number.isInteger(d.amount)) return "Amount must be whole gulden";
   if (d.amount < t.min_amount) return `Amount must be at least ${fl(t.min_amount)}`;
+  if (d.amount > request.amount) return `${b.name} wants no more than ${fl(request.amount)}`;
   if (d.amount > freeCash(state)) return notEnoughCash(state);
   if (!(d.rate > 0)) return "Rate must be above zero";
-  if (d.rate > tier.max_rate) return `A ${d.tier} borrower will not pay more than ${(tier.max_rate * 100).toFixed(1)}%`;
+  if (d.rate > request.max_rate) return `${b.name} will not pay more than ${(request.max_rate * 100).toFixed(1)}%`;
   return null;
 }
 
@@ -26,18 +29,21 @@ export function lend(state: GameState, d: LendDecision, data: GameData): Decisio
   if (reason) return { ok: false, reason };
 
   const next = structuredClone(state);
-  const names = data.borrower_names;
+  const b = next.borrowers.find((x) => x.id === d.borrower)!;
   const loan: Loan = {
     id: next.loans.length + 1,
-    borrower_name: names.length ? names[next.loans.length % names.length]! : `Borrower ${next.loans.length + 1}`,
+    borrower_id: b.id,
+    borrower_name: b.name,
     principal: d.amount,
     rate: d.rate,
-    quality: data.tuning.loans.tiers[d.tier].quality,
+    quality: b.quality,
     start_turn: next.world.turn,
     term_quarters: data.tuning.loans.term_quarters,
     status: "active",
   };
   next.loans.push(loan);
+  // One loan per request: the borrower has what they asked for this quarter.
+  next.requests = next.requests.filter((r) => r.borrower_id !== b.id);
   next.house.cash -= d.amount;
   next.actions_this_turn += 1;
   const note = `Loan #${loan.id} to ${loan.borrower_name} at ${(d.rate * 100).toFixed(1)}%`;

@@ -2,6 +2,7 @@ import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-tab
 import { useMemo } from "react";
 import { gameData } from "../data";
 import { bondBook, bondValue, quarterlyCoupon } from "../sim/bonds";
+import { estimateRange } from "../sim/borrowers";
 import { freeCash } from "../sim/reserves";
 import { loanBook, netWorth } from "../sim/turn";
 import type { GameState, LedgerEntry } from "../sim/types";
@@ -82,6 +83,14 @@ export function LedgerPanel({ base, preview }: { base: GameState; preview: GameS
   );
 }
 
+/** The player's quality estimate for a borrower. True quality is never shown. */
+function estimateText(state: GameState, borrowerId: number): string {
+  const b = state.borrowers.find((x) => x.id === borrowerId);
+  if (!b) return "no estimate";
+  const r = estimateRange(b, gameData.tuning);
+  return `estimated quality ${r.low.toFixed(2)} to ${r.high.toFixed(2)}`;
+}
+
 function Holdings({ state }: { state: GameState }) {
   const loans = state.loans.filter((l) => l.status === "active");
   const bonds = state.bonds.filter((b) => b.status === "active");
@@ -98,7 +107,7 @@ function Holdings({ state }: { state: GameState }) {
         <ul className="holdings">
           {loans.map((l) => (
             <li key={`l${l.id}`}>
-              Loan #{l.id}, {l.borrower_name}: {fl(l.principal)} at {pct(l.rate)}, quality {l.quality}, {quartersLeft(state, l)} qtr left
+              Loan #{l.id}, {l.borrower_name}: {fl(l.principal)} at {pct(l.rate)}, {quartersLeft(state, l)} qtr left, {estimateText(state, l.borrower_id)}
             </li>
           ))}
           {bonds.map((b) => (

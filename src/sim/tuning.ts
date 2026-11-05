@@ -1,9 +1,4 @@
-import type { Quarter, Sentiment, TierName } from "./types";
-
-export interface TierTuning {
-  quality: number;
-  max_rate: number;
-}
+import type { Quarter, Sentiment } from "./types";
 
 export interface Tuning {
   start: {
@@ -19,6 +14,8 @@ export interface Tuning {
     reserve: number;
     /** Placeholder name shown in the Family panel until Week 5 adds people. */
     head_of_house: string;
+    /** Placeholder Prudence (1 to 10) for the head of house until Week 5. Narrows borrower estimates. */
+    head_prudence: number;
   };
   /** Last quarter of the run. Once it has been played the run is finished. */
   end: {
@@ -67,14 +64,29 @@ export interface Tuning {
     p0: number;
     term_quarters: number;
     min_amount: number;
-    tiers: Record<TierName, TierTuning>;
+    /** Borrowers asking for a loan each quarter. */
+    requests_per_quarter: number;
+    /** A request is drawn between min and max, then grows by growth_per_repaid for each loan repaid, up to max_growth times. */
+    request_amount: { min: number; max: number; growth_per_repaid: number; max_growth: number };
+    /** Highest rate a borrower pays: base + spread * (1 - market_quality), to the nearest half percent. */
+    rate: { base: number; spread: number };
+    /** Market quality is true quality plus up to +/- noise; a default lowers it, a repayment raises it. */
+    market: { noise: number; default_penalty: number; repaid_bonus: number };
+    /**
+     * The player's estimate is a range of +/- width around a point that always lies within width of the
+     * truth. Each point of Prudence narrows width by prudence_step; a report sets it to report_width.
+     */
+    estimate: { width: number; prudence_step: number; report_width: number; report_cost: number };
+    /** A borrower who defaults asks for nothing for this many quarters. */
+    defaulter_absence_quarters: number;
   };
 }
 
 /** Everything loaded from data/*.json. The sim receives it as an argument and does no I/O. */
 export interface GameData {
   tuning: Tuning;
-  borrower_names: string[];
+  /** Merchant houses that borrow, from data/borrowers.json. */
+  borrowers: BorrowerType[];
   /** States whose bonds can be bought, from data/states.json. */
   states: BondIssuer[];
   /** Kinds of venture the house can back, from data/ventures.json. */
@@ -121,6 +133,13 @@ export interface GameEvent {
   conditions: EventConditions;
   /** May be empty for news-only events. */
   effects: EventEffect[];
+}
+
+export interface BorrowerType {
+  name: string;
+  trade: string;
+  /** True quality is drawn from this range at the start of each game. */
+  quality: [number, number];
 }
 
 export interface VentureType {

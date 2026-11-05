@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { gameData } from "../src/data";
+import { FAIR, fresh, GOOD, GOOD_2, POOR } from "./helpers";
 import { newGame } from "../src/sim/init";
 import { accountBalance } from "../src/sim/ledger";
 import { checkLend, defaultChance, lend, quarterlyInterest } from "../src/sim/loans";
 import type { GameState, LendDecision } from "../src/sim/types";
 
 const tuning = gameData.tuning;
-const good: LendDecision = { kind: "lend", amount: 10000, rate: 0.06, tier: "good" };
+const good: LendDecision = { kind: "lend", amount: 10000, rate: 0.06, borrower: GOOD };
 
 function lendOk(state: GameState, d: LendDecision): GameState {
   const r = lend(state, d, gameData);
@@ -49,7 +50,7 @@ describe("defaultChance", () => {
 
 describe("lend", () => {
   it("moves cash into the loan book and writes both ledger sides", () => {
-    const s0 = newGame(gameData);
+    const s0 = fresh();
     const s1 = lendOk(s0, good);
     expect(s1.house.cash).toBe(s0.house.cash - 10000);
     expect(s1.loans).toHaveLength(1);
@@ -59,55 +60,56 @@ describe("lend", () => {
   });
 
   it("does not change the input state", () => {
-    const s0 = newGame(gameData);
+    const s0 = fresh();
     const before = structuredClone(s0);
     lendOk(s0, good);
     expect(s0).toEqual(before);
   });
 
   it("allows lending every last gulden", () => {
-    const s0 = newGame(gameData);
+    const s0 = fresh();
     const s1 = lendOk(s0, { ...good, amount: s0.house.cash });
     expect(s1.house.cash).toBe(0);
   });
 
   it("refuses with zero cash", () => {
-    const s0 = newGame(gameData);
+    const s0 = fresh();
     s0.house.cash = 0;
     expect(checkLend(s0, good, tuning)).toMatch(/Not enough cash/);
   });
 
   it("refuses more than the cash on hand", () => {
-    const s0 = newGame(gameData);
+    const s0 = fresh();
     expect(checkLend(s0, { ...good, amount: s0.house.cash + 1 }, tuning)).toMatch(/Not enough cash/);
   });
 
   it("refuses a rate above the tier's maximum", () => {
-    const s0 = newGame(gameData);
+    const s0 = fresh();
     expect(checkLend(s0, { ...good, rate: 0.061 }, tuning)).toMatch(/will not pay more/);
-    expect(checkLend(s0, { ...good, tier: "poor", rate: 0.16 }, tuning)).toBeNull();
+    expect(checkLend(s0, { ...good, borrower: POOR, rate: 0.16 }, tuning)).toBeNull();
   });
 
   it("refuses zero or negative rates", () => {
-    const s0 = newGame(gameData);
+    const s0 = fresh();
     expect(checkLend(s0, { ...good, rate: 0 }, tuning)).toMatch(/above zero/);
     expect(checkLend(s0, { ...good, rate: -0.01 }, tuning)).toMatch(/above zero/);
   });
 
   it("refuses amounts below the minimum or not whole", () => {
-    const s0 = newGame(gameData);
+    const s0 = fresh();
     expect(checkLend(s0, { ...good, amount: 999 }, tuning)).toBe("Amount must be at least 1,000 fl.");
     expect(checkLend(s0, { ...good, amount: 1500.5 }, tuning)).toMatch(/whole/);
   });
 
   it("refuses after the turn's actions are used up", () => {
-    let s = newGame(gameData);
-    for (let i = 0; i < tuning.actions_per_turn; i++) s = lendOk(s, { ...good, amount: 1000 });
-    expect(checkLend(s, { ...good, amount: 1000 }, tuning)).toMatch(/No actions left/);
+    let s = fresh();
+    // One loan per borrower per quarter, so each action lends to a different test borrower.
+    for (const borrower of [POOR, FAIR, GOOD]) s = lendOk(s, { ...good, borrower, amount: 1000 });
+    expect(checkLend(s, { ...good, borrower: GOOD_2, amount: 1000 }, tuning)).toMatch(/No actions left/);
   });
 
   it("returns a reason instead of throwing", () => {
-    const r = lend(newGame(gameData), { ...good, rate: 0.5 }, gameData);
+    const r = lend(fresh(), { ...good, rate: 0.5 }, gameData);
     expect(r.ok).toBe(false);
   });
 });

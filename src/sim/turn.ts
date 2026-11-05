@@ -3,6 +3,7 @@ import { bondBook, markBonds, resolveBonds } from "./bonds";
 import { applyDecision } from "./decisions";
 import { addEntry } from "./ledger";
 import { resolveWithdrawals } from "./liquidity";
+import { drawRequests, recordDefault, recordRepayment } from "./borrowers";
 import { resolveEvents } from "./events";
 import { quarterNews } from "./news";
 import { defaultChance, quarterlyInterest } from "./loans";
@@ -28,7 +29,8 @@ export function loanBook(state: GameState): number {
  * 6. resolve ventures that reach their term, 7. depositors withdraw for the current mood, with
  * forced sales if cash runs short (bankruptcy if even that fails), 8. roll next quarter's mood,
  * 9. fire events for next quarter (they can override the mood), 10. mark bonds to that mood's
- * prices and each state's risk, 11. write the quarter's news, 12. advance the calendar.
+ * prices and each state's risk, 11. draw next quarter's loan requests, 12. write the quarter's
+ * news, 13. advance the calendar.
  * Throws if the run is over (bankrupt, or past tuning.end), or if a decision is invalid (check with applyDecision first).
  */
 export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data: GameData): GameState {
@@ -48,8 +50,7 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
     if (loan.status !== "active") continue;
 
     if (rng.next() < defaultChance(loan.quality, world.sentiment, data.tuning, next.trade_risk)) {
-      loan.status = "defaulted";
-      addEntry(next, "loans", "default", -loan.principal, `Loan #${loan.id}: ${loan.borrower_name} defaulted`);
+      recordDefault(next, loan, `Loan #${loan.id}: ${loan.borrower_name} defaulted`, data.tuning);
       continue;
     }
 
@@ -64,6 +65,7 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
       const note = `Loan #${loan.id}: ${loan.borrower_name} repaid`;
       addEntry(next, "cash", "repayment", loan.principal, note);
       addEntry(next, "loans", "repayment", -loan.principal, note);
+      recordRepayment(next, loan, data.tuning);
     }
   }
 
@@ -73,6 +75,7 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
   world.sentiment = nextSentiment(world.sentiment, rng.next(), data.tuning);
   resolveEvents(next, rng, data);
   markBonds(next, data);
+  next.requests = drawRequests(next, data, rng);
   next.news.push(...quarterNews(state, next, data));
 
   next.actions_this_turn = 0;

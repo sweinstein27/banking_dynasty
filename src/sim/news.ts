@@ -39,9 +39,9 @@ export function quarterNews(before: GameState, after: GameState, data: GameData)
     const name = data.ventures.find((t) => t.id === v.type)?.name ?? v.type;
     if (v.status === "paid_out") {
       const payout = sum(entries.filter((e) => e.account === "cash" && e.category === "venture_payout" && e.note.startsWith(`Venture #${v.id}:`)));
-      add("venture_paid_out", `The ${name.toLowerCase()} succeeded, turning a stake of ${fl(was.invested)} into ${fl(payout)}`);
+      add("venture_paid_out", `Venture #${v.id} (${name}) succeeded, turning a stake of ${fl(was.invested)} into ${fl(payout)}`);
     } else if (v.status === "failed") {
-      add("venture_failed", `The ${name.toLowerCase()} failed. The stake of ${fl(was.invested)} is lost.`);
+      add("venture_failed", `Venture #${v.id} (${name}) failed. The stake of ${fl(was.invested)} is lost.`);
     }
   }
 

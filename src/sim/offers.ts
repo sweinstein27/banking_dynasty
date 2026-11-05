@@ -1,14 +1,24 @@
 // What each decision can be made with right now, for the terminal and the UI to list.
 import { bondPrice, stateRisk } from "./bonds";
-import type { GameData, Tuning } from "./tuning";
-import type { GameState, TierName } from "./types";
+import { estimateRange } from "./borrowers";
+import type { GameData } from "./tuning";
+import type { GameState } from "./types";
 import { ventureFailureChance } from "./ventures";
 
+/** A loan request as the player may see it: no true quality, only the estimate range. */
 export interface LendOffer {
-  tier: TierName;
-  quality: number;
-  /** Highest annual rate this tier accepts. */
+  borrower_id: number;
+  name: string;
+  trade: string;
+  /** Most the borrower will take, in whole gulden. */
+  amount: number;
+  /** Highest annual rate the borrower will pay. */
   max_rate: number;
+  /** The player's quality estimate; it always contains the true quality. */
+  estimate: { low: number; high: number };
+  reported: boolean;
+  repaid: number;
+  defaulted: number;
 }
 
 export interface BondOffer {
@@ -34,12 +44,22 @@ export interface VentureOffer {
   blocked: string | null;
 }
 
-export function lendOffers(tuning: Tuning): LendOffer[] {
-  return (Object.keys(tuning.loans.tiers) as TierName[]).map((tier) => ({
-    tier,
-    quality: tuning.loans.tiers[tier].quality,
-    max_rate: tuning.loans.tiers[tier].max_rate,
-  }));
+/** This quarter's loan requests, in borrower order. */
+export function lendOffers(state: GameState, data: GameData): LendOffer[] {
+  return state.requests.map((r) => {
+    const b = state.borrowers.find((x) => x.id === r.borrower_id)!;
+    return {
+      borrower_id: b.id,
+      name: b.name,
+      trade: b.trade,
+      amount: r.amount,
+      max_rate: r.max_rate,
+      estimate: estimateRange(b, data.tuning),
+      reported: b.reported,
+      repaid: b.repaid,
+      defaulted: b.defaulted,
+    };
+  });
 }
 
 export function bondOffers(state: GameState, data: GameData): BondOffer[] {

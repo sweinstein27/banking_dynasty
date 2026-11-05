@@ -7,21 +7,22 @@ import { loanSalePrice, principalToSell, raiseCash, resolveWithdrawals } from ".
 import { lend, quarterlyInterest } from "../src/sim/loans";
 import { endTurn, loanBook, netWorth } from "../src/sim/turn";
 import type { GameState, LendDecision } from "../src/sim/types";
-import { noDefaults, noEvents } from "./helpers";
+import { fresh, GOOD, noDefaults, quiet, reopenRequests } from "./helpers";
 
 const tuning = gameData.tuning;
 const panicShare = tuning.sentiment.withdrawal_share.panic;
-const lendGood = (amount: number): LendDecision => ({ kind: "lend", amount, rate: 0.06, tier: "good" });
+const lendGood = (amount: number): LendDecision => ({ kind: "lend", amount, rate: 0.06, borrower: GOOD });
 
 /** A house with the given loans (oldest first), cash and deposits, in a panic. */
 function house(opts: { cash: number; deposits: number; loans?: number[] }): GameState {
-  let s = newGame(gameData);
+  let s = fresh();
   s.house.cash = 10_000_000;
   for (const amount of opts.loans ?? []) {
     const r = lend(s, lendGood(amount), gameData);
     if (!r.ok) throw new Error(r.reason);
     s = r.state;
     s.actions_this_turn = 0;
+    reopenRequests(s);
   }
   s.house.cash = opts.cash;
   s.house.deposits = opts.deposits;
@@ -132,12 +133,12 @@ describe("forced sales", () => {
 
   it("leave the unsold part of a loan earning interest at its smaller principal", () => {
     let s = house({ cash: 0, deposits: 50000, loans: [20000] });
-    s = endTurn(s, [], noDefaults, noEvents);
+    s = endTurn(s, [], noDefaults, quiet);
     const kept = s.loans[0]!.principal;
     expect(kept).toBeGreaterThan(0);
     s.world.sentiment = "calm";
     const cash = s.house.cash;
-    s = endTurn(s, [], noDefaults, noEvents);
+    s = endTurn(s, [], noDefaults, quiet);
     expect(s.house.cash - cash).toBe(quarterlyInterest({ principal: kept, rate: 0.06 }));
   });
 
@@ -184,9 +185,9 @@ describe("bankruptcy", () => {
 
   it("ends the run: End Turn refuses to play on and no decisions are accepted", () => {
     const s0 = house({ cash: 0, deposits: 50000 });
-    const s1 = endTurn(s0, [], noDefaults, noEvents);
+    const s1 = endTurn(s0, [], noDefaults, quiet);
     expect(s1.house.status).toBe("bankrupt");
-    expect(() => endTurn(s1, [], noDefaults, noEvents)).toThrow(/bankrupt/);
+    expect(() => endTurn(s1, [], noDefaults, quiet)).toThrow(/bankrupt/);
     const r = applyDecision(s1, { kind: "set_reserve", amount: 5000 }, gameData);
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.reason).toMatch(/bankrupt/);
@@ -196,7 +197,7 @@ describe("bankruptcy", () => {
     // A loan repaid this quarter adds cash before withdrawals, which can save the house.
     let s = house({ cash: 0, deposits: 50000, loans: [20000] });
     s.world.turn = s.loans[0]!.start_turn + tuning.loans.term_quarters - 1;
-    s = endTurn(s, [], noDefaults, noEvents);
+    s = endTurn(s, [], noDefaults, quiet);
     expect(s.loans[0]!.status).toBe("repaid");
     expect(s.house.status).toBe("solvent");
   });

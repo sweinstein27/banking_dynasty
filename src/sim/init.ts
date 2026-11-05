@@ -1,8 +1,14 @@
+import { createBorrowers, drawRequests } from "./borrowers";
 import { addEntry } from "./ledger";
+import type { Rng } from "./rng";
 import type { GameData } from "./tuning";
 import type { GameState } from "./types";
 
-export function newGame(data: GameData): GameState {
+/**
+ * A new game at the start date. Draws the borrowers and the first quarter's loan requests from
+ * `rng`, so the same seed gives the same borrowers; pass the run's RNG, then keep using it.
+ */
+export function newGame(data: GameData, rng: Rng): GameState {
   const s = data.tuning.start;
   const state: GameState = {
     world: {
@@ -26,6 +32,8 @@ export function newGame(data: GameData): GameState {
     bonds: [],
     defaulted_states: [],
     ventures: [],
+    borrowers: createBorrowers(data, rng),
+    requests: [],
     ledger: [],
     next_ledger_id: 1,
     news: [],
@@ -36,5 +44,6 @@ export function newGame(data: GameData): GameState {
   };
   addEntry(state, "cash", "opening", s.cash, "Opening cash");
   addEntry(state, "deposits", "opening", s.deposits, "Opening deposits owed");
+  state.requests = drawRequests(state, data, rng);
   return state;
 }

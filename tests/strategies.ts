@@ -2,31 +2,44 @@
 import { gameData } from "../src/data";
 import { applyDecision } from "../src/sim/decisions";
 import { newGame } from "../src/sim/init";
-import { checkLend } from "../src/sim/loans";
+import { lendOffers, type LendOffer } from "../src/sim/offers";
 import { freeCash } from "../src/sim/reserves";
 import { createRng } from "../src/sim/rng";
 import { endTurn, netWorth } from "../src/sim/turn";
 import type { Decision, GameState, Sentiment } from "../src/sim/types";
 
-/** A simple mixed strategy: each turn, lend a share of cash to each tier at its maximum rate. */
-export function scriptedDecisions(state: GameState): Decision[] {
+/** Lends `share` of free cash (to the nearest 100 fl., capped at what was asked) to a request at its maximum rate. */
+function lendShare(s: GameState, o: LendOffer, share: number): Decision {
+  const amount = Math.min(o.amount, Math.floor((freeCash(s) * share) / 100) * 100);
+  return { kind: "lend", borrower: o.borrower_id, amount, rate: o.max_rate };
+}
+
+/** Applies the decisions a strategy wants in order, keeping those the sim accepts. */
+function accepted(state: GameState, wanted: ((s: GameState) => Decision | null)[]): Decision[] {
   const decisions: Decision[] = [];
-  const share = { good: 0.2, fair: 0.15, poor: 0.1 } as const;
-  let cash = state.house.cash;
-  for (const tier of ["good", "fair", "poor"] as const) {
-    const amount = Math.floor((cash * share[tier]) / 100) * 100;
-    const d: Decision = { kind: "lend", amount, rate: gameData.tuning.loans.tiers[tier].max_rate, tier };
-    if (checkLend({ ...state, house: { ...state.house, cash } }, d, gameData.tuning) === null) {
-      decisions.push(d);
-      cash -= amount;
-    }
+  let preview = state;
+  for (const make of wanted) {
+    const d = make(preview);
+    if (!d) continue;
+    const r = applyDecision(preview, d, gameData);
+    if (!r.ok) continue;
+    decisions.push(d);
+    preview = r.state;
   }
   return decisions;
 }
 
+/** This quarter's requests, safest-looking first (highest estimate low bound, then borrower id). */
+const safestFirst = (s: GameState) => [...lendOffers(s, gameData)].sort((a, b) => b.estimate.low - a.estimate.low || a.borrower_id - b.borrower_id);
+
+/** A simple lending strategy: each turn, lend 20% of free cash to every borrower who asks, at their maximum rate. */
+export function scriptedDecisions(state: GameState): Decision[] {
+  return accepted(state, lendOffers(state, gameData).map((o) => (s: GameState) => lendShare(s, o, 0.2)));
+}
+
 /**
  * Full-economy strategy. Turn 1: set a 20,000 reserve, buy Bavarian bonds, back a mill.
- * Later turns: lend to a good borrower, buy bonds rotating through four states, and back a
+ * Later turns: lend to the safest-looking borrower who asks, buy bonds rotating through four states, and back a
  * shipping line with 30% of what is left every fourth turn. Shares are of free cash; decisions that
  * would be refused (for example below a minimum amount) are skipped.
  */
@@ -34,7 +47,7 @@ export function economyDecisions(state: GameState): Decision[] {
   const t = state.world.turn;
   const rotation = ["bavaria", "austria", "france", "naples"];
   const share = (s: GameState, f: number) => Math.floor((freeCash(s) * f) / 100) * 100;
-  const wanted: ((s: GameState) => Decision)[] =
+  const wanted: ((s: GameState) => Decision | null)[] =
     t === 1
       ? [
           () => ({ kind: "set_reserve", amount: 20000 }),
@@ -42,20 +55,14 @@ export function economyDecisions(state: GameState): Decision[] {
           (s) => ({ kind: "invest_venture", venture: "mill", amount: share(s, 0.1) }),
         ]
       : [
-          (s) => ({ kind: "lend", amount: share(s, 0.2), rate: 0.06, tier: "good" }),
+          (s) => {
+            const best = safestFirst(s)[0];
+            return best ? lendShare(s, best, 0.2) : null;
+          },
           (s) => ({ kind: "buy_bond", state: rotation[t % rotation.length]!, face_value: share(s, 0.1) }),
           ...(t % 4 === 1 ? [(s: GameState) => ({ kind: "invest_venture", venture: "shipping", amount: share(s, 0.3) }) as Decision] : []),
         ];
-  const decisions: Decision[] = [];
-  let preview = state;
-  for (const make of wanted) {
-    const d = make(preview);
-    const r = applyDecision(preview, d, gameData);
-    if (!r.ok) continue;
-    decisions.push(d);
-    preview = r.state;
-  }
-  return decisions;
+  return accepted(state, wanted);
 }
 
 export type Strategy = (state: GameState) => Decision[];
@@ -71,7 +78,7 @@ export function play(
   sentimentByTurn: Sentiment[];
 } {
   const rng = createRng(seed);
-  let state = newGame(gameData);
+  let state = newGame(gameData, rng);
   const netWorthByTurn: number[] = [];
   const sentimentByTurn: Sentiment[] = [];
   for (let i = 0; i < turns; i++) {
@@ -84,7 +91,8 @@ export function play(
 }
 
 /**
- * Aggressive strategy: no reserve. Each turn lend half of free cash to a fair borrower at 10%,
+ * Aggressive strategy: no reserve. Each turn lend half of free cash to the riskiest-looking borrower
+ * who asks, at their maximum rate,
  * put 60% of what is left into the riskiest bonds still for sale (Naples, then France), and every
  * fourth turn back a shipping line with half of what remains. Built to be caught short by a run.
  */
@@ -92,25 +100,20 @@ export function aggressiveDecisions(state: GameState): Decision[] {
   const t = state.world.turn;
   const share = (s: GameState, f: number) => Math.floor((freeCash(s) * f) / 100) * 100;
   const bondState = (s: GameState) => (s.defaulted_states.includes("naples") ? "france" : "naples");
-  const wanted: ((s: GameState) => Decision)[] = [
-    (s) => ({ kind: "lend", amount: share(s, 0.5), rate: 0.1, tier: "fair" }),
+  const wanted: ((s: GameState) => Decision | null)[] = [
+    (s) => {
+      // The riskiest-looking borrower pays the most.
+      const riskiest = safestFirst(s).at(-1);
+      return riskiest ? lendShare(s, riskiest, 0.5) : null;
+    },
     (s) => ({ kind: "buy_bond", state: bondState(s), face_value: share(s, 0.6) }),
     ...(t % 4 === 1 ? [(s: GameState) => ({ kind: "invest_venture", venture: "shipping", amount: share(s, 0.5) }) as Decision] : []),
   ];
-  const decisions: Decision[] = [];
-  let preview = state;
-  for (const make of wanted) {
-    const d = make(preview);
-    const r = applyDecision(preview, d, gameData);
-    if (!r.ok) continue;
-    decisions.push(d);
-    preview = r.state;
-  }
-  return decisions;
+  return accepted(state, wanted);
 }
 
 /** Seed for the panic golden run, picked with `npm run find-panic-seed`; see docs/decisions.md. */
-export const PANIC_SEED = 1982;
+export const PANIC_SEED = 1372;
 
 /**
  * What the panic golden run must exercise: a panic with a bank run, forced sales of both bonds and

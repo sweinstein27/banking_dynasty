@@ -2,7 +2,6 @@
 
 export type Sentiment = "calm" | "uneasy" | "panic";
 export type Quarter = 1 | 2 | 3 | 4;
-export type TierName = "poor" | "fair" | "good";
 
 export interface WorldState {
   turn: number;
@@ -29,8 +28,36 @@ export type HouseStatus = "solvent" | "bankrupt";
 
 export type LoanStatus = "active" | "repaid" | "defaulted" | "sold";
 
+/** A merchant house that borrows from the player. Quality is hidden: the player sees estimateRange. */
+export interface Borrower {
+  id: number;
+  name: string;
+  trade: string;
+  /** True chance-of-repayment quality, 0 (worst) to 1 (best). Never shown to the player. */
+  quality: number;
+  /** What the market believes. Sets the highest rate the borrower will pay; falls after a default. */
+  market_quality: number;
+  /** Fixed draw in [-1, 1] placing the player's estimate around the truth, so it cannot be re-rolled. */
+  estimate_noise: number;
+  /** A correspondent's report has been bought: the estimate is narrow from now on. */
+  reported: boolean;
+  repaid: number;
+  defaulted: number;
+  last_default_turn: number | null;
+}
+
+/** A borrower asking the house for a loan this quarter. */
+export interface LoanRequest {
+  borrower_id: number;
+  /** Most the borrower will take, in whole gulden. */
+  amount: number;
+  /** Highest annual rate the borrower will pay. */
+  max_rate: number;
+}
+
 export interface Loan {
   id: number;
+  borrower_id: number;
   borrower_name: string;
   principal: number;
   /** Annual rate, e.g. 0.08 for 8%. */
@@ -45,7 +72,7 @@ export interface Loan {
 /** Which balance an entry moves. Summing entries per account reproduces that balance. */
 export type LedgerAccount = "cash" | "loans" | "bonds" | "ventures" | "deposits";
 
-export type LedgerCategory = "event" | "opening" | "loan_out" | "interest" | "default" | "repayment"
+export type LedgerCategory = "event" | "report" | "opening" | "loan_out" | "interest" | "default" | "repayment"
   | "withdrawal"
   | "forced_sale"
   | "bond_purchase"
@@ -137,6 +164,9 @@ export interface GameState {
   /** States that have defaulted. They pay nothing more and sell no new bonds. */
   defaulted_states: string[];
   ventures: Venture[];
+  borrowers: Borrower[];
+  /** This quarter's loan requests, drawn at the end of the previous turn. */
+  requests: LoanRequest[];
   ledger: LedgerEntry[];
   next_ledger_id: number;
   /** Every quarter's news, oldest first. */
@@ -153,11 +183,18 @@ export interface GameState {
 
 export interface LendDecision {
   kind: "lend";
-  /** Whole gulden. */
+  /** Borrower id; the borrower must have a request this quarter. */
+  borrower: number;
+  /** Whole gulden, no more than the request. */
   amount: number;
-  /** Annual rate. */
+  /** Annual rate, no more than the request's maximum. */
   rate: number;
-  tier: TierName;
+}
+
+/** Buy a correspondent's report on a borrower who is asking for a loan: narrows the quality estimate. */
+export interface ReportDecision {
+  kind: "report";
+  borrower: number;
 }
 
 export interface SetReserveDecision {
@@ -182,4 +219,4 @@ export interface InvestVentureDecision {
   amount: number;
 }
 
-export type Decision = LendDecision | SetReserveDecision | BuyBondDecision | InvestVentureDecision;
+export type Decision = LendDecision | ReportDecision | SetReserveDecision | BuyBondDecision | InvestVentureDecision;

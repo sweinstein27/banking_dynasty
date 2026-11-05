@@ -4,15 +4,16 @@ import { Dialog, ToggleGroup } from "radix-ui";
 import { useState, type ReactNode } from "react";
 import { gameData } from "../data";
 import { bondCost } from "../sim/bonds";
-import { bondOffers, lendOffers, ventureOffers } from "../sim/offers";
+import { bondOffers, lendOffers, ventureOffers, type LendOffer } from "../sim/offers";
 import { freeCash } from "../sim/reserves";
-import type { Decision, GameState, TierName } from "../sim/types";
+import type { Decision, GameState } from "../sim/types";
 import { fl, parseAmount, pct } from "./format";
 
 export type DecisionKind = Decision["kind"];
 
 export const DECISION_LABELS: Record<DecisionKind, string> = {
   lend: "Lend to merchants",
+  report: "Buy a report",
   buy_bond: "Buy state bonds",
   invest_venture: "Back a venture",
   set_reserve: "Set reserves",
@@ -35,6 +36,7 @@ export function DecisionDialog({ kind, state, onClose, onSubmit }: {
               <Dialog.Title>{DECISION_LABELS[kind]}</Dialog.Title>
               <p className="muted">Uses 1 action. Free cash above the reserve: {fl(freeCash(state))}</p>
               {kind === "lend" && <LendForm state={state} onSubmit={onSubmit} onDone={onClose} />}
+              {kind === "report" && <ReportForm state={state} onSubmit={onSubmit} onDone={onClose} />}
               {kind === "buy_bond" && <BondForm state={state} onSubmit={onSubmit} onDone={onClose} />}
               {kind === "invest_venture" && <VentureForm state={state} onSubmit={onSubmit} onDone={onClose} />}
               {kind === "set_reserve" && <ReserveForm state={state} onSubmit={onSubmit} onDone={onClose} />}
@@ -118,29 +120,57 @@ function Footer({ error, canConfirm, onConfirm }: { error: string | null; canCon
   );
 }
 
+/** One borrower's request, as a choice button: what they want, what they pay, and your estimate. */
+function OfferSummary({ o }: { o: LendOffer }) {
+  return (
+    <>
+      <strong>{o.name}, {o.trade}</strong>
+      <span>Wants up to {fl(o.amount)} and pays up to {pct(o.max_rate)} a year.</span>
+      <span>
+        Your estimate of quality: {o.estimate.low.toFixed(2)} to {o.estimate.high.toFixed(2)}
+        {o.reported ? " (from a report)" : ""}.
+      </span>
+      <span className="muted">
+        {o.repaid === 0 && o.defaulted === 0 ? "No history with the house." : `With the house: repaid ${o.repaid}, defaulted ${o.defaulted}.`}
+      </span>
+    </>
+  );
+}
+
+function NoRequests() {
+  return <p>No one is asking for a loan this quarter.</p>;
+}
+
 function LendForm(props: FormProps) {
   const { state } = props;
   const { error, submit } = useSubmit(props);
-  const [tier, setTier] = useState<TierName | "">("");
+  const [id, setId] = useState("");
   const [amount, setAmount] = useState("");
   const [rate, setRate] = useState("");
-  const offers = lendOffers(gameData.tuning);
+  const offers = lendOffers(state, gameData);
+  const chosen = offers.find((o) => String(o.borrower_id) === id);
+  const quick = shares(state).map(([name, n]): [string, number] => {
+    const capped = chosen ? Math.min(n, chosen.amount) : n;
+    return [name.replace(/\(.*\)/, `(${fl(capped)})`), capped];
+  });
 
+  if (!offers.length) return <><NoRequests /><Footer error={null} canConfirm={false} onConfirm={() => {}} /></>;
   return (
     <>
       <h3>Borrower</h3>
-      <Choices<TierName> value={tier} onChange={(t) => {
-        setTier(t);
-        setRate(String(+(offers.find((o) => o.tier === t)!.max_rate * 100).toFixed(2)));
+      <Choices value={id} onChange={(v) => {
+        setId(v);
+        const o = offers.find((x) => String(x.borrower_id) === v)!;
+        setRate(String(+(o.max_rate * 100).toFixed(2)));
+        setAmount(String(Math.min(o.amount, Math.floor(freeCash(state) / 100) * 100)));
       }}>
         {offers.map((o) => (
-          <Choice key={o.tier} value={o.tier}>
-            <strong>{o.tier[0]!.toUpperCase() + o.tier.slice(1)}</strong>
-            <span>Quality {o.quality}. Pays up to {pct(o.max_rate)} a year.</span>
+          <Choice key={o.borrower_id} value={String(o.borrower_id)}>
+            <OfferSummary o={o} />
           </Choice>
         ))}
       </Choices>
-      <AmountField label="Amount (fl.)" text={amount} onText={setAmount} quick={shares(state)} />
+      <AmountField label="Amount (fl.)" text={amount} onText={setAmount} quick={quick} />
       <div className="field">
         <label>
           <span>Annual rate (%)</span>
@@ -148,7 +178,32 @@ function LendForm(props: FormProps) {
         </label>
       </div>
       <p className="muted">Term {gameData.tuning.loans.term_quarters} quarters. Interest is paid each quarter, starting this one.</p>
-      <Footer error={error} canConfirm={tier !== ""} onConfirm={() => tier && submit({ kind: "lend", tier, amount: parseAmount(amount), rate: Number(rate) / 100 })} />
+      <Footer error={error} canConfirm={chosen !== undefined} onConfirm={() => chosen && submit({ kind: "lend", borrower: chosen.borrower_id, amount: parseAmount(amount), rate: Number(rate) / 100 })} />
+    </>
+  );
+}
+
+function ReportForm(props: FormProps) {
+  const { state } = props;
+  const { error, submit } = useSubmit(props);
+  const [id, setId] = useState("");
+  const offers = lendOffers(state, gameData);
+  const { report_cost } = gameData.tuning.loans.estimate;
+
+  if (!offers.length) return <><NoRequests /><Footer error={null} canConfirm={false} onConfirm={() => {}} /></>;
+  return (
+    <>
+      <p>A correspondent looks into a borrower's books for {fl(report_cost)} The estimate of their quality narrows to a tight range around the truth.</p>
+      <h3>Borrower</h3>
+      <Choices value={id} onChange={setId}>
+        {offers.map((o) => (
+          <Choice key={o.borrower_id} value={String(o.borrower_id)} disabled={o.reported}>
+            <OfferSummary o={o} />
+            {o.reported && <span className="error">Already reported</span>}
+          </Choice>
+        ))}
+      </Choices>
+      <Footer error={error} canConfirm={id !== ""} onConfirm={() => submit({ kind: "report", borrower: Number(id) })} />
     </>
   );
 }

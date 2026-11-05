@@ -5,7 +5,7 @@ import { accountBalance } from "../src/sim/ledger";
 import { applyWithdrawals, nextSentiment, withdrawalDemand } from "../src/sim/sentiment";
 import { endTurn } from "../src/sim/turn";
 import type { LendDecision, Sentiment } from "../src/sim/types";
-import { fixedRng, noDefaults, noEvents } from "./helpers";
+import { FAIR, fixedRng, fresh, noDefaults, quiet } from "./helpers";
 
 const tuning = gameData.tuning;
 const tr = tuning.sentiment.transitions;
@@ -74,10 +74,10 @@ describe("withdrawalDemand: reputation", () => {
 
   it("drives End Turn: a low-reputation house loses more deposits", () => {
     const run = (rep: number) => {
-      const s0 = newGame(gameData);
+      const s0 = fresh();
       s0.world.sentiment = "uneasy";
       s0.house.reputation = rep;
-      return endTurn(s0, [], fixedRng(0.999999), noEvents).house.deposits;
+      return endTurn(s0, [], fixedRng(0.999999), quiet).house.deposits;
     };
     expect(run(20)).toBeLessThan(run(50));
     expect(run(80)).toBeGreaterThan(run(50));
@@ -86,30 +86,30 @@ describe("withdrawalDemand: reputation", () => {
 
 describe("endTurn: sentiment", () => {
   it("rolls next quarter's mood at the end of the turn", () => {
-    const s = endTurn(newGame(gameData), [], fixedRng(0), noEvents);
+    const s = endTurn(fresh(), [], fixedRng(0), quiet);
     expect(s.world.sentiment).toBe("uneasy");
   });
 
   it("uses this quarter's mood for defaults, not next quarter's", () => {
     // Fair loan: p = p0 * m * 0.4. Roll between the calm and uneasy thresholds, then roll calm -> uneasy.
-    const lendFair: LendDecision = { kind: "lend", amount: 10000, rate: 0.08, tier: "fair" };
+    const lendFair: LendDecision = { kind: "lend", amount: 10000, rate: 0.08, borrower: FAIR };
     const p = tuning.loans.p0 * 0.4;
-    const s = endTurn(newGame(gameData), [lendFair], fixedRng(p * 1.5, 0), noEvents);
+    const s = endTurn(fresh(), [lendFair], fixedRng(p * 1.5, 0), quiet);
     expect(s.loans[0]!.status).toBe("active");
     expect(s.world.sentiment).toBe("uneasy");
   });
 
   it("draws one roll for the mood and one for random events when there are no loans", () => {
     let calls = 0;
-    endTurn(newGame(gameData), [], { next: () => (calls++, 0.5) }, noEvents);
+    endTurn(fresh(), [], { next: () => (calls++, 0.5) }, quiet);
     expect(calls).toBe(2);
   });
 
   it("does not change the input state", () => {
-    const s0 = newGame(gameData);
+    const s0 = fresh();
     s0.world.sentiment = "uneasy";
     const before = structuredClone(s0);
-    endTurn(s0, [], fixedRng(0), noEvents);
+    endTurn(s0, [], fixedRng(0), quiet);
     expect(s0).toEqual(before);
   });
 });
@@ -129,17 +129,17 @@ describe("withdrawals by mood", () => {
   });
 
   it("writes no ledger entry when nothing is withdrawn", () => {
-    const s = newGame(gameData);
+    const s = fresh();
     const entries = s.ledger.length;
     expect(applyWithdrawals(s, tuning)).toBeNull();
     expect(s.ledger).toHaveLength(entries);
   });
 
   it("pays uneasy depositors during End Turn and reconciles", () => {
-    const s0 = newGame(gameData);
+    const s0 = fresh();
     s0.world.sentiment = "uneasy";
     const demand = withdrawalDemand(s0.house.deposits, "uneasy", tuning, 50);
-    const s1 = endTurn(s0, [], noDefaults, noEvents);
+    const s1 = endTurn(s0, [], noDefaults, quiet);
     expect(s1.house.deposits).toBe(s0.house.deposits - demand);
     expect(s1.house.cash).toBe(s0.house.cash - demand);
     expect(accountBalance(s1, "cash")).toBe(s1.house.cash);
@@ -147,7 +147,7 @@ describe("withdrawals by mood", () => {
   });
 
   it("leaves a shortfall owed when cash is zero (forced sales come in step 3)", () => {
-    const s0 = newGame(gameData);
+    const s0 = fresh();
     s0.world.sentiment = "uneasy";
     s0.house.cash = 0;
     const r = applyWithdrawals(s0, tuning);
@@ -156,7 +156,7 @@ describe("withdrawals by mood", () => {
   });
 
   it("draws on the reserve first", () => {
-    const s0 = newGame(gameData);
+    const s0 = fresh();
     s0.world.sentiment = "uneasy";
     s0.house.reserve = 20000;
     const r = applyWithdrawals(s0, tuning);

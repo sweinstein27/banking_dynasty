@@ -22,8 +22,10 @@ export interface Game {
 }
 
 function start(seed: number): Game {
-  const base = newGame(gameData);
-  return { seed, rngState: createRng(seed).state, base, queued: [], preview: base };
+  // newGame draws the borrowers and first requests, so keep the RNG state from after those draws.
+  const rng = createRng(seed);
+  const base = newGame(gameData, rng);
+  return { seed, rngState: rng.state, base, queued: [], preview: base };
 }
 
 export function useGame() {

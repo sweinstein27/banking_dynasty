@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { gameData } from "../src/data";
+import { fresh, GOOD } from "./helpers";
 import { applyDecisions } from "../src/sim/decisions";
 import { newGame } from "../src/sim/init";
 import { createRng } from "../src/sim/rng";
@@ -13,7 +14,7 @@ const SEED = 76;
 /** Plays `turns` turns with the aggressive strategy, returning the state and the live RNG. */
 function playTo(turns: number) {
   const rng = createRng(SEED);
-  let state = newGame(gameData);
+  let state = newGame(gameData, rng);
   for (let i = 0; i < turns; i++) state = endTurn(state, aggressiveDecisions(state), rng, gameData);
   return { state, rng };
 }
@@ -26,7 +27,7 @@ function parsed(text: string) {
 
 describe("save and load", () => {
   it("round-trips a new game", () => {
-    const s = newGame(gameData);
+    const s = fresh();
     const save = parsed(toSave(s, 42, createRng(42).state, []));
     expect(save).toEqual({ version: SAVE_VERSION, seed: 42, rng_state: 42, state: s, queued: [] });
   });
@@ -55,7 +56,7 @@ describe("save and load", () => {
 });
 
 describe("parseSave refuses", () => {
-  const good = () => JSON.parse(toSave(newGame(gameData), 1, 1, [])) as Record<string, any>;
+  const good = () => JSON.parse(toSave(fresh(), 1, 1, [])) as Record<string, any>;
   const reason = (obj: unknown) => {
     const r = parseSave(typeof obj === "string" ? obj : JSON.stringify(obj), gameData);
     return r.ok ? null : r.reason;
@@ -66,7 +67,7 @@ describe("parseSave refuses", () => {
   });
 
   it("another version", () => {
-    expect(reason({ ...good(), version: 1 })).toMatch(/Unsupported save version 1 \(expected 2\)/);
+    expect(reason({ ...good(), version: 1 })).toMatch(/Unsupported save version 1 \(expected 3\)/);
   });
 
   it("a bad RNG state", () => {
@@ -87,7 +88,7 @@ describe("parseSave refuses", () => {
 
   it("queued decisions the sim would refuse", () => {
     const g = good();
-    g.queued = [{ kind: "lend", amount: 10_000_000, rate: 0.06, tier: "good" }];
+    g.queued = [{ kind: "lend", amount: 10_000_000, rate: 0.06, borrower: GOOD }];
     expect(reason(g)).toMatch(/queued decision the game refuses: Not enough cash/);
   });
 
