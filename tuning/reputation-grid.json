@@ -1,0 +1,6 @@
+{
+  "vary": {
+    "events.rival-rumours.weight": [2, 1.5, 1],
+    "events.good-name.weight": [2, 3, 4]
+  }
+}

@@ -158,7 +158,7 @@
     "title": "Rumours from Bankhaus Kessler",
     "text": "A rival house whispers on the bourse that your house is short of cash. Some depositors listen.",
     "historical": false,
-    "weight": 2,
+    "weight": 1,
     "conditions": {},
     "effects": [{ "kind": "reputation", "delta": -6 }]
   },
@@ -167,7 +167,7 @@
     "title": "A good name",
     "text": "A respected merchant tells the bourse that your house has never once been late with a payment.",
     "historical": false,
-    "weight": 2,
+    "weight": 3,
     "conditions": { "max_reputation": 80 },
     "effects": [{ "kind": "reputation", "delta": 4 }]
   },

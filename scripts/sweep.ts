@@ -39,13 +39,19 @@ const results = combinations(grid.vary).map((combo) => {
   const label = combo.map(([p, v]) => `${p.split(".").slice(-2).join(".")}=${v}`).join(" ");
   const weakest = Math.min(...CONTENDERS.map((n) => sums.find((s) => s.strategy === n)?.strong ?? 0));
   process.stdout.write(".");
-  return { label, passed: targets.filter((t) => t.pass).length, weakest, targets, sums };
+  const reputation = names
+    .map((n) => {
+      const reps = rows.filter((r) => r.strategy === n).map((r) => r.final_reputation).sort((a, b) => a - b);
+      return `${n} ${reps[Math.floor(reps.length / 2)]}`;
+    })
+    .join("  ");
+  return { label, passed: targets.filter((t) => t.pass).length, weakest, targets, sums, reputation };
 });
 
 results.sort((a, b) => b.passed - a.passed || b.weakest - a.weakest);
 console.log(`\n${results.length} combinations, seeds 1 to ${runs}. Best first.`);
 for (const r of results) {
   const med = r.sums.map((s) => `${s.strategy} ${Math.round(s.median / 1000)}k/${(s.bankrupt_rate * 100).toFixed(0)}%/${(s.strong * 100).toFixed(0)}%`).join("  ");
-  console.log(`\n${r.passed}/6 passed  ${r.label}\n  median/bankrupt/strong: ${med}`);
+  console.log(`\n${r.passed}/6 passed  ${r.label}\n  median/bankrupt/strong: ${med}\n  median final reputation: ${r.reputation}`);
   for (const t of r.targets) if (!t.pass) console.log(`  ${t.pass === null ? "n/a " : "FAIL"} ${t.id}: ${t.detail}`);
 }
