@@ -2,6 +2,7 @@ import type { DecisionResult } from "./actions";
 import { buyBond } from "./bonds";
 import { lend } from "./loans";
 import { setReserve } from "./reserves";
+import { investVenture } from "./ventures";
 import type { GameData } from "./tuning";
 import type { Decision, GameState } from "./types";
 
@@ -14,5 +15,7 @@ export function applyDecision(state: GameState, d: Decision, data: GameData): De
       return setReserve(state, d, data.tuning);
     case "buy_bond":
       return buyBond(state, d, data);
+    case "invest_venture":
+      return investVenture(state, d, data);
   }
 }

@@ -43,7 +43,7 @@ export interface Loan {
 }
 
 /** Which balance an entry moves. Summing entries per account reproduces that balance. */
-export type LedgerAccount = "cash" | "loans" | "bonds" | "deposits";
+export type LedgerAccount = "cash" | "loans" | "bonds" | "ventures" | "deposits";
 
 export type LedgerCategory = "opening" | "loan_out" | "interest" | "default" | "repayment"
   | "withdrawal"
@@ -51,7 +51,10 @@ export type LedgerCategory = "opening" | "loan_out" | "interest" | "default" | "
   | "bond_purchase"
   | "coupon"
   | "revaluation"
-  | "bond_default";
+  | "bond_default"
+  | "venture_in"
+  | "venture_payout"
+  | "venture_failure";
 
 export type BondStatus = "active" | "defaulted" | "sold";
 
@@ -71,6 +74,23 @@ export interface Bond {
   status: BondStatus;
 }
 
+export type VentureStatus = "active" | "paid_out" | "failed" | "sold";
+
+/** Capital backing one venture. Field names follow the spec's venture table, plus timing. */
+export interface Venture {
+  id: number;
+  /** Id from data/ventures.json. */
+  type: string;
+  /** Whole gulden still at stake (reduced if part is sold to meet withdrawals). */
+  invested: number;
+  expected_return: number;
+  failure_risk: number;
+  unlock_year: number;
+  start_turn: number;
+  term_quarters: number;
+  status: VentureStatus;
+}
+
 export interface LedgerEntry {
   id: number;
   turn: number;
@@ -88,6 +108,7 @@ export interface GameState {
   bonds: Bond[];
   /** States that have defaulted. They pay nothing more and sell no new bonds. */
   defaulted_states: string[];
+  ventures: Venture[];
   ledger: LedgerEntry[];
   next_ledger_id: number;
   /** Decisions taken so far this turn. Reset when the turn ends. */
@@ -117,4 +138,12 @@ export interface BuyBondDecision {
   face_value: number;
 }
 
-export type Decision = LendDecision | SetReserveDecision | BuyBondDecision;
+export interface InvestVentureDecision {
+  kind: "invest_venture";
+  /** Id from data/ventures.json. */
+  venture: string;
+  /** Whole gulden. */
+  amount: number;
+}
+
+export type Decision = LendDecision | SetReserveDecision | BuyBondDecision | InvestVentureDecision;

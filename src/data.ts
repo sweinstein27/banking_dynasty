@@ -2,10 +2,12 @@
 import borrowerNames from "../data/borrowers.json";
 import states from "../data/states.json";
 import tuning from "../data/tuning.json";
+import ventures from "../data/ventures.json";
 import type { GameData, Tuning } from "./sim/tuning";
 
 export const gameData: GameData = {
   tuning: tuning as Tuning,
   borrower_names: borrowerNames,
   states,
+  ventures,
 };

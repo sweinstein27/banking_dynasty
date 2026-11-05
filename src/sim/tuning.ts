@@ -32,6 +32,12 @@ export interface Tuning {
     loan_discount: number;
     /** Taken off the current market price. */
     bond_discount: number;
+    /** Taken off the amount invested. */
+    venture_discount: number;
+  };
+  ventures: {
+    /** Smallest amount that can be invested. */
+    min_amount: number;
   };
   bonds: {
     /** Base default chance per quarter: p_default = p0 * m_sentiment * risk. */
@@ -56,6 +62,21 @@ export interface GameData {
   borrower_names: string[];
   /** States whose bonds can be bought, from data/states.json. */
   states: BondIssuer[];
+  /** Kinds of venture the house can back, from data/ventures.json. */
+  ventures: VentureType[];
+}
+
+export interface VentureType {
+  id: string;
+  name: string;
+  /** Capital is locked for this many quarters, counting the quarter of investment. */
+  term_quarters: number;
+  /** Profit on success as a share of the amount invested, paid at maturity. */
+  expected_return: number;
+  /** Chance of failure at maturity when calm; scaled by the sentiment multiplier, capped at 1. */
+  failure_risk: number;
+  /** Cannot be backed before this year. */
+  unlock_year: number;
 }
 
 export interface BondIssuer {

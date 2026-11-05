@@ -29,11 +29,16 @@ export function bondSaleRatio(bond: Pick<Bond, "price">, tuning: Tuning): number
   return bond.price * (1 - tuning.forced_sale.bond_discount);
 }
 
+/** What a slice of a venture's stake fetches in a forced sale, in whole gulden. */
+export function ventureSalePrice(amount: number, tuning: Tuning): number {
+  return Math.round(amount * (1 - tuning.forced_sale.venture_discount));
+}
+
 /**
  * Sells assets at a discount until `needed` cash is raised or nothing is left to sell.
- * Order: bonds (most liquid, oldest first), then loans (oldest first). Only the slice needed is
- * sold: the rest stays on the books and keeps earning. A holding sold down to nothing gets
- * status `sold`. Ventures join the list in step 5. Returns the cash raised.
+ * Order: bonds (most liquid, oldest first), then loans (oldest first), then ventures (oldest
+ * first, steepest discount). Only the slice needed is sold: the rest stays on the books and keeps
+ * earning. A holding sold down to nothing gets status `sold`. Returns the cash raised.
  * Mutates `state`; callers pass a draft copy.
  */
 export function raiseCash(state: GameState, needed: number, tuning: Tuning): number {
@@ -67,6 +72,20 @@ export function raiseCash(state: GameState, needed: number, tuning: Tuning): num
     const note = `Loan #${loan.id} (${loan.borrower_name}) ${what}, at a discount to meet withdrawals`;
     addEntry(state, "cash", "forced_sale", price, note);
     addEntry(state, "loans", "forced_sale", -slice, note);
+  }
+  for (const v of state.ventures) {
+    if (raised >= needed) break;
+    if (v.status !== "active") continue;
+    const slice = amountToSell(needed - raised, v.invested, 1 - tuning.forced_sale.venture_discount);
+    const price = ventureSalePrice(slice, tuning);
+    v.invested -= slice;
+    if (v.invested === 0) v.status = "sold";
+    state.house.cash += price;
+    raised += price;
+    const what = v.status === "sold" ? "sold" : `${slice} of the stake sold, ${v.invested} kept`;
+    const note = `Venture #${v.id} (${v.type}) ${what}, at a discount to meet withdrawals`;
+    addEntry(state, "cash", "forced_sale", price, note);
+    addEntry(state, "ventures", "forced_sale", -slice, note);
   }
   return raised;
 }

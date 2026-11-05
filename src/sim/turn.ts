@@ -7,10 +7,11 @@ import type { Rng } from "./rng";
 import { nextSentiment } from "./sentiment";
 import type { GameData } from "./tuning";
 import type { Decision, GameState, Quarter } from "./types";
+import { resolveVentures, ventureBook } from "./ventures";
 
-/** NetWorth = Cash + Loans + Bonds + Ventures - Deposits. Ventures arrive in Week 2 step 5. */
+/** NetWorth = Cash + Loans + Bonds + Ventures - Deposits. Ventures count at cost until they resolve. */
 export function netWorth(state: GameState): number {
-  return state.house.cash + loanBook(state) + bondBook(state) - state.house.deposits;
+  return state.house.cash + loanBook(state) + bondBook(state) + ventureBook(state) - state.house.deposits;
 }
 
 export function loanBook(state: GameState): number {
@@ -21,9 +22,9 @@ export function loanBook(state: GameState): number {
  * Resolves one quarter:
  * 1. apply decisions, 2. roll defaults, 3. collect interest from survivors,
  * 4. repay loans that reached their term, 5. roll bond defaults and pay coupons,
- * 6. depositors withdraw for the current mood, with forced sales if cash runs short
- * (bankruptcy if even that fails), 7. roll next quarter's mood, 8. mark bonds to that mood's prices,
- * 9. advance the calendar.
+ * 6. resolve ventures that reach their term, 7. depositors withdraw for the current mood, with
+ * forced sales if cash runs short (bankruptcy if even that fails), 8. roll next quarter's mood,
+ * 9. mark bonds to that mood's prices, 10. advance the calendar.
  * Throws if the house is already bankrupt, or if a decision is invalid (check with applyDecision first).
  */
 export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data: GameData): GameState {
@@ -61,6 +62,7 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
   }
 
   resolveBonds(next, rng, data);
+  resolveVentures(next, rng, data);
   resolveWithdrawals(next, data.tuning);
   world.sentiment = nextSentiment(world.sentiment, rng.next(), data.tuning);
   markBonds(next, data);

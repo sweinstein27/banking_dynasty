@@ -25,6 +25,7 @@ export function newGame(data: GameData): GameState {
     loans: [],
     bonds: [],
     defaulted_states: [],
+    ventures: [],
     ledger: [],
     next_ledger_id: 1,
     actions_this_turn: 0,

@@ -9,6 +9,7 @@ import { freeCash } from "../src/sim/reserves";
 import { createRng } from "../src/sim/rng";
 import { endTurn, loanBook, netWorth } from "../src/sim/turn";
 import type { Decision, GameState, LedgerEntry, TierName } from "../src/sim/types";
+import { quartersLeft, ventureBook, ventureFailureChance, venturePayout } from "../src/sim/ventures";
 
 function argValue(name: string): number | undefined {
   const i = process.argv.indexOf(`--${name}`);
@@ -53,7 +54,7 @@ const pct = (r: number) => `${(r * 100).toFixed(1)}%`;
 function printStatus(s: GameState) {
   const { world, house } = s;
   console.log(`\n=== ${house.name}, ${house.city}. ${world.year} Q${world.quarter} (turn ${world.turn}) ===`);
-  console.log(`Cash ${fl(house.cash)}  Loans ${fl(loanBook(s))}  Bonds ${fl(bondBook(s))}  Deposits ${fl(house.deposits)}  Net worth ${fl(netWorth(s))}`);
+  console.log(`Cash ${fl(house.cash)}  Loans ${fl(loanBook(s))}  Bonds ${fl(bondBook(s))}  Ventures ${fl(ventureBook(s))}  Deposits ${fl(house.deposits)}  Net worth ${fl(netWorth(s))}`);
   console.log(`Reserve ${fl(house.reserve)}  Free cash ${fl(freeCash(s))}`);
   console.log(`Sentiment ${world.sentiment}  Base rate ${pct(world.base_rate)}  Actions left ${actionsLeft(s, tuning)}`);
 }
@@ -61,7 +62,12 @@ function printStatus(s: GameState) {
 function printHoldings(s: GameState) {
   const active = s.loans.filter((l) => l.status === "active");
   const bonds = s.bonds.filter((b) => b.status === "active");
-  if (!active.length && !bonds.length) return console.log("No active loans or bonds.");
+  const ventures = s.ventures.filter((v) => v.status === "active");
+  if (!active.length && !bonds.length && !ventures.length) return console.log("No active loans, bonds or ventures.");
+  for (const v of ventures) {
+    const name = gameData.ventures.find((t) => t.id === v.type)?.name ?? v.type;
+    console.log(`  Venture #${v.id} ${name}: ${fl(v.invested)} locked, pays ${fl(venturePayout(v))} in ${quartersLeft(s, v)} qtr if it succeeds`);
+  }
   for (const b of bonds) {
     const name = gameData.states.find((st) => st.id === b.issuer_state)?.name ?? b.issuer_state;
     console.log(`  Bond #${b.id} ${name}: ${fl(b.face_value)} face at ${b.price}, worth ${fl(bondValue(b))}, coupon ${fl(quarterlyCoupon(b))}/qtr`);
@@ -77,7 +83,7 @@ function printLedger(entries: LedgerEntry[]) {
   if (!entries.length) return console.log("  (no entries)");
   for (const e of entries) {
     const amt = (e.amount >= 0 ? "+" : "") + e.amount.toLocaleString("en-US");
-    console.log(`  ${e.account.padEnd(8)} ${e.category.padEnd(13)} ${amt.padStart(10)}  ${e.note}`);
+    console.log(`  ${e.account.padEnd(8)} ${e.category.padEnd(15)} ${amt.padStart(10)}  ${e.note}`);
   }
 }
 
@@ -113,6 +119,20 @@ async function askBond(preview: GameState): Promise<Decision | null> {
   return { kind: "buy_bond", state: st.id, face_value };
 }
 
+async function askVenture(preview: GameState): Promise<Decision | null> {
+  const { world } = preview;
+  console.log("Ventures:");
+  gameData.ventures.forEach((v, i) => {
+    const locked = world.year < v.unlock_year ? `  [not before ${v.unlock_year}]` : "";
+    const fail = pct(ventureFailureChance(v.failure_risk, world.sentiment, tuning));
+    console.log(`  ${i + 1}) ${v.name}: ${v.term_quarters} qtr, returns ${pct(v.expected_return)}, fails ${fail} if it ended now${locked}`);
+  });
+  const v = gameData.ventures[Number(await ask(`Venture (1-${gameData.ventures.length}): `)) - 1];
+  if (!v) return console.log("Unknown venture."), null;
+  const amount = Number(await ask(`Amount in gulden (free cash ${fl(freeCash(preview))}): `));
+  return { kind: "invest_venture", venture: v.id, amount };
+}
+
 async function askReserve(preview: GameState): Promise<Decision> {
   console.log(`Current reserve: ${fl(preview.house.reserve)} Lending cannot take cash below it; withdrawals draw on it first.`);
   const amount = Number(await ask("New reserve in gulden: "));
@@ -130,10 +150,10 @@ async function main() {
 
     while (!ended) {
       printStatus(preview);
-      const choice = (await ask("[1] Lend  [2] Buy bonds  [3] Set reserve  [4] View holdings  [5] End turn  [q] Quit: "))?.trim();
+      const choice = (await ask("[1] Lend  [2] Buy bonds  [3] Back venture  [4] Set reserve  [5] View holdings  [6] End turn  [q] Quit: "))?.trim();
       if (choice === null || choice === undefined || choice === "q") return;
-      if (choice === "1" || choice === "2" || choice === "3") {
-        const askFor = { "1": askLend, "2": askBond, "3": askReserve }[choice];
+      if (choice === "1" || choice === "2" || choice === "3" || choice === "4") {
+        const askFor = { "1": askLend, "2": askBond, "3": askVenture, "4": askReserve }[choice];
         const d = await askFor(preview);
         if (!d) continue;
         const r = applyDecision(preview, d, gameData);
@@ -143,10 +163,11 @@ async function main() {
           preview = r.state;
           if (d.kind === "lend") console.log("Loan agreed.");
           else if (d.kind === "buy_bond") console.log("Bonds bought.");
+          else if (d.kind === "invest_venture") console.log("Venture backed.");
           else console.log(`Reserve set to ${fl(d.amount)}`);
         }
-      } else if (choice === "4") printHoldings(preview);
-      else if (choice === "5") ended = true;
+      } else if (choice === "5") printHoldings(preview);
+      else if (choice === "6") ended = true;
     }
 
     const turn = state.world.turn;
