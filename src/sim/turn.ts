@@ -3,6 +3,7 @@ import { bondBook, markBonds, resolveBonds } from "./bonds";
 import { applyDecision } from "./decisions";
 import { addEntry } from "./ledger";
 import { resolveWithdrawals } from "./liquidity";
+import { quarterNews } from "./news";
 import { defaultChance, quarterlyInterest } from "./loans";
 import type { Rng } from "./rng";
 import { nextSentiment } from "./sentiment";
@@ -25,7 +26,7 @@ export function loanBook(state: GameState): number {
  * 4. repay loans that reached their term, 5. roll bond defaults and pay coupons,
  * 6. resolve ventures that reach their term, 7. depositors withdraw for the current mood, with
  * forced sales if cash runs short (bankruptcy if even that fails), 8. roll next quarter's mood,
- * 9. mark bonds to that mood's prices, 10. advance the calendar.
+ * 9. mark bonds to that mood's prices, 10. write the quarter's news, 11. advance the calendar.
  * Throws if the run is over (bankrupt, or past tuning.end), or if a decision is invalid (check with applyDecision first).
  */
 export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data: GameData): GameState {
@@ -69,6 +70,7 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
   resolveWithdrawals(next, data.tuning);
   world.sentiment = nextSentiment(world.sentiment, rng.next(), data.tuning);
   markBonds(next, data);
+  next.news.push(...quarterNews(state, next, data));
 
   next.actions_this_turn = 0;
   world.turn += 1;

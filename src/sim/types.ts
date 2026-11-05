@@ -101,6 +101,24 @@ export interface LedgerEntry {
   note: string;
 }
 
+export type NewsKind =
+  | "loan_default"
+  | "bond_default"
+  | "venture_paid_out"
+  | "venture_failed"
+  | "withdrawal"
+  | "forced_sale"
+  | "bankruptcy"
+  | "mood";
+
+/** One message for the News panel, written when a quarter resolves. */
+export interface NewsItem {
+  /** The turn whose resolution produced it. */
+  turn: number;
+  kind: NewsKind;
+  text: string;
+}
+
 export interface GameState {
   world: WorldState;
   house: House;
@@ -111,6 +129,8 @@ export interface GameState {
   ventures: Venture[];
   ledger: LedgerEntry[];
   next_ledger_id: number;
+  /** Every quarter's news, oldest first. */
+  news: NewsItem[];
   /** Decisions taken so far this turn. Reset when the turn ends. */
   actions_this_turn: number;
 }
