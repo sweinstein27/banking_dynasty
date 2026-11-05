@@ -1,5 +1,6 @@
+import { applyDecision } from "./decisions";
 import { addEntry } from "./ledger";
-import { defaultChance, lend, quarterlyInterest } from "./loans";
+import { defaultChance, quarterlyInterest } from "./loans";
 import type { Rng } from "./rng";
 import type { GameData } from "./tuning";
 import type { Decision, GameState, Quarter } from "./types";
@@ -17,12 +18,12 @@ export function loanBook(state: GameState): number {
  * Resolves one quarter:
  * 1. apply decisions, 2. roll defaults, 3. collect interest from survivors,
  * 4. repay loans that reached their term, 5. advance the calendar.
- * Throws if a decision is invalid; callers should check with checkLend first.
+ * Throws if a decision is invalid; callers should check with applyDecision first.
  */
 export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data: GameData): GameState {
   let next = state;
   for (const d of decisions) {
-    const result = lend(next, d, data);
+    const result = applyDecision(next, d, data);
     if (!result.ok) throw new Error(`Invalid decision: ${result.reason}`);
     next = result.state;
   }
@@ -52,6 +53,7 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
     }
   }
 
+  next.actions_this_turn = 0;
   world.turn += 1;
   if (world.quarter === 4) {
     world.quarter = 1;

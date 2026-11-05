@@ -1,0 +1,15 @@
+import type { DecisionResult } from "./actions";
+import { lend } from "./loans";
+import { setReserve } from "./reserves";
+import type { GameData } from "./tuning";
+import type { Decision, GameState } from "./types";
+
+/** Applies one decision of any kind. Returns a new state, or the reason it was refused. */
+export function applyDecision(state: GameState, d: Decision, data: GameData): DecisionResult {
+  switch (d.kind) {
+    case "lend":
+      return lend(state, d, data);
+    case "set_reserve":
+      return setReserve(state, d, data.tuning);
+  }
+}

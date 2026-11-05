@@ -19,6 +19,8 @@ export interface House {
   cash: number;
   deposits: number;
   reputation: number;
+  /** Cash floor set by the player. Spending may not take cash below it; withdrawals may. */
+  reserve: number;
 }
 
 export type LoanStatus = "active" | "repaid" | "defaulted";
@@ -39,7 +41,7 @@ export interface Loan {
 /** Which balance an entry moves. Summing entries per account reproduces that balance. */
 export type LedgerAccount = "cash" | "loans" | "deposits";
 
-export type LedgerCategory = "opening" | "loan_out" | "interest" | "default" | "repayment";
+export type LedgerCategory = "opening" | "loan_out" | "interest" | "default" | "repayment" | "withdrawal";
 
 export interface LedgerEntry {
   id: number;
@@ -57,6 +59,8 @@ export interface GameState {
   loans: Loan[];
   ledger: LedgerEntry[];
   next_ledger_id: number;
+  /** Decisions taken so far this turn. Reset when the turn ends. */
+  actions_this_turn: number;
 }
 
 export interface LendDecision {
@@ -68,4 +72,10 @@ export interface LendDecision {
   tier: TierName;
 }
 
-export type Decision = LendDecision;
+export interface SetReserveDecision {
+  kind: "set_reserve";
+  /** Whole gulden. */
+  amount: number;
+}
+
+export type Decision = LendDecision | SetReserveDecision;

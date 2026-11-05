@@ -2,7 +2,9 @@
 import { createInterface } from "node:readline";
 import { gameData } from "../src/data";
 import { newGame } from "../src/sim/init";
-import { lend } from "../src/sim/loans";
+import { actionsLeft } from "../src/sim/actions";
+import { applyDecision } from "../src/sim/decisions";
+import { freeCash } from "../src/sim/reserves";
 import { createRng } from "../src/sim/rng";
 import { endTurn, loanBook, netWorth } from "../src/sim/turn";
 import type { Decision, GameState, LedgerEntry, TierName } from "../src/sim/types";
@@ -47,11 +49,12 @@ function ask(prompt: string): Promise<string | null> {
 const fl = (n: number) => `${n.toLocaleString("en-US")} fl.`;
 const pct = (r: number) => `${(r * 100).toFixed(1)}%`;
 
-function printStatus(s: GameState, queued: Decision[]) {
+function printStatus(s: GameState) {
   const { world, house } = s;
   console.log(`\n=== ${house.name}, ${house.city}. ${world.year} Q${world.quarter} (turn ${world.turn}) ===`);
   console.log(`Cash ${fl(house.cash)}  Loans ${fl(loanBook(s))}  Deposits ${fl(house.deposits)}  Net worth ${fl(netWorth(s))}`);
-  console.log(`Sentiment ${world.sentiment}  Base rate ${pct(world.base_rate)}  Actions left ${tuning.loans.actions_per_turn - queued.length}`);
+  console.log(`Reserve ${fl(house.reserve)}  Free cash ${fl(freeCash(s))}`);
+  console.log(`Sentiment ${world.sentiment}  Base rate ${pct(world.base_rate)}  Actions left ${actionsLeft(s, tuning)}`);
 }
 
 function printLoans(s: GameState) {
@@ -68,7 +71,7 @@ function printLedger(entries: LedgerEntry[]) {
   if (!entries.length) return console.log("  (no entries)");
   for (const e of entries) {
     const amt = (e.amount >= 0 ? "+" : "") + e.amount.toLocaleString("en-US");
-    console.log(`  ${e.account.padEnd(8)} ${e.category.padEnd(9)} ${amt.padStart(10)}  ${e.note}`);
+    console.log(`  ${e.account.padEnd(8)} ${e.category.padEnd(10)} ${amt.padStart(10)}  ${e.note}`);
   }
 }
 
@@ -82,9 +85,15 @@ async function askLend(preview: GameState): Promise<Decision | null> {
   const tierIn = await ask("Tier (1-3): ");
   const tier = tierNames[Number(tierIn) - 1] ?? (tierNames.find((t) => t === tierIn?.trim()) as TierName | undefined);
   if (!tier) return console.log("Unknown tier."), null;
-  const amount = Number(await ask(`Amount in gulden (cash ${fl(preview.house.cash)}): `));
+  const amount = Number(await ask(`Amount in gulden (free cash ${fl(freeCash(preview))}): `));
   const rate = Number(await ask("Annual rate in % (e.g. 8): ")) / 100;
   return { kind: "lend", amount, rate, tier };
+}
+
+async function askReserve(preview: GameState): Promise<Decision> {
+  console.log(`Current reserve: ${fl(preview.house.reserve)} Lending cannot take cash below it; withdrawals draw on it first.`);
+  const amount = Number(await ask("New reserve in gulden: "));
+  return { kind: "set_reserve", amount };
 }
 
 async function main() {
@@ -97,21 +106,21 @@ async function main() {
     let ended = false;
 
     while (!ended) {
-      printStatus(preview, queued);
-      const choice = (await ask("[1] Lend  [2] View loans  [3] End turn  [q] Quit: "))?.trim();
+      printStatus(preview);
+      const choice = (await ask("[1] Lend  [2] Set reserve  [3] View loans  [4] End turn  [q] Quit: "))?.trim();
       if (choice === null || choice === undefined || choice === "q") return;
-      if (choice === "1") {
-        const d = await askLend(preview);
+      if (choice === "1" || choice === "2") {
+        const d = choice === "1" ? await askLend(preview) : await askReserve(preview);
         if (!d) continue;
-        const r = lend(preview, d, gameData);
+        const r = applyDecision(preview, d, gameData);
         if (!r.ok) console.log(`Refused: ${r.reason}`);
         else {
           queued.push(d);
           preview = r.state;
-          console.log("Loan agreed.");
+          console.log(d.kind === "lend" ? "Loan agreed." : `Reserve set to ${fl(d.amount)}`);
         }
-      } else if (choice === "2") printLoans(preview);
-      else if (choice === "3") ended = true;
+      } else if (choice === "3") printLoans(preview);
+      else if (choice === "4") ended = true;
     }
 
     const turn = state.world.turn;
@@ -119,7 +128,7 @@ async function main() {
     printLedger(state.ledger.filter((e) => e.turn === turn && e.category !== "opening"));
   }
 
-  printStatus(state, []);
+  printStatus(state);
   console.log(`\nFinished ${maxTurns} turns. Final net worth ${fl(netWorth(state))}`);
 }
 

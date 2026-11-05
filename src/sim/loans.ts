@@ -1,30 +1,26 @@
+import { checkActionLeft, type DecisionResult } from "./actions";
 import { addEntry } from "./ledger";
+import { freeCash } from "./reserves";
 import type { GameData, Tuning } from "./tuning";
 import type { GameState, LendDecision, Loan, Sentiment } from "./types";
-
-export type LendResult = { ok: true; state: GameState } | { ok: false; reason: string };
-
-/** Loans made this turn, each of which used one action. */
-export function actionsUsed(state: GameState): number {
-  return state.loans.filter((l) => l.start_turn === state.world.turn).length;
-}
 
 /** Returns why a lend decision is invalid, or null if it can go ahead. */
 export function checkLend(state: GameState, d: LendDecision, tuning: Tuning): string | null {
   const t = tuning.loans;
   const tier = t.tiers[d.tier];
   if (!tier) return `Unknown borrower tier "${d.tier}"`;
-  if (actionsUsed(state) >= t.actions_per_turn) return `No actions left this turn (max ${t.actions_per_turn})`;
+  const noAction = checkActionLeft(state, tuning);
+  if (noAction) return noAction;
   if (!Number.isInteger(d.amount)) return "Amount must be whole gulden";
   if (d.amount < t.min_amount) return `Amount must be at least ${t.min_amount}`;
-  if (d.amount > state.house.cash) return `Not enough cash (have ${state.house.cash})`;
+  if (d.amount > freeCash(state)) return notEnoughCash(state);
   if (!(d.rate > 0)) return "Rate must be above zero";
   if (d.rate > tier.max_rate) return `A ${d.tier} borrower will not pay more than ${(tier.max_rate * 100).toFixed(1)}%`;
   return null;
 }
 
 /** Makes a loan: cash moves into the loan book. Returns a new state; the input is not changed. */
-export function lend(state: GameState, d: LendDecision, data: GameData): LendResult {
+export function lend(state: GameState, d: LendDecision, data: GameData): DecisionResult {
   const reason = checkLend(state, d, data.tuning);
   if (reason) return { ok: false, reason };
 
@@ -42,6 +38,7 @@ export function lend(state: GameState, d: LendDecision, data: GameData): LendRes
   };
   next.loans.push(loan);
   next.house.cash -= d.amount;
+  next.actions_this_turn += 1;
   const note = `Loan #${loan.id} to ${loan.borrower_name} at ${(d.rate * 100).toFixed(1)}%`;
   addEntry(next, "cash", "loan_out", -d.amount, note);
   addEntry(next, "loans", "loan_out", d.amount, note);
@@ -56,4 +53,10 @@ export function quarterlyInterest(loan: Pick<Loan, "principal" | "rate">): numbe
 /** p_default = p0 * m_sentiment * (1 - q), per quarter. */
 export function defaultChance(quality: number, sentiment: Sentiment, tuning: Tuning): number {
   return tuning.loans.p0 * tuning.sentiment_multiplier[sentiment] * (1 - quality);
+}
+
+function notEnoughCash(state: GameState): string {
+  const { cash, reserve } = state.house;
+  if (reserve === 0) return `Not enough cash (have ${cash})`;
+  return `Not enough cash above the reserve (have ${cash}, reserve ${reserve}, free ${freeCash(state)})`;
 }

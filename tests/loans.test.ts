@@ -102,7 +102,7 @@ describe("lend", () => {
 
   it("refuses after the turn's actions are used up", () => {
     let s = newGame(gameData);
-    for (let i = 0; i < tuning.loans.actions_per_turn; i++) s = lendOk(s, { ...good, amount: 1000 });
+    for (let i = 0; i < tuning.actions_per_turn; i++) s = lendOk(s, { ...good, amount: 1000 });
     expect(checkLend(s, { ...good, amount: 1000 }, tuning)).toMatch(/No actions left/);
   });
 

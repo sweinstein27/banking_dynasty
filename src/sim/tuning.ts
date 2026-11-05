@@ -16,12 +16,14 @@ export interface Tuning {
     reputation: number;
     base_rate: number;
     sentiment: Sentiment;
+    reserve: number;
   };
+  /** Shared by every decision type. */
+  actions_per_turn: number;
   sentiment_multiplier: Record<Sentiment, number>;
   loans: {
     p0: number;
     term_quarters: number;
-    actions_per_turn: number;
     min_amount: number;
     tiers: Record<TierName, TierTuning>;
   };

@@ -8,8 +8,10 @@
     "deposits": 50000,
     "reputation": 50,
     "base_rate": 0.05,
-    "sentiment": "calm"
+    "sentiment": "calm",
+    "reserve": 0
   },
+  "actions_per_turn": 3,
   "sentiment_multiplier": {
     "calm": 1,
     "uneasy": 2,
@@ -18,7 +20,6 @@
   "loans": {
     "p0": 0.04,
     "term_quarters": 4,
-    "actions_per_turn": 3,
     "min_amount": 1000,
     "tiers": {
       "poor": { "quality": 0.3, "max_rate": 0.16 },
