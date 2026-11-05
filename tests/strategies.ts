@@ -113,7 +113,7 @@ export function aggressiveDecisions(state: GameState): Decision[] {
 }
 
 /** Seed for the panic golden run, picked with `npm run find-panic-seed`; see docs/decisions.md. */
-export const PANIC_SEED = 137;
+export const PANIC_SEED = 2286;
 
 /**
  * What the panic golden run must exercise: a panic with a bank run, forced sales of both bonds and

@@ -1,4 +1,5 @@
 import { createBorrowers, drawRequests } from "./borrowers";
+import { createFamily } from "./family";
 import { addEntry } from "./ledger";
 import type { Rng } from "./rng";
 import type { GameData } from "./tuning";
@@ -33,6 +34,7 @@ export function newGame(data: GameData, rng: Rng): GameState {
     defaulted_states: [],
     ventures: [],
     borrowers: createBorrowers(data, rng),
+    people: createFamily(data, rng),
     requests: [],
     ledger: [],
     next_ledger_id: 1,

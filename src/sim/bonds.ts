@@ -1,3 +1,4 @@
+import { connectionsBonus, headStat } from "./family";
 import { fl } from "./format";
 import { checkActionLeft, type DecisionResult } from "./actions";
 import { addEntry } from "./ledger";
@@ -17,6 +18,11 @@ export function bondPrice(risk: number, sentiment: Sentiment, tuning: Tuning): n
 export function stateRisk(state: GameState, issuer: BondIssuer): number {
   const shifted = issuer.risk + (state.risk_shift[issuer.id] ?? 0);
   return Math.round(Math.min(1, Math.max(0, shifted)) * 1000) / 1000;
+}
+
+/** Reputation a state requires before it sells to the house: its min_reputation, less the head's Connections bonus. */
+export function reputationGate(state: GameState, issuer: BondIssuer, tuning: Tuning): number {
+  return issuer.min_reputation - connectionsBonus(headStat(state, "connections", tuning), tuning);
 }
 
 /** Book value of a holding at its last mark, in whole gulden. */
@@ -51,8 +57,9 @@ export function checkBuyBond(state: GameState, d: BuyBondDecision, data: GameDat
   const noAction = checkActionLeft(state, t);
   if (noAction) return noAction;
   if (state.defaulted_states.includes(issuer.id)) return `${issuer.name} has defaulted and sells no new bonds`;
-  if (state.house.reputation < issuer.min_reputation)
-    return `${issuer.name} will only deal with houses of reputation ${issuer.min_reputation} or more (yours is ${state.house.reputation})`;
+  const gate = reputationGate(state, issuer, t);
+  if (state.house.reputation < gate)
+    return `${issuer.name} will only deal with houses of reputation ${gate} or more (yours is ${state.house.reputation})`;
   if (!Number.isInteger(d.face_value)) return "Face value must be whole gulden";
   if (d.face_value < t.bonds.min_amount) return `Face value must be at least ${fl(t.bonds.min_amount)}`;
   const cost = bondCost(state, issuer, d.face_value, t);

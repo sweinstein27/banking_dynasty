@@ -1,6 +1,7 @@
 // Loads data/*.json for scripts, tests and (later) the UI. Kept outside src/sim so the sim stays I/O free.
 import borrowers from "../data/borrowers.json";
 import events from "../data/events.json";
+import family from "../data/family.json";
 import states from "../data/states.json";
 import tuning from "../data/tuning.json";
 import ventures from "../data/ventures.json";
@@ -12,4 +13,5 @@ export const gameData: GameData = {
   states,
   ventures,
   events: events as GameEvent[],
+  family,
 };

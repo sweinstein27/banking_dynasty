@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { gameData } from "../data";
 import { bondBook, bondValue, quarterlyCoupon } from "../sim/bonds";
 import { estimateRange } from "../sim/borrowers";
+import { headStat } from "../sim/family";
 import { debtBook, debtInterest } from "../sim/crisis";
 import { freeCash } from "../sim/reserves";
 import { loanBook, netWorth } from "../sim/turn";
@@ -89,7 +90,7 @@ export function LedgerPanel({ base, preview }: { base: GameState; preview: GameS
 function estimateText(state: GameState, borrowerId: number): string {
   const b = state.borrowers.find((x) => x.id === borrowerId);
   if (!b) return "no estimate";
-  const r = estimateRange(b, gameData.tuning);
+  const r = estimateRange(b, headStat(state, "prudence", gameData.tuning), gameData.tuning);
   return `estimated quality ${r.low.toFixed(2)} to ${r.high.toFixed(2)}`;
 }
 

@@ -7,9 +7,10 @@ import { createRng } from "../src/sim/rng";
 import { parseSave, SAVE_VERSION, toSave } from "../src/sim/save";
 import { endTurn } from "../src/sim/turn";
 import type { Decision, GameState } from "../src/sim/types";
-import { aggressiveDecisions, play } from "./strategies";
+import { aggressiveDecisions, PANIC_SEED, play } from "./strategies";
 
-const SEED = 76;
+/** The panic seed survives 20 turns of the aggressive strategy, so the run never ends early. */
+const SEED = PANIC_SEED;
 
 /** Plays `turns` turns with the aggressive strategy, returning the state and the live RNG. */
 function playTo(turns: number) {
@@ -67,7 +68,7 @@ describe("parseSave refuses", () => {
   });
 
   it("another version", () => {
-    expect(reason({ ...good(), version: 1 })).toMatch(/Unsupported save version 1 \(expected 4\)/);
+    expect(reason({ ...good(), version: 1 })).toMatch(/Unsupported save version 1 \(expected 5\)/);
   });
 
   it("a bad RNG state", () => {

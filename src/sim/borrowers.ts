@@ -32,16 +32,16 @@ export function maxRate(marketQuality: number, tuning: Tuning): number {
   return Math.round((base + spread * (1 - marketQuality)) * 200) / 200;
 }
 
-/** Half-width of the player's estimate: report_width after a report, otherwise narrowed by Prudence. */
-export function estimateWidth(b: Pick<Borrower, "reported">, tuning: Tuning): number {
+/** Half-width of the player's estimate: report_width after a report, otherwise narrowed by the head's Prudence. */
+export function estimateWidth(b: Pick<Borrower, "reported">, prudence: number, tuning: Tuning): number {
   const e = tuning.loans.estimate;
   if (b.reported) return e.report_width;
-  return e.width * Math.max(0, 1 - tuning.start.head_prudence * e.prudence_step);
+  return e.width * Math.max(0, 1 - prudence * e.prudence_step);
 }
 
-/** The quality range the player sees. It always contains the true quality. */
-export function estimateRange(b: Borrower, tuning: Tuning): { low: number; high: number } {
-  const w = estimateWidth(b, tuning);
+/** The quality range the player sees, given the head's Prudence. It always contains the true quality. */
+export function estimateRange(b: Borrower, prudence: number, tuning: Tuning): { low: number; high: number } {
+  const w = estimateWidth(b, prudence, tuning);
   const centre = b.quality + b.estimate_noise * w;
   return {
     low: Math.floor(clamp01(centre - w) * 100) / 100,

@@ -1,3 +1,4 @@
+import { acumenFactor, headStat } from "./family";
 import { fl } from "./format";
 import { checkActionLeft, type DecisionResult } from "./actions";
 import { addEntry } from "./ledger";
@@ -11,9 +12,9 @@ export function ventureBook(state: GameState): number {
   return state.ventures.filter((v) => v.status === "active").reduce((sum, v) => sum + v.invested, 0);
 }
 
-/** Chance of failure at maturity: failure_risk * m_sentiment, capped at 1. */
-export function ventureFailureChance(failureRisk: number, sentiment: Sentiment, tuning: Tuning): number {
-  return Math.min(1, failureRisk * tuning.sentiment_multiplier[sentiment]);
+/** Chance of failure at maturity: failure_risk * m_sentiment * the head's Acumen factor, capped at 1. */
+export function ventureFailureChance(failureRisk: number, sentiment: Sentiment, tuning: Tuning, acumen: number): number {
+  return Math.min(1, failureRisk * tuning.sentiment_multiplier[sentiment] * acumenFactor(acumen, tuning));
 }
 
 /** Cash returned on success, in whole gulden: the stake plus its expected return. */
@@ -77,7 +78,7 @@ export function resolveVentures(state: GameState, rng: Rng, data: GameData): voi
     if (v.status !== "active" || quartersLeft(state, v) > 1) continue;
     const name = data.ventures.find((t) => t.id === v.type)?.name ?? v.type;
 
-    if (rng.next() < ventureFailureChance(v.failure_risk, state.world.sentiment, data.tuning)) {
+    if (rng.next() < ventureFailureChance(v.failure_risk, state.world.sentiment, data.tuning, headStat(state, "acumen", data.tuning))) {
       v.status = "failed";
       addEntry(state, "ventures", "venture_failure", -v.invested, `Venture #${v.id}: ${name} failed`);
       continue;

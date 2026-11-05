@@ -12,10 +12,17 @@ export interface Tuning {
     base_rate: number;
     sentiment: Sentiment;
     reserve: number;
-    /** Placeholder name shown in the Family panel until Week 5 adds people. */
-    head_of_house: string;
-    /** Placeholder Prudence (1 to 10) for the head of house until Week 5. Narrows borrower estimates. */
-    head_prudence: number;
+  };
+  family: {
+    /** Children's starting stats are each drawn as a whole number in this range. */
+    child_stats: { min: number; max: number };
+    /** A stat at this value changes nothing. */
+    neutral_stat: number;
+    max_stat: number;
+    /** Each point of the head's Acumen above neutral cuts venture failure risk by this share (below neutral, raises it). */
+    acumen_step: number;
+    /** Each point of the head's Connections above neutral lowers states' reputation gates by this much. */
+    connections_step: number;
   };
   /** Last quarter of the run. Once it has been played the run is finished. */
   end: {
@@ -101,6 +108,7 @@ export interface GameData {
   tuning: Tuning;
   /** Merchant houses that borrow, from data/borrowers.json. */
   borrowers: BorrowerType[];
+  family: FamilyData;
   /** States whose bonds can be bought, from data/states.json. */
   states: BondIssuer[];
   /** Kinds of venture the house can back, from data/ventures.json. */
@@ -149,6 +157,12 @@ export interface GameEvent {
   conditions: EventConditions;
   /** May be empty for news-only events. */
   effects: EventEffect[];
+}
+
+/** data/family.json: the house's starting family. Names are invented. */
+export interface FamilyData {
+  head: { name: string; birth_year: number; acumen: number; prudence: number; connections: number };
+  children: { name: string; birth_year: number }[];
 }
 
 export interface BorrowerType {

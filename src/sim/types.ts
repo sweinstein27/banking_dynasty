@@ -28,6 +28,22 @@ export type HouseStatus = "solvent" | "bankrupt";
 
 export type LoanStatus = "active" | "repaid" | "defaulted" | "sold" | "called";
 
+/** A member of the family. Field names follow the spec's person table. Stats run from 1 to 10. */
+export interface Person {
+  id: number;
+  house_id: number;
+  name: string;
+  birth_year: number;
+  death_year: number | null;
+  is_head: boolean;
+  /** Venture success. */
+  acumen: number;
+  /** Spotting bad borrowers. */
+  prudence: number;
+  /** Access to state bonds. */
+  connections: number;
+}
+
 /** A merchant house that borrows from the player. Quality is hidden: the player sees estimateRange. */
 export interface Borrower {
   id: number;
@@ -186,6 +202,8 @@ export interface GameState {
   defaulted_states: string[];
   ventures: Venture[];
   borrowers: Borrower[];
+  /** The family, living and dead, in order of birth (the founding head first). */
+  people: Person[];
   /** This quarter's loan requests, drawn at the end of the previous turn. */
   requests: LoanRequest[];
   ledger: LedgerEntry[];

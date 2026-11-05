@@ -8,7 +8,7 @@ import { loanBook } from "./turn";
 import type { Decision, GameState, LedgerAccount } from "./types";
 import { ventureBook } from "./ventures";
 
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 export interface SaveFile {
   version: number;
@@ -51,7 +51,7 @@ export function parseSave(text: string, data: GameData): ParseResult {
 
   const s = raw.state;
   if (!isObject(s) || !isObject(s.world) || !isObject(s.house)) return { ok: false, reason: "Save file has no game state" };
-  for (const key of ["loans", "bonds", "defaulted_states", "ventures", "ledger", "news", "fired_events", "borrowers", "requests", "debts"] as const) {
+  for (const key of ["loans", "bonds", "defaulted_states", "ventures", "ledger", "news", "fired_events", "borrowers", "requests", "debts", "people"] as const) {
     if (!Array.isArray(s[key])) return { ok: false, reason: `Save file state is missing "${key}"` };
   }
   if (!isObject(s.risk_shift)) return { ok: false, reason: 'Save file state is missing "risk_shift"' };

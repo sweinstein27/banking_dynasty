@@ -61,7 +61,7 @@ describe("estimateRange", () => {
     for (const q of [0, 0.05, 0.3, 0.5, 0.77, 0.95, 1]) {
       for (const n of [-1, -0.6, 0, 0.3, 1]) {
         for (const reported of [false, true]) {
-          const r = estimateRange(borrower(q, n, reported), tuning);
+          const r = estimateRange(borrower(q, n, reported), 5, tuning);
           expect(r.low, `${q} ${n}`).toBeLessThanOrEqual(q);
           expect(r.high, `${q} ${n}`).toBeGreaterThanOrEqual(q);
           expect(r.low).toBeGreaterThanOrEqual(0);
@@ -72,16 +72,16 @@ describe("estimateRange", () => {
   });
 
   it("is narrowed by Prudence, and much narrower after a report", () => {
-    expect(estimateWidth(borrower(0.5, 0), tuning)).toBeCloseTo(t.estimate.width * (1 - tuning.start.head_prudence * t.estimate.prudence_step));
-    const before = estimateRange(borrower(0.5, 0.4), tuning);
-    const after = estimateRange(borrower(0.5, 0.4, true), tuning);
+    expect(estimateWidth(borrower(0.5, 0), 5, tuning)).toBeCloseTo(t.estimate.width * (1 - 5 * t.estimate.prudence_step));
+    const before = estimateRange(borrower(0.5, 0.4), 5, tuning);
+    const after = estimateRange(borrower(0.5, 0.4, true), 5, tuning);
     expect(after.high - after.low).toBeLessThan(before.high - before.low);
     expect(after.high - after.low).toBeLessThanOrEqual(2 * t.estimate.report_width + 0.02);
   });
 
   it("is off-centre by the borrower's fixed noise", () => {
-    const r = estimateRange(borrower(0.5, 1), tuning);
-    const w = estimateWidth(borrower(0.5, 1), tuning);
+    const r = estimateRange(borrower(0.5, 1), 5, tuning);
+    const w = estimateWidth(borrower(0.5, 1), 5, tuning);
     // Bounds are rounded outwards to the hundredth, so the range never shrinks past the truth.
     expect(r.low).toBe(0.5);
     expect(r.high).toBe(Math.ceil((0.5 + 2 * w) * 100) / 100);
