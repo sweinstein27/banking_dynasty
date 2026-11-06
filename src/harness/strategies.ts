@@ -35,7 +35,8 @@ export const idle: Strategy = () => [];
  * before lending, lends only where even the low end of the estimate is 0.6 or better, buys bonds
  * only from the safest states (risk 0.25 or less), and educates the heir who would take over until
  * their stats are enough to be trained. In a panic it pays depositors slowly when cash is short.
- * It answers letters with the paid, certain response when it can afford it.
+ * It answers letters with the paid, certain response when it can afford it. It never courts other
+ * houses: it never borrows, so their favour would buy it nothing (measured in D4).
  */
 export function cautious(state: GameState, data: GameData): Decision[] {
   return cautiousPlay(state, data, true);
@@ -81,15 +82,18 @@ function cautiousPlay(state: GameState, data: GameData, educate: boolean): Decis
 /**
  * Aggressive: no reserve, lends most of its free cash to whoever pays the most, buys the riskiest
  * bonds still for sale and backs a venture every year. When a panic leaves it short, it borrows
- * all it can from the cheapest house willing to lend. It answers letters with the free response that takes a chance.
+ * all it can, from the cheapest house willing to lend and then the next. It answers letters with the free response that takes a chance.
  */
 export function aggressive(state: GameState, data: GameData): Decision[] {
   const wanted: Maker[] = letterReplies(state, data, "risky");
   if (state.world.sentiment === "panic" && shortForWithdrawals(state, data)) {
-    wanted.push((s) => {
-      const best = lenders(s, data.tuning)[0];
-      return best && !best.refused ? { kind: "borrow", house: best.house.id, amount: best.room } : null;
-    });
+    // All it can: the cheapest willing house first, then the next, while actions last.
+    for (let i = 0; i < 2; i++) {
+      wanted.push((s) => {
+        const best = lenders(s, data.tuning)[0];
+        return best && !best.refused ? { kind: "borrow", house: best.house.id, amount: best.room } : null;
+      });
+    }
   }
   wanted.push((s) => (s.house.reserve > 0 ? { kind: "set_reserve", amount: 0 } : null));
   wanted.push((s) => {
