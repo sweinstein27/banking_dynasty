@@ -1,89 +1,107 @@
+// The family: the head of house and the heirs as portraits, with what each stat does.
 import { gameData } from "../data";
-import { ageIn, headOf, headStat, heirsOf, isTrained, STATS, statTotal, successor, yearlyDeathChance, type Stat } from "../sim/family";
+import { ageIn, headOf, headStat, heirsOf, isTrained, STATS, successor, yearlyDeathChance, type Stat } from "../sim/family";
 import type { GameState, Person } from "../sim/types";
 import { pct } from "./format";
+import { PageTurner, usePages } from "./Pager";
 
+const HEIRS_PER_PAGE = 3;
 const STAT_NAMES: Record<Stat, string> = { acumen: "Acumen", prudence: "Prudence", connections: "Connections" };
 const STAT_EFFECT: Record<Stat, string> = {
-  acumen: "ventures fail less often",
-  prudence: "sharper estimates of borrowers",
-  connections: "states sell bonds at a lower reputation",
+  acumen: "ventures fail less",
+  prudence: "sharper borrower estimates",
+  connections: "states sell bonds sooner",
 };
 
-function Stats({ p }: { p: Person }) {
+const initials = (name: string) => name.split(" ").map((w) => w[0]).join("");
+
+/** A stat as pips out of the maximum, with the number for anyone who would rather read it. */
+function Pips({ value, max }: { value: number; max: number }) {
   return (
-    <span>
-      {STATS.map((k) => `${STAT_NAMES[k]} ${p[k]}`).join(", ")} (total {statTotal(p)})
+    <span className="pips" aria-label={`${value} of ${max}`}>
+      {Array.from({ length: max }, (_, i) => <span key={i} className={i < value ? "pip on" : "pip"} />)}
+      <span className="pip-n">{value}</span>
     </span>
+  );
+}
+
+function Cameo({ p, year }: { p: Person; year: number }) {
+  return (
+    <div className="cameo" aria-hidden="true">
+      <span>{initials(p.name)}</span>
+      <small>{ageIn(p, year)}</small>
+    </div>
   );
 }
 
 export function FamilyPanel({ state }: { state: GameState }) {
   const { tuning } = gameData;
-  const { house, world } = state;
+  const { world } = state;
+  const max = tuning.family.max_stat;
   const head = headOf(state);
   const heirs = heirsOf(state);
   const next = successor(state, tuning);
+  const pages = usePages(heirs, HEIRS_PER_PAGE);
   const dead = state.people.filter((p) => p.death_year !== null);
   const green = head?.inexperienced_until != null && world.turn < head.inexperienced_until;
 
   return (
-    <section className="panel">
-      <h2>Family</h2>
-      <p>
-        {house.name}, {house.city}. Reputation {house.reputation} of 100.
-      </p>
+    <section className="panel family" aria-label="The Family">
+      <h2>The House of {gameData.family.surname}</h2>
 
       {head && (
         <div className="person head">
-          <h3>Head of house: {head.name}, aged {ageIn(head, world.year)}</h3>
-          <ul className="stat-list">
-            {STATS.map((k) => (
-              <li key={k}>
-                <strong>{STAT_NAMES[k]} {headStat(state, k, tuning)}</strong>
-                {green && ` (${head[k]} once experienced)`}: {STAT_EFFECT[k]}
-              </li>
-            ))}
-          </ul>
-          {green && <p className="error">New to the house and untrained: stats count lower until {head.inexperienced_until! - world.turn} more quarters have passed.</p>}
-          <p className="muted">Chance of death this year: {pct(yearlyDeathChance(ageIn(head, world.year), tuning))}</p>
+          <Cameo p={head} year={world.year} />
+          <div className="person-body">
+            <p className="person-name">{head.name}, head of house, aged {ageIn(head, world.year)}</p>
+            <ul className="stat-list">
+              {STATS.map((k) => (
+                <li key={k}>
+                  <span className="stat-name">{STAT_NAMES[k]}</span>
+                  <Pips value={headStat(state, k, tuning)} max={max} />
+                  <span className="stat-effect">{STAT_EFFECT[k]}</span>
+                </li>
+              ))}
+            </ul>
+            {green && <p className="stamp">Untrained: stats count lower for {head.inexperienced_until! - world.turn} more quarters</p>}
+            <p className="muted small">Chance of death this year: {pct(yearlyDeathChance(ageIn(head, world.year), tuning))}</p>
+          </div>
         </div>
       )}
 
       <h3>Heirs</h3>
       {heirs.length === 0 ? (
-        <p className="error">No heirs. If the head dies, a distant cousin takes over, untrained.</p>
+        <p className="stamp">No heirs. If the head dies, a distant cousin takes over, untrained.</p>
       ) : (
         <ul className="heirs">
-          {heirs.map((p) => (
-            <li key={p.id} className={p.id === next?.id ? "next-heir" : undefined}>
-              <strong>{p.name}, aged {ageIn(p, world.year)}</strong>
-              {p.id === next?.id && <span className="tag">Would take over</span>}
-              <br />
-              <Stats p={p} />
-              <br />
-              <span className={isTrained(p, world.year, tuning) ? "good" : "muted"}>
-                {isTrained(p, world.year, tuning)
-                  ? "Trained: a smooth succession"
-                  : `Untrained: needs to be ${tuning.family.succession.adult_age} or over with a total of ${tuning.family.succession.trained_total}`}
-              </span>
-            </li>
-          ))}
+          {pages.items.map((p) => {
+            const trained = isTrained(p, world.year, tuning);
+            return (
+              <li key={p.id} className="person heir">
+                <Cameo p={p} year={world.year} />
+                <div className="person-body">
+                  <p className="person-name">
+                    {p.name}
+                    {p.id === next?.id && <span className="ribbon-tag">Heir</span>}
+                  </p>
+                  <p className="small">
+                    {STATS.map((k) => `${STAT_NAMES[k]} ${p[k]}`).join(", ")}
+                  </p>
+                  <p className={trained ? "small good" : "small muted"}>
+                    {trained ? "Trained" : `Untrained: needs ${tuning.family.succession.adult_age}+ and a total of ${tuning.family.succession.trained_total}`}
+                  </p>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
-      <p className="muted">Educate heirs with "Invest in the family" in the Decisions panel.</p>
+      <PageTurner pages={pages} />
 
       {dead.length > 0 && (
-        <>
-          <h3>Remembered</h3>
-          <ul className="heirs">
-            {dead.map((p) => (
-              <li key={p.id} className="muted">
-                {p.name}, {p.birth_year} to {p.death_year}
-              </li>
-            ))}
-          </ul>
-        </>
+        <p className="remembered small muted">
+          Remembered: {dead.map((p) => `${p.name} (${p.birth_year} to ${p.death_year})`).join("; ")}
+        </p>
       )}
     </section>
   );

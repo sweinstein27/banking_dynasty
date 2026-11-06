@@ -14,3 +14,7 @@ export function previousQuarter(w: Pick<WorldState, "year" | "quarter">): Pick<W
 
 /** Parses a typed amount ("12,000" or "12000") to a number, or NaN. The sim decides if it is valid. */
 export const parseAmount = (text: string) => (text.trim() === "" ? NaN : Number(text.replace(/[,\s]/g, "")));
+
+/** The season of a quarter, for the masthead: Q1 winter, Q2 spring, Q3 summer, Q4 autumn. */
+export const SEASONS = ["Winter", "Spring", "Summer", "Autumn"] as const;
+export const seasonLabel = (w: Pick<WorldState, "year" | "quarter">) => `${SEASONS[w.quarter - 1]} ${w.year}`;
