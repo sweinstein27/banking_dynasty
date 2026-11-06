@@ -30,6 +30,18 @@ export function quarterNews(before: GameState, after: GameState, data: GameData)
     if (ev) news.push({ turn, kind: "event", title: ev.title, text: ev.options?.length ? `${ev.text} A letter awaits your answer.` : ev.text });
   }
 
+  for (const h of after.houses) {
+    const was = before.houses.find((x) => x.id === h.id);
+    if (!was) continue;
+    if (h.head.name !== was.head.name) {
+      add("houses", `${was.head.name} of ${h.name} has died, aged ${ageIn(was.head, before.world.year)}. ${h.head.name} takes over the house.`);
+    }
+    if (h.failed_turn !== null && was.failed_turn === null) {
+      const came = sum(after.ledger.slice(before.ledger.length).filter((e) => e.account === "cash" && e.note === `Depositors of ${h.name}, which has failed`));
+      add("houses", `${h.name} has closed its doors in the panic.${came > 0 ? ` Some of its depositors bring ${fl(came)} to your house.` : ""}`);
+    }
+  }
+
   for (const loan of after.loans) {
     if (loan.status !== "defaulted" || before.loans.find((l) => l.id === loan.id)?.status === "defaulted") continue;
     add("loan_default", `${loan.borrower_name} defaulted, losing the full principal of ${fl(loan.principal)}`);

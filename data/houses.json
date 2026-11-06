@@ -1,0 +1,60 @@
+{
+  "houses": [
+    {
+      "id": "kessler",
+      "name": "Bankhaus Kessler",
+      "surname": "Kessler",
+      "temperament": "bold",
+      "head": { "name": "Anton Kessler", "birth_year": 1770 },
+      "heir": { "name": "Friedrich Kessler", "birth_year": 1797 },
+      "wealth": 300000,
+      "reputation": 55,
+      "opinion": -30
+    },
+    {
+      "id": "albrecht",
+      "name": "Bankhaus Albrecht",
+      "surname": "Albrecht",
+      "temperament": "cautious",
+      "head": { "name": "Georg Albrecht", "birth_year": 1758 },
+      "heir": { "name": "Johanna Albrecht", "birth_year": 1789 },
+      "wealth": 500000,
+      "reputation": 70,
+      "opinion": 0
+    },
+    {
+      "id": "winter",
+      "name": "Gebrüder Winter",
+      "surname": "Winter",
+      "temperament": "bold",
+      "head": { "name": "Ludwig Winter", "birth_year": 1781 },
+      "heir": { "name": "Paul Winter", "birth_year": 1806 },
+      "wealth": 150000,
+      "reputation": 50,
+      "opinion": 10
+    },
+    {
+      "id": "stellmann",
+      "name": "Haus Stellmann",
+      "surname": "Stellmann",
+      "temperament": "cautious",
+      "head": { "name": "Caroline Stellmann", "birth_year": 1772 },
+      "heir": { "name": "Theodor Stellmann", "birth_year": 1798 },
+      "wealth": 200000,
+      "reputation": 60,
+      "opinion": 20
+    },
+    {
+      "id": "rautenberg",
+      "name": "Rautenberg & Co.",
+      "surname": "Rautenberg",
+      "temperament": "bold",
+      "head": { "name": "Emil Rautenberg", "birth_year": 1785 },
+      "heir": { "name": "Clara Rautenberg", "birth_year": 1811 },
+      "wealth": 80000,
+      "reputation": 40,
+      "opinion": 0
+    }
+  ],
+  "heir_names": ["Moritz", "Henriette", "August", "Luise", "Konrad", "Sophie", "Eduard", "Marie", "Julius", "Wilhelmine"]
+}

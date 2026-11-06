@@ -14,13 +14,14 @@ export function fixedRng(...values: number[]): Rng {
 export const noDefaults: Rng = { next: () => 0.999999 };
 
 /**
- * The real game data with no events, no loan requests drawn and no deposit flows, for unit tests of
+ * The real game data with no events, no other houses, no loan requests drawn and no deposit flows, for unit tests of
  * other systems: no event roll can fire, End Turn draws no request rolls, and deposits change only
  * by what the test does, so tests can count rolls and balances exactly.
  */
 export const quiet: GameData = {
   ...gameData,
   events: [],
+  houses: { ...gameData.houses, houses: [] },
   tuning: {
     ...gameData.tuning,
     loans: { ...gameData.tuning.loans, requests_per_quarter: 0 },
@@ -61,5 +62,5 @@ export function reopenRequests(s: GameState): void {
   s.requests = fresh().requests;
 }
 /** Seed for the panic golden run, picked with `npm run find-panic-seed`; see docs/decisions.md. */
-export const PANIC_SEED = 1723;
+export const PANIC_SEED = 596;
 

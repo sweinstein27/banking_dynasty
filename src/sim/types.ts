@@ -185,7 +185,8 @@ export type NewsKind =
   | "reputation"
   | "warning"
   | "crisis"
-  | "family";
+  | "family"
+  | "houses";
 
 /** One message for the News panel, written when a quarter resolves. */
 export interface NewsItem {
@@ -201,6 +202,27 @@ export interface FiredEvent {
   id: string;
   /** The turn at whose end it fired; it describes the quarter that follows. */
   turn: number;
+}
+
+/** Another Frankfurt house. Its books are not modelled: only its wealth, reputation and opinion of the player. */
+export interface OtherHouse {
+  id: string;
+  name: string;
+  surname: string;
+  temperament: "cautious" | "bold";
+  head: { name: string; birth_year: number };
+  /** Who takes over when the head dies. */
+  heir: { name: string; birth_year: number };
+  wealth: number;
+  start_wealth: number;
+  /** 0 to 100. */
+  reputation: number;
+  /** Opinion of the player's house, -100 to 100. */
+  opinion: number;
+  /** Where opinion drifts back to. */
+  baseline: number;
+  /** The turn it closed its doors, or null while it trades. */
+  failed_turn: number | null;
 }
 
 /** A letter on the desk: an event's question, answered during the quarter after it fired. */
@@ -270,6 +292,8 @@ export interface GameState {
   news: NewsItem[];
   /** Events that have fired, in order. The spec's event.fired_turn. */
   fired_events: FiredEvent[];
+  /** The other Frankfurt houses, failed ones included. */
+  houses: OtherHouse[];
   /** Letters awaiting an answer this quarter. */
   letters: Letter[];
   /** Every letter settled, oldest first. */

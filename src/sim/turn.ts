@@ -9,6 +9,7 @@ import { debtBook, serviceDebts } from "./crisis";
 import { resolveDeposits } from "./deposits";
 import { resolveEvents } from "./events";
 import { headEffects, resolveFamily } from "./family";
+import { resolveHouses } from "./houses";
 import { settleLetters } from "./letters";
 import { quarterNews } from "./news";
 import { defaultChance, quarterlyInterest } from "./loans";
@@ -35,7 +36,8 @@ export function loanBook(state: GameState): number {
  * 6. resolve ventures that reach their term, 7. pay interest on debts and repay those due, then
  * depositors withdraw for the current mood (less if paying slowly, nothing if suspended), with
  * forced sales if cash runs short (bankruptcy if even that fails), then interest is credited to
- * depositors and, in a calm market, reputation draws new deposits, 8. roll next quarter's mood
+ * depositors and, in a calm market, reputation draws new deposits; then the other houses' quarter
+ * (wealth, their heads' deaths, failures in a panic, whose depositors partly come here), 8. roll next quarter's mood
  * (a roll into panic starts a warning countdown instead; a running countdown overrides the roll),
  * 9. fire events for next quarter (they can override the mood; those with responses leave letters), then the family's quarter (the
  * head may die and an heir succeed; at year end a child may be born), 10. mark bonds to that mood's
@@ -85,6 +87,7 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
   serviceDebts(next, data.tuning);
   resolveWithdrawals(next, data.tuning, headEffects(next, data).withdrawals);
   resolveDeposits(next, data.tuning);
+  resolveHouses(next, rng, data);
   const rolled = nextSentiment(world.sentiment, rng.next(), data.tuning);
   world.sentiment = moodWithWarnings(next, rolled, rng, data.tuning);
   resolveEvents(next, rng, data);

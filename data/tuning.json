@@ -51,6 +51,14 @@
     "suspend": { "reputation_cost": 12 },
     "call_loan": { "recovery": 0.9, "absence_quarters": 8 }
   },
+  "houses": {
+    "growth": { "cautious": 0.006, "bold": 0.01 },
+    "shock": { "calm": { "cautious": 0, "bold": 0 }, "uneasy": { "cautious": -0.005, "bold": -0.015 }, "panic": { "cautious": -0.03, "bold": -0.05 } },
+    "noise": 0.015,
+    "fail_chance": { "cautious": 0.005, "bold": 0.012 },
+    "depositors_share": 0.1,
+    "opinion": { "min": -100, "max": 100, "drift": 0.1, "succession_reset": 0.5 }
+  },
   "actions_per_turn": 3,
   "sentiment_multiplier": {
     "calm": 1,

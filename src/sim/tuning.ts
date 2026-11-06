@@ -56,6 +56,19 @@ export interface Tuning {
       patronage: { cost: number; connections: number; reputation: number };
     };
   };
+  /** The other Frankfurt houses (data/houses.json). */
+  houses: {
+    /** Quarterly growth of a house's wealth by temperament, plus a shock for the quarter's mood, plus noise up to +/- noise. */
+    growth: Record<Temperament, number>;
+    shock: Record<Sentiment, Record<Temperament, number>>;
+    noise: number;
+    /** In each panic quarter a house fails with this chance, times start wealth / wealth (between 0.5 and 3). */
+    fail_chance: Record<Temperament, number>;
+    /** When a house fails, this share of its wealth, times the player's reputation / 100, comes to the player as deposits. */
+    depositors_share: number;
+    /** Opinion of the player's house: kept between min and max, drifting each quarter toward the house's baseline by `drift` of the gap; a new head moves it `succession_reset` of the way back. */
+    opinion: { min: number; max: number; drift: number; succession_reset: number };
+  };
   /** Last quarter of the run. Once it has been played the run is finished. */
   end: {
     year: number;
@@ -154,6 +167,28 @@ export interface GameData {
   ventures: VentureType[];
   /** Historical and random events, from data/events.json. */
   events: GameEvent[];
+  /** The other Frankfurt houses, from data/houses.json. Names are invented. */
+  houses: HousesData;
+}
+
+export type Temperament = "cautious" | "bold";
+
+/** data/houses.json */
+export interface HousesData {
+  houses: {
+    id: string;
+    name: string;
+    surname: string;
+    temperament: Temperament;
+    head: { name: string; birth_year: number };
+    heir: { name: string; birth_year: number };
+    wealth: number;
+    reputation: number;
+    /** Starting opinion of the player's house, and the baseline it drifts back to. */
+    opinion: number;
+  }[];
+  /** First names for heirs born to the houses during the run. */
+  heir_names: string[];
 }
 
 /** All must hold for an event to fire. Years refer to the quarter the event describes. */

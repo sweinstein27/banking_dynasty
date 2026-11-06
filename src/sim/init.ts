@@ -1,5 +1,6 @@
 import { createBorrowers, drawRequests } from "./borrowers";
 import { createFamily } from "./family";
+import { createHouses } from "./houses";
 import { addEntry } from "./ledger";
 import type { Rng } from "./rng";
 import type { GameData } from "./tuning";
@@ -43,6 +44,7 @@ export function newGame(data: GameData, rng: Rng): GameState {
     next_ledger_id: 1,
     news: [],
     fired_events: [],
+    houses: createHouses(data),
     letters: [],
     letter_outcomes: [],
     scheduled_events: [],
