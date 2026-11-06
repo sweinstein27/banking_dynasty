@@ -1,0 +1,8 @@
+{
+  "tuning": {
+    "family": { "invest": { "educate": { "cost": 500 } }, "succession": { "reputation_untrained": 10 } },
+    "deposits": { "interest_rate": 0.01, "per_reputation": 1000 }
+  },
+  "ventures": { "shipping": { "failure_risk": 0.15 } },
+  "states": { "naples": { "coupon": 0.12 } }
+}

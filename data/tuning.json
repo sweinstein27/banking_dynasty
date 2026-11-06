@@ -29,7 +29,7 @@
     },
     "births": { "min_head_age": 25, "max_head_age": 45, "max_heirs": 3, "chance": 0.15 },
     "invest": {
-      "educate": { "cost": 1000, "gain": 1 },
+      "educate": { "cost": 500, "gain": 1 },
       "charity": { "cost": 2000, "reputation": 3 },
       "patronage": { "cost": 3000, "connections": 1, "reputation": 1 }
     }
@@ -42,7 +42,7 @@
     "random_chance": 0.25,
     "cooldown_quarters": 12
   },
-  "deposits": { "per_reputation": 1000, "catch_up": 0.1, "interest_rate": 0.02 },
+  "deposits": { "per_reputation": 1000, "catch_up": 0.1, "interest_rate": 0.01 },
   "crisis": {
     "rival": { "name": "Bankhaus Kessler", "rate": 0.12, "term_quarters": 4, "max_outstanding": 50000, "min_amount": 5000, "reputation_cost": 3 },
     "pay_slowly": { "share": 0.5, "reputation_cost": 4 },

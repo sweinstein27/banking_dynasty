@@ -77,3 +77,26 @@ The cautious harness strategy also changed before tuning: it educates only the h
 
 - **Your playtest:** one full run with [docs/playtest.md](playtest.md). Time, feel, and whether 1825 and the family matter.
 - **A decision** on reputation-driven deposit inflows (open question 2).
+
+## Deposits round (2026-11-06)
+
+Reputation now draws deposits in calm quarters (1,000 fl. per point, 10% of the gap a quarter), and depositors earn interest. The cautious_no_family strategy and target T7 measure whether educating heirs pays. Seeds 1 to 1,000; strong finish / bankrupt / median.
+
+| Strategy | Before deposits (Week 7 final) | Deposits rule, untuned (2% interest) | After tuning |
+| --- | --- | --- | --- |
+| idle | 0% / 0% / 46,510 fl. | 0% / 0% / 19,269 fl. | 0% / 0% / 32,557 fl. |
+| cautious | 18.1% / 1.2% / 74,350 fl. | 8.3% / 6.5% / 43,991 fl. | 23.1% / 3.1% / 71,279 fl. |
+| aggressive | 18.8% / 35.1% / 36,989 fl. | 14.4% / 50.7% / -10,284 fl. | 26.0% / 38.0% / 42,231 fl. |
+| bond_heavy | 16.8% / 18.2% / 41,050 fl. | 11.6% / 35.0% / 12,160 fl. | 23.3% / 23.7% / 44,612 fl. |
+| venture_heavy | 17.2% / 40.8% / 3,661 fl. | 15.2% / 55.2% / -10,325 fl. | 27.7% / 38.3% / 23,866 fl. |
+| cautious_no_family | not measured | 15.3% / 4.3% / 65,350 fl. | 23.2% / 2.4% / 78,132 fl. |
+| Targets passed | 6 of 6 | 4 of 7 | **7 of 7** |
+
+Changed: deposit interest 2% to 1%, tutor price 1,000 to 500 fl., the shipping line's failure risk 20% to 15%, Naples coupon 10% to 12%.
+
+What it shows:
+
+1. **Strong finishes are more common and more even** (23% to 28% for every contender, from 17% to 19%). Reputation now feeds deposits, which feed lending.
+2. **Educating still doesn't pay outright.** It costs about 9% of the median: 71,279 fl. with education against 78,132 without. No numbers fixed this, because tutoring is paid when heirs are children and loses decades of compounding. T7 was softened to "within 10%", by Scott's decision. What education buys is safety: untrained successions fall from about 1 a run to about 0.2, and reputation ends higher (median 48 against 41).
+3. **Doing nothing now costs more:** depositors' interest runs whether or not the money is put to work (idle median 32,557 fl.).
+4. **The 1825 floor is tight:** 15.8% of aggressive houses fail in 1825-29, just above T5's 15%.

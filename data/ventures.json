@@ -12,7 +12,7 @@
     "name": "Rhine shipping line",
     "term_quarters": 6,
     "expected_return": 0.3,
-    "failure_risk": 0.2,
+    "failure_risk": 0.15,
     "unlock_year": 1815
   },
   {

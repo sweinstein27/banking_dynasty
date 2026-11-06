@@ -1,0 +1,14 @@
+{
+  "base": {
+    "tuning": {
+      "family": { "invest": { "educate": { "cost": 500 } }, "succession": { "reputation_untrained": 10 } },
+      "deposits": { "interest_rate": 0.01, "per_reputation": 1000 }
+    }
+  },
+  "vary": {
+    "tuning.forced_sale.venture_discount": [0.3, 0.2],
+    "ventures.mill.failure_risk": [0.15, 0.1],
+    "ventures.shipping.failure_risk": [0.2, 0.15],
+    "states.naples.coupon": [0.1, 0.12]
+  }
+}

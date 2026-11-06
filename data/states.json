@@ -3,5 +3,5 @@
   { "id": "bavaria", "name": "Kingdom of Bavaria", "coupon": 0.05, "risk": 0.2, "min_reputation": 40 },
   { "id": "austria", "name": "Austrian Empire", "coupon": 0.05, "risk": 0.25, "min_reputation": 45 },
   { "id": "france", "name": "Kingdom of France", "coupon": 0.05, "risk": 0.4, "min_reputation": 50 },
-  { "id": "naples", "name": "Kingdom of Naples", "coupon": 0.1, "risk": 0.6, "min_reputation": 30 }
+  { "id": "naples", "name": "Kingdom of Naples", "coupon": 0.12, "risk": 0.6, "min_reputation": 30 }
 ]
