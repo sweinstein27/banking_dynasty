@@ -8,7 +8,7 @@ import { bondOffers, lendOffers, ventureOffers } from "../sim/offers";
 import { withdrawalDemand } from "../sim/sentiment";
 import type { GameData } from "../sim/tuning";
 import type { Decision, GameState } from "../sim/types";
-import { accepted, lendShare, safestFirst, shareOfFree, type Strategy } from "./common";
+import { accepted, letterReplies, lendShare, safestFirst, shareOfFree, type Strategy } from "./common";
 
 type Maker = (s: GameState) => Decision | null;
 
@@ -35,19 +35,20 @@ export const idle: Strategy = () => [];
  * before lending, lends only where even the low end of the estimate is 0.6 or better, buys bonds
  * only from the safest states (risk 0.25 or less), and educates the heir who would take over until
  * their stats are enough to be trained. In a panic it pays depositors slowly when cash is short.
+ * It answers letters with the paid, certain response when it can afford it.
  */
 export function cautious(state: GameState, data: GameData): Decision[] {
   return cautiousPlay(state, data, true);
 }
 
-/** The cautious strategy without any investment in the family, to measure whether educating pays (T7). */
+/** The cautious strategy without any investment in the family, to measure whether educating pays (T7). It answers letters as cautious does. */
 export function cautiousNoFamily(state: GameState, data: GameData): Decision[] {
   return cautiousPlay(state, data, false);
 }
 
 function cautiousPlay(state: GameState, data: GameData, educate: boolean): Decision[] {
   const worried = state.panic_warning !== null || state.world.sentiment !== "calm";
-  const wanted: Maker[] = [];
+  const wanted: Maker[] = letterReplies(state, data, "safe");
   if (state.world.sentiment === "panic" && shortForWithdrawals(state, data)) wanted.push(() => ({ kind: "pay_slowly" }));
   wanted.push(reserveAt(worried ? 0.6 : 0.4));
   wanted.push((s) => {
@@ -80,10 +81,10 @@ function cautiousPlay(state: GameState, data: GameData, educate: boolean): Decis
 /**
  * Aggressive: no reserve, lends most of its free cash to whoever pays the most, buys the riskiest
  * bonds still for sale and backs a venture every year. When a panic leaves it short, it borrows
- * all it can from the rival house.
+ * all it can from the rival house. It answers letters with the free response that takes a chance.
  */
 export function aggressive(state: GameState, data: GameData): Decision[] {
-  const wanted: Maker[] = [];
+  const wanted: Maker[] = letterReplies(state, data, "risky");
   if (state.world.sentiment === "panic" && shortForWithdrawals(state, data)) {
     wanted.push((s) => {
       const room = borrowingRoom(s, data.tuning);

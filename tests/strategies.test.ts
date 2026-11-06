@@ -18,7 +18,8 @@ function run(strategy: Strategy, seed: number): { state: GameState; decisions: D
     const ds = strategy(s, gameData);
     const r = applyDecisions(s, ds, gameData);
     if (!r.ok) throw new Error(`seed ${seed} turn ${s.world.turn}: ${r.reason}`);
-    expect(ds.length).toBeLessThanOrEqual(gameData.tuning.actions_per_turn);
+    // Replies to letters use no action.
+    expect(ds.filter((d) => d.kind !== "answer_letter").length).toBeLessThanOrEqual(gameData.tuning.actions_per_turn);
     decisions.push(...ds);
     s = endTurn(s, ds, rng, gameData);
   }
@@ -30,6 +31,16 @@ const runs = Object.fromEntries(Object.entries(STRATEGIES).map(([name, st]) => [
 const kinds = (name: string) => runs[name]!.flatMap((r) => r.decisions.map((d) => (d.kind === "invest_family" ? `${d.kind}:${d.form}` : d.kind)));
 
 describe("harness strategies", () => {
+  it("answer letters in their own style: cautious pays, aggressive takes the chance, the rest leave the default", () => {
+    const replies = (name: string) => runs[name]!.flatMap((r) => r.decisions.filter((d) => d.kind === "answer_letter")).map((d) => `${d.event}/${d.option}`);
+    const cautious = new Set(replies("cautious"));
+    const aggressive = new Set(replies("aggressive"));
+    expect(cautious.size).toBeGreaterThan(0);
+    expect([...cautious].every((r) => ["clerk-skimming/prosecute", "rival-rumours/open-books", "heir-illness/doctors", "heir-talent/university", "bridge-gift/give", "pamphleteer/pay"].includes(r)), [...cautious].join()).toBe(true);
+    expect([...aggressive].every((r) => ["clerk-skimming/dismiss", "rival-rumours/answer", "heir-illness/local", "pamphleteer/refuse"].includes(r)), [...aggressive].join()).toBe(true);
+    for (const name of ["idle", "bond_heavy", "venture_heavy"]) expect(replies(name), name).toEqual([]);
+  });
+
   it("play whole runs with only decisions the sim accepts", () => {
     for (const rs of Object.values(runs)) for (const r of rs) expect(runOver(r.state, gameData.tuning)).not.toBeNull();
   });
