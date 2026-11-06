@@ -21,6 +21,7 @@ export const DECISION_LABELS: Record<DecisionKind, string> = {
   set_reserve: "Set reserves",
   invest_family: "Invest in the family",
   designate_heir: "Name an heir",
+  answer_letter: "Answer a letter",
   borrow: "Borrow from the rival house",
   pay_slowly: "Pay depositors slowly",
   suspend: "Suspend withdrawals",

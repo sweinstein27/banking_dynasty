@@ -183,9 +183,34 @@ export type EventEffect =
   /** Starts a countdown to a panic in `quarters` quarters, unless one is running or the market already panics. */
   | { kind: "panic_warning"; quarters: number }
   /** One living heir, picked at random, gains `gain` in one stat, also picked at random (up to max_stat). */
-  | { kind: "heir_talent"; gain: number };
+  | { kind: "heir_talent"; gain: number }
+  /** One living heir, picked at random among those who could still gain it, gains the trait. */
+  | { kind: "heir_trait"; trait: string }
+  /** Fires the follow-up event `event` at the end of a quarter picked at random within `within_quarters`. */
+  | { kind: "follow_up"; event: string; within_quarters: number };
 
-/** One record in data/events.json. Historical events fire once at their date; random ones by weight. */
+/** A chance outcome of a letter's response: with probability `p`, `effects` also apply. Settled at End Turn. */
+export interface EventChance {
+  p: number;
+  effects: EventEffect[];
+  /** News when the chance comes up. */
+  text: string;
+  /** News when it does not. Optional. */
+  miss_text?: string;
+}
+
+/** One response to a letter. */
+export interface EventOption {
+  id: string;
+  /** Short words on the response card, such as "Prosecute in open court". */
+  label: string;
+  /** What happens, in the news once the quarter ends. */
+  text: string;
+  effects: EventEffect[];
+  chance?: EventChance;
+}
+
+/** One record in data/events.json. Historical events fire once at their date; random ones by weight; follow-ups when scheduled. */
 export interface GameEvent {
   id: string;
   title: string;
@@ -198,8 +223,14 @@ export interface GameEvent {
   weight?: number;
   cooldown_quarters?: number;
   conditions: EventConditions;
-  /** May be empty for news-only events. */
+  /** Fired now. May be empty for news-only events. */
   effects: EventEffect[];
+  /** Fires only when another event's follow_up effect schedules it: never by date or weight. */
+  follow_up?: boolean;
+  /** Responses: the event also leaves a letter on the desk, answered next quarter (2 to 3 responses). */
+  options?: EventOption[];
+  /** Id of the response taken when a letter goes unanswered. It must cost nothing. */
+  default_option?: string;
 }
 
 /** data/family.json: the house's starting family. Names are invented. */

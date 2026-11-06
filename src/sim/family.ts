@@ -6,7 +6,7 @@ import { addEntry } from "./ledger";
 import { freeCash } from "./reserves";
 import type { Rng } from "./rng";
 import type { GameData, Tuning } from "./tuning";
-import { birthTrait, comingOfAgeTrait, drawTrait, traitEffects } from "./traits";
+import { birthTrait, comingOfAgeTrait, drawTrait, openTraits, traitEffects } from "./traits";
 import type { DesignateHeirDecision, GameState, InvestFamilyDecision, Person } from "./types";
 
 export type Stat = "acumen" | "prudence" | "connections";
@@ -255,6 +255,13 @@ export function heirTalent(state: GameState, gain: number, rng: Rng, tuning: Tun
   const heir = heirs[Math.floor(rng.next() * heirs.length)]!;
   const stat = STATS[Math.floor(rng.next() * STATS.length)]!;
   heir[stat] = Math.min(tuning.family.max_stat, heir[stat] + gain);
+}
+
+/** One living heir who could still gain `trait` (picked at random, one roll) gains it. Nothing if none can. */
+export function heirTrait(state: GameState, trait: string, rng: Rng, data: GameData): void {
+  const open = heirsOf(state).filter((p) => openTraits(p.traits, data).some((t) => t.id === trait));
+  if (!open.length) return;
+  open[Math.floor(rng.next() * open.length)]!.traits.push(trait);
 }
 
 /** Returns why a designate_heir decision is invalid, or null if it can go ahead. */

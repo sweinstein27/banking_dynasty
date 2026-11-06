@@ -9,6 +9,7 @@ import { debtBook, serviceDebts } from "./crisis";
 import { resolveDeposits } from "./deposits";
 import { resolveEvents } from "./events";
 import { headEffects, resolveFamily } from "./family";
+import { settleLetters } from "./letters";
 import { quarterNews } from "./news";
 import { defaultChance, quarterlyInterest } from "./loans";
 import type { Rng } from "./rng";
@@ -28,14 +29,15 @@ export function loanBook(state: GameState): number {
 
 /**
  * Resolves one quarter:
- * 1. apply decisions, 2. roll defaults, 3. collect interest from survivors,
+ * 1. apply decisions, then settle the quarter's letters (unanswered ones take their default response;
+ * chances are rolled), 2. roll defaults, 3. collect interest from survivors,
  * 4. repay loans that reached their term, 5. roll bond defaults and pay coupons,
  * 6. resolve ventures that reach their term, 7. pay interest on debts and repay those due, then
  * depositors withdraw for the current mood (less if paying slowly, nothing if suspended), with
  * forced sales if cash runs short (bankruptcy if even that fails), then interest is credited to
  * depositors and, in a calm market, reputation draws new deposits, 8. roll next quarter's mood
  * (a roll into panic starts a warning countdown instead; a running countdown overrides the roll),
- * 9. fire events for next quarter (they can override the mood), then the family's quarter (the
+ * 9. fire events for next quarter (they can override the mood; those with responses leave letters), then the family's quarter (the
  * head may die and an heir succeed; at year end a child may be born), 10. mark bonds to that mood's
  * prices and each state's risk, 11. draw next quarter's loan requests, 12. write the quarter's
  * news, 13. at year end, record the year's net worth, 14. advance the calendar.
@@ -53,6 +55,7 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
   }
   next = cloneState(next);
   const { world, house } = next;
+  settleLetters(next, rng, data);
 
   for (const loan of next.loans) {
     if (loan.status !== "active") continue;

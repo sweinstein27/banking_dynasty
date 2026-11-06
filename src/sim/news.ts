@@ -16,9 +16,18 @@ export function quarterNews(before: GameState, after: GameState, data: GameData)
   const add = (kind: NewsKind, text: string) => news.push({ turn, kind, text });
   const sum = (list: LedgerEntry[]) => list.reduce((s, e) => s + e.amount, 0);
 
+  // Letters settled this quarter.
+  for (const o of after.letter_outcomes.slice(before.letter_outcomes.length)) {
+    const ev = data.events.find((e) => e.id === o.event);
+    const opt = ev?.options?.find((x) => x.id === o.option);
+    if (!ev || !opt) continue;
+    const odds = o.chance === true ? ` ${opt.chance!.text}` : o.chance === false && opt.chance?.miss_text ? ` ${opt.chance.miss_text}` : "";
+    news.push({ turn, kind: "letter", title: ev.title, text: `${o.by_default ? "Left unanswered. " : ""}${opt.text}${odds}` });
+  }
+
   for (const f of after.fired_events.slice(before.fired_events.length)) {
     const ev = data.events.find((e) => e.id === f.id);
-    if (ev) news.push({ turn, kind: "event", title: ev.title, text: ev.text });
+    if (ev) news.push({ turn, kind: "event", title: ev.title, text: ev.options?.length ? `${ev.text} A letter awaits your answer.` : ev.text });
   }
 
   for (const loan of after.loans) {

@@ -3,6 +3,7 @@ import { buyBond } from "./bonds";
 import { buyReport } from "./borrowers";
 import { applyCrisis } from "./crisis";
 import { designateHeir, investFamily } from "./family";
+import { answerLetter } from "./letters";
 import { lend } from "./loans";
 import { setReserve } from "./reserves";
 import { investVenture } from "./ventures";
@@ -26,6 +27,8 @@ export function applyDecision(state: GameState, d: Decision, data: GameData): De
       return investFamily(state, d, data);
     case "designate_heir":
       return designateHeir(state, d, data);
+    case "answer_letter":
+      return answerLetter(state, d, data);
     case "borrow":
     case "pay_slowly":
     case "suspend":

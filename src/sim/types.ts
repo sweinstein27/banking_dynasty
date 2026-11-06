@@ -181,6 +181,7 @@ export type NewsKind =
   | "bankruptcy"
   | "mood"
   | "event"
+  | "letter"
   | "reputation"
   | "warning"
   | "crisis"
@@ -199,6 +200,34 @@ export interface NewsItem {
 export interface FiredEvent {
   id: string;
   /** The turn at whose end it fired; it describes the quarter that follows. */
+  turn: number;
+}
+
+/** A letter on the desk: an event's question, answered during the quarter after it fired. */
+export interface Letter {
+  /** The event that sent it. At most one letter per event is open at a time. */
+  event: string;
+  /** The turn at whose end it arrived. */
+  turn: number;
+  /** The chosen response's id, or null while unanswered. Its certain effects have already applied. */
+  answer: string | null;
+}
+
+/** A letter settled at End Turn, for the news and the chronicle. */
+export interface LetterOutcome {
+  /** The turn whose end settled it. */
+  turn: number;
+  event: string;
+  option: string;
+  /** No answer was given, so the event's default response was taken. */
+  by_default: boolean;
+  /** Whether the response's chance came up; null if it had none. */
+  chance: boolean | null;
+}
+
+/** An event scheduled by a follow_up effect, to fire at the end of `turn`. */
+export interface ScheduledEvent {
+  id: string;
   turn: number;
 }
 
@@ -241,6 +270,12 @@ export interface GameState {
   news: NewsItem[];
   /** Events that have fired, in order. The spec's event.fired_turn. */
   fired_events: FiredEvent[];
+  /** Letters awaiting an answer this quarter. */
+  letters: Letter[];
+  /** Every letter settled, oldest first. */
+  letter_outcomes: LetterOutcome[];
+  /** Follow-up events waiting for their quarter. */
+  scheduled_events: ScheduledEvent[];
   /** Change to each state's risk caused by events, by state id. Missing means no change. */
   risk_shift: Record<string, number>;
   /** Multiplier on every loan's default chance, set by events. 1 means no change. */
@@ -323,6 +358,13 @@ export interface DesignateHeirDecision {
   heir: number;
 }
 
+/** Answer a letter on the desk. Uses none of the quarter's actions. */
+export interface AnswerLetterDecision {
+  kind: "answer_letter";
+  event: string;
+  option: string;
+}
+
 export type InvestFamilyDecision =
   | { kind: "invest_family"; form: "educate"; heir: number; stat: "acumen" | "prudence" | "connections" }
   | { kind: "invest_family"; form: "charity" }
@@ -330,4 +372,4 @@ export type InvestFamilyDecision =
 
 export type CrisisDecision = BorrowDecision | PaySlowlyDecision | SuspendDecision | CallLoanDecision;
 
-export type Decision = LendDecision | ReportDecision | SetReserveDecision | BuyBondDecision | InvestVentureDecision | InvestFamilyDecision | DesignateHeirDecision | CrisisDecision;
+export type Decision = LendDecision | ReportDecision | SetReserveDecision | BuyBondDecision | InvestVentureDecision | InvestFamilyDecision | DesignateHeirDecision | AnswerLetterDecision | CrisisDecision;
