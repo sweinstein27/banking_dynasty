@@ -12,14 +12,16 @@ The prototype has to prove one thing: that lending, investing and surviving pani
 
 One city, one family, 36 years: 144 quarterly turns from 1815 Q1 to the end of 1850.
 
-| In the prototype | Saved for later |
+Widened on 2026-11-06 (Scott's decision): after the first prototype was playable and tuned, the game grows toward its pitch, a Crusader Kings dynasty layer first (Phase 1), then a Victoria 3 world (Phase 2). See the build plan.
+
+| In the game | Saved for later |
 | --- | --- |
-| Frankfurt only | Branches in London, Paris, Vienna, Naples |
-| Head of house plus 1 to 3 heirs | Marriages, alliances, family feuds |
-| 5 core decisions per turn | Full investment menu |
-| About 15 historical events, 20 random ones | Hundreds of events, regional news |
-| One simple rival house (news only) | AI rivals that compete for deals |
-| Text and tables, single save | Map, art, sound, Steam release |
+| Frankfurt, then branches in London, Paris, Vienna, Naples (Phase 2) | More cities beyond these |
+| A family of characters with traits, spouses and children (Phase 1) | Family feuds and intrigue |
+| 5 core decisions per turn, plus crisis measures | Full investment menu |
+| Historical and random events, many with choices (Phase 1) | Hundreds of events, regional news |
+| Four or five other Frankfurt houses with opinions of you (Phase 1) | AI rivals that compete for every deal |
+| One screen of paper and ink, a map of Europe (Phase 2), single save | Art, sound, Steam release |
 
 ## Core loop
 
@@ -103,13 +105,17 @@ Fun comes from judgment under uncertainty, tension you can see coming, and stori
 
 Week 4 gets heavier with these; Week 8's buffer absorbs the overflow.
 
-### After the prototype (do not build yet)
+### Moved into the build plan (2026-11-06)
 
-- Ambitions: player-picked goals per decade, such as underwriting a state loan by 1830
-- Heirs with traits: succession becomes a real choice between strengths and flaws
-- A reactive rival: bids against you, can stumble in a panic, can be rescued for a stake
+- Heirs with traits, and succession as a real choice between strengths and flaws: Phase 1, D1 and D2
+- Ambitions: player-picked goals per decade, such as underwriting a state loan by 1830: Phase 1, D6
+- A reactive rival that can stumble in a panic and be rescued for a stake: Phase 1, D4
+- Hard political choices, such as lending to governments suppressing the 1848 revolutions: Phase 2, W3
+
+### Still after the build plan (do not build yet)
+
 - Information as a resource: news arrives late; a correspondent network gives earlier warning
-- Hard political choices: for example, whether to lend to governments suppressing the 1848 revolutions
+- Rivals that bid against you for each deal
 
 ### Always
 
@@ -155,7 +161,7 @@ TypeScript and React web app, runs in a browser on a Mac.
 
 Not using: a full game engine (Godot, Unity, Phaser), an off-the-shelf economic sim, or an AI model inside the shipped game.
 
-UI: four panels (News, Ledger, Family, Decisions) plus End Turn. Everything is a click: no dragging, no hover-only information, large targets. Must be fully playable on a trackpad.
+UI: one screen with no scrolling, a counting-house desk: the Gazette (news), the Ledger, the Desk (decisions) and the Family, plus End the quarter. New views (the family tree, the map of Europe) are tabs in the masthead, never longer pages; lists turn pages. Everything is a click: no dragging, no hover-only information, targets of at least 44 px. Must be fully playable on a trackpad.
 
 ## Build plan
 
@@ -167,8 +173,27 @@ Eight weeks part-time (about 5 to 8 hours a week). The sim works in a terminal b
 4. Week 4, events: the event system plus the first 6 historical and 10 random events.
 5. Week 5, family: stats, heirs, ageing, succession.
 6. Week 6, balancing harness: auto-play 1,000 runs with simple strategies (cautious, aggressive, bond-heavy); compare final net worth and bankruptcy rates.
-7. Week 7, tune and playtest: adjust numbers until more than one strategy can win.
-8. Week 8, buffer: fix what broke, write more events.
+7. Week 7, tune and playtest: adjust numbers until more than one strategy can win. Done, with a one-screen UI redesign after the first playtest and a reputation-driven deposits rule.
+
+The first prototype ends here. The scope then widened (2026-11-06) toward the pitch: Crusader Kings' dynasty layer first, then Victoria 3's world. Each milestone is planned and approved before code, goes sim first with tests, then the terminal, then the UI, and ends with the harness re-run against the balance targets and a browser check.
+
+Phase 1, the dynasty:
+
+- D1, characters with traits: each person has one or two traits (data/traits.json) that change real numbers, and education can shape a child's traits.
+- D2, choosing your heir: the player names the successor; passing over the eldest costs reputation.
+- D3, events with choices: events offer two or three responses, answered as letters on the desk before the quarter ends (plain JSON, not Ink).
+- D4, other houses: four or five invented Frankfurt houses, Kessler among them, each with a head, wealth, reputation and an opinion of the player's house.
+- D5, marriages and alliances: children marry into other houses for dowries, allies and grandchildren; births need a spouse.
+- D6, the family tree and ambitions: a family tree view, and goals picked each decade.
+
+Phase 2, the world (planned in detail once Phase 1 is done):
+
+- W1, a map of Europe as a second view, with branches in London, Paris, Vienna and Naples.
+- W2, goods and prices (grain, cloth, wine, iron, colonial wares) moved by harvests, wars and the Zollverein; borrowers follow their trade.
+- W3, states with politics: stability, regimes, wars, and hard choices such as 1848.
+- W4, real interest rates, calibrated against the Bank of England data.
+
+Week 8's buffer (fixes and more events) folds into each milestone.
 
 ## Success test
 
