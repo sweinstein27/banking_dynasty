@@ -2,6 +2,7 @@
 import { applyDecision } from "../sim/decisions";
 import { optionCost } from "../sim/events";
 import { checkAnswerLetter } from "../sim/letters";
+import { checkMarriage, marriageable, matchMoney } from "../sim/marriages";
 import { lendOffers, type LendOffer } from "../sim/offers";
 import { freeCash } from "../sim/reserves";
 import type { GameData } from "../sim/tuning";
@@ -59,5 +60,22 @@ export function letterReplies(state: GameState, data: GameData, style: LetterSty
         ? [...open].filter((o) => !o.chance && !o.effects.some((e) => e.kind === "follow_up")).sort((a, b) => optionCost(b) - optionCost(a))[0]
         : open.find((o) => o.chance && optionCost(o) === 0);
     return pick && (style === "risky" || optionCost(pick) > 0) ? { kind: "answer_letter", event: letter.event, option: pick.id } : null;
+  });
+}
+
+/**
+ * One maker per member of the line who may marry. "best": the house that agrees and pays the
+ * largest dowry, else a merchant family. "merchant": always a merchant family. Marrying keeps the
+ * line going: children need a married couple.
+ */
+export function marriageMakers(state: GameState, data: GameData, style: "best" | "merchant"): ((s: GameState) => Decision | null)[] {
+  return marriageable(state, data).map((p) => (s: GameState): Decision | null => {
+    const merchant: Decision = { kind: "arrange_marriage", member: p.id, with: "merchant", form: "in" };
+    if (style === "merchant") return merchant;
+    const best = s.houses
+      .map((h) => ({ kind: "arrange_marriage", member: p.id, with: h.id, form: "in" }) as const)
+      .filter((d) => !checkMarriage(s, d, data))
+      .sort((a, b) => matchMoney(s, b, data) - matchMoney(s, a, data))[0];
+    return best ?? merchant;
   });
 }
