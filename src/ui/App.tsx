@@ -69,10 +69,15 @@ export function App() {
           <span className="season">{over ? `After ${seasonLabel(previousQuarter(base.world))}` : seasonLabel(base.world)}</span>
           {!over && <span className="small">Quarter {base.world.turn} of 144</span>}
         </div>
-        <div className={`barometer mood-${mood}`} aria-label={`Market: ${mood}`}>
-          <span className="small">Market</span>
-          <span className="reading">{BAROMETER[mood]}</span>
-          {base.panic_warning && !over && <span className="warning-chip">Panic in {base.panic_warning.turns_left} qtr</span>}
+        <div className={`barometer mood-${mood}`} aria-label={`Market: ${BAROMETER[mood]}`}>
+          <div className="dial" aria-hidden="true">
+            <span className="needle" />
+          </div>
+          <div className="barometer-text">
+            <span className="small">The market</span>
+            <span className="reading">{BAROMETER[mood]}</span>
+            {base.panic_warning && !over && <span className="warning-chip">Panic in {base.panic_warning.turns_left} qtr</span>}
+          </div>
         </div>
         <div className="masthead-buttons">
           <button className="secondary" onClick={save}>Save</button>
