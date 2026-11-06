@@ -6,24 +6,27 @@ import { addEntry } from "./ledger";
 import { freeCash } from "./reserves";
 import type { Rng } from "./rng";
 import type { GameData, Tuning } from "./tuning";
+import { birthTrait, drawTrait } from "./traits";
 import type { GameState, InvestFamilyDecision, Person } from "./types";
 
 export type Stat = "acumen" | "prudence" | "connections";
 export const STATS: Stat[] = ["acumen", "prudence", "connections"];
 
 /**
- * The starting family from data/family.json: the head with fixed stats, then each child with stats
- * drawn from child_stats. Three rolls per child, in data order.
+ * The starting family from data/family.json: the head with fixed stats and traits, then each child
+ * with stats drawn from child_stats and one random trait. Four rolls per child, in data order.
  */
 export function createFamily(data: GameData, rng: Rng): Person[] {
   const { min, max } = data.tuning.family.child_stats;
   const draw = () => min + Math.floor(rng.next() * (max - min + 1));
   const { head, children } = data.family;
   return [
-    { id: 1, house_id: 1, name: head.name, birth_year: head.birth_year, death_year: null, is_head: true, acumen: head.acumen, prudence: head.prudence, connections: head.connections, inexperienced_until: null },
-    ...children.map((c, i): Person => ({
-      id: i + 2, house_id: 1, name: c.name, birth_year: c.birth_year, death_year: null, is_head: false, acumen: draw(), prudence: draw(), connections: draw(), inexperienced_until: null,
-    })),
+    { id: 1, house_id: 1, name: head.name, birth_year: head.birth_year, death_year: null, is_head: true, acumen: head.acumen, prudence: head.prudence, connections: head.connections, traits: [...head.traits], inexperienced_until: null },
+    ...children.map((c, i): Person => {
+      const stats = { acumen: draw(), prudence: draw(), connections: draw() };
+      const trait = drawTrait([], rng, data);
+      return { id: i + 2, house_id: 1, name: c.name, birth_year: c.birth_year, death_year: null, is_head: false, ...stats, traits: trait ? [trait] : [], inexperienced_until: null };
+    }),
   ];
 }
 
@@ -102,7 +105,7 @@ export function succeed(state: GameState, data: GameData): void {
     const c = data.family.cousin;
     next = {
       id: state.people.length + 1, house_id: 1, name: c.name, birth_year: year - c.age, death_year: null, is_head: false,
-      acumen: t.cousin_stat, prudence: t.cousin_stat, connections: t.cousin_stat, inexperienced_until: null,
+      acumen: t.cousin_stat, prudence: t.cousin_stat, connections: t.cousin_stat, traits: [...c.traits], inexperienced_until: null,
     };
     state.people.push(next);
   }
@@ -117,7 +120,7 @@ export function succeed(state: GameState, data: GameData): void {
 /**
  * The family's quarter: one roll for the head's death once they reach death.from_age (succession
  * follows at once), then at year end one roll for a birth if the head is of age and has room for
- * heirs. Mutates `state`; callers pass a draft copy.
+ * heirs (a birth then draws three stat rolls and two trait rolls). Mutates `state`; callers pass a draft copy.
  */
 export function resolveFamily(state: GameState, rng: Rng, data: GameData): void {
   const { year, quarter } = state.world;
@@ -138,9 +141,11 @@ export function resolveFamily(state: GameState, rng: Rng, data: GameData): void 
   const first = data.family.child_names.find((n) => !state.people.some((p) => p.name === `${n} ${surname}`)) ?? "Child";
   const { min, max } = data.tuning.family.child_stats;
   const draw = () => min + Math.floor(rng.next() * (max - min + 1));
+  const stats = { acumen: draw(), prudence: draw(), connections: draw() };
+  const trait = birthTrait(parent.traits, rng, data);
   state.people.push({
     id: state.people.length + 1, house_id: 1, name: `${first} ${surname}`, birth_year: year + 1, death_year: null, is_head: false,
-    acumen: draw(), prudence: draw(), connections: draw(), inexperienced_until: null,
+    ...stats, traits: trait ? [trait] : [], inexperienced_until: null,
   });
 }
 

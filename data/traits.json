@@ -1,0 +1,13 @@
+[
+  { "id": "shrewd", "name": "Shrewd", "description": "Sees the profit in a deal before others do.", "virtue_for": "acumen", "effects": { "acumen": 2 } },
+  { "id": "prudent", "name": "Prudent", "description": "Reads a merchant's books, and his face, before lending.", "opposite": "reckless", "virtue_for": "prudence", "effects": { "prudence": 2 } },
+  { "id": "reckless", "name": "Reckless", "description": "Trusts a handshake and a good dinner.", "opposite": "prudent", "effects": { "prudence": -2 } },
+  { "id": "well_connected", "name": "Well-connected", "description": "Dines with ministers and corresponds with courts.", "opposite": "aloof", "virtue_for": "connections", "effects": { "connections": 2 } },
+  { "id": "aloof", "name": "Aloof", "description": "Cold with the bourse; respected, never liked.", "opposite": "well_connected", "effects": { "connections": -2, "reputation_gain": 0.75 } },
+  { "id": "charismatic", "name": "Charismatic", "description": "Depositors trust a face they like.", "effects": { "withdrawals": 0.85, "reputation_gain": 1.5 } },
+  { "id": "hale", "name": "Hale", "description": "Walks the Zeil every morning, whatever the weather.", "opposite": "sickly", "effects": { "death_chance": 0.6 } },
+  { "id": "sickly", "name": "Sickly", "description": "Coughs through every winter.", "opposite": "hale", "effects": { "death_chance": 1.8 } },
+  { "id": "frugal", "name": "Frugal", "description": "Counts the candles.", "opposite": "spendthrift", "effects": { "family_cost": 0.75 } },
+  { "id": "spendthrift", "name": "Spendthrift", "description": "Never refuses a tailor, a tutor or a ball.", "opposite": "frugal", "effects": { "family_cost": 1.5 } },
+  { "id": "gambler", "name": "Gambler", "description": "Loves a long shot, and backs too many.", "effects": { "acumen": 1, "venture_failure": 1.3 } }
+]

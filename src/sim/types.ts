@@ -42,6 +42,8 @@ export interface Person {
   prudence: number;
   /** Access to state bonds. */
   connections: number;
+  /** Trait ids, from data/traits.json. */
+  traits: string[];
   /** An untrained head's stats count lower until this turn. Null when not inexperienced. */
   inexperienced_until: number | null;
 }

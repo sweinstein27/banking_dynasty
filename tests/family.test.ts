@@ -16,7 +16,7 @@ describe("createFamily", () => {
   it("starts with the head from data/family.json and each child, in order", () => {
     const people = createFamily(gameData, createRng(1));
     const { head, children } = gameData.family;
-    expect(people[0]).toEqual({ id: 1, house_id: 1, name: head.name, birth_year: head.birth_year, death_year: null, is_head: true, acumen: head.acumen, prudence: head.prudence, connections: head.connections, inexperienced_until: null });
+    expect(people[0]).toEqual({ id: 1, house_id: 1, name: head.name, birth_year: head.birth_year, death_year: null, is_head: true, acumen: head.acumen, prudence: head.prudence, connections: head.connections, traits: head.traits, inexperienced_until: null });
     expect(people.slice(1).map((p) => [p.id, p.name, p.birth_year, p.is_head])).toEqual(children.map((c, i) => [i + 2, c.name, c.birth_year, false]));
   });
 

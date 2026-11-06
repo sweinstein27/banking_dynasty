@@ -4,7 +4,11 @@
     "birth_year": 1765,
     "acumen": 5,
     "prudence": 5,
-    "connections": 5
+    "connections": 5,
+    "traits": [
+      "prudent",
+      "aloof"
+    ]
   },
   "children": [
     {
@@ -23,7 +27,8 @@
   "surname": "Adler",
   "cousin": {
     "name": "Wilhelm Adler",
-    "age": 30
+    "age": 30,
+    "traits": []
   },
   "child_names": [
     "Luise",

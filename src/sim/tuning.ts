@@ -16,6 +16,11 @@ export interface Tuning {
   family: {
     /** Children's starting stats are each drawn as a whole number in this range. */
     child_stats: { min: number; max: number };
+    /**
+     * A newborn takes one of the head's traits with inherit_chance, else a random one. At 18 an heir
+     * gains the virtue of any stat that has reached virtue_stat, else a random trait.
+     */
+    traits: { inherit_chance: number; virtue_stat: number };
     /** A stat at this value changes nothing. */
     neutral_stat: number;
     max_stat: number;
@@ -139,6 +144,8 @@ export interface GameData {
   /** Merchant houses that borrow, from data/borrowers.json. */
   borrowers: BorrowerType[];
   family: FamilyData;
+  /** Character traits, from data/traits.json. */
+  traits: TraitType[];
   /** States whose bonds can be bought, from data/states.json. */
   states: BondIssuer[];
   /** Kinds of venture the house can back, from data/ventures.json. */
@@ -195,13 +202,41 @@ export interface GameEvent {
 
 /** data/family.json: the house's starting family. Names are invented. */
 export interface FamilyData {
-  head: { name: string; birth_year: number; acumen: number; prudence: number; connections: number };
+  head: { name: string; birth_year: number; acumen: number; prudence: number; connections: number; traits: string[] };
   children: { name: string; birth_year: number }[];
   surname: string;
   /** Takes over if the head dies with no heir left. */
-  cousin: { name: string; age: number };
+  cousin: { name: string; age: number; traits: string[] };
   /** First names for children born during the game, used in turn. */
   child_names: string[];
+}
+
+/**
+ * What a trait does. Stat effects add to the person's stats (within 1 to 10). The rest multiply:
+ * the chance of death, venture failure risk, withdrawals, family spending and reputation gains.
+ * Only the head's traits act on the business.
+ */
+export interface TraitEffects {
+  acumen?: number;
+  prudence?: number;
+  connections?: number;
+  death_chance?: number;
+  venture_failure?: number;
+  withdrawals?: number;
+  family_cost?: number;
+  reputation_gain?: number;
+}
+
+/** One record of data/traits.json. Descriptions are invented. */
+export interface TraitType {
+  id: string;
+  name: string;
+  description: string;
+  /** A trait a person can never hold together with this one. */
+  opposite?: string;
+  /** The virtue an heir gains at 18 when this stat has reached virtue_stat. */
+  virtue_for?: "acumen" | "prudence" | "connections";
+  effects: TraitEffects;
 }
 
 export interface BorrowerType {

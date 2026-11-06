@@ -13,6 +13,7 @@
   },
   "family": {
     "child_stats": { "min": 1, "max": 3 },
+    "traits": { "inherit_chance": 0.3, "virtue_stat": 6 },
     "neutral_stat": 5,
     "max_stat": 10,
     "acumen_step": 0.05,
