@@ -4,7 +4,7 @@ import { useState } from "react";
 import { gameData } from "../data";
 import { dateOfTurn } from "../sim/chronicle";
 import type { GameState, NewsItem } from "../sim/types";
-import { seasonLabel } from "./format";
+import { keepUnits, seasonLabel } from "./format";
 import { PageTurner, usePages } from "./Pager";
 
 /** News items shown on one page of an issue. */
@@ -63,7 +63,7 @@ function Issue({ news }: { news: NewsItem[] }) {
             {pages.items.map((n, i) => (
               <li key={i} className={`news-${n.kind}`}>
                 {n.title && <strong className="headline">{n.title}. </strong>}
-                {n.text}
+                {keepUnits(n.text)}
               </li>
             ))}
           </ul>

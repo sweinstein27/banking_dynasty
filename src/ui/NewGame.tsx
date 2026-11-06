@@ -15,29 +15,37 @@ export function NewGame({ onStart, onLoad, onResume, error }: {
 
   return (
     <main className="start">
-      <h1>Banking Dynasty</h1>
-      <p>Frankfurt, 1815. Run a family banking house one quarter at a time until the end of 1850.</p>
-      {onResume && (
-        <div className="card">
-          <button className="primary wide" onClick={onResume}>Back to the current game</button>
-          <p className="muted">Starting or loading another game replaces the current one. Save it first if you want to keep it.</p>
-        </div>
-      )}
-      <div className="card">
-        <label className="field">
-          <span>Seed (the same seed replays the same run)</span>
-          <input inputMode="numeric" value={seedText} onChange={(e) => setSeedText(e.target.value)} />
-        </label>
-        {!valid && <p className="error">The seed must be a whole number from 0 to 4,294,967,295.</p>}
-        <div className="row">
-          <button className="secondary" onClick={() => setSeedText(String(randomSeed()))}>New random seed</button>
-          <button className="primary" disabled={!valid} onClick={() => onStart(seed)}>Start new game</button>
-        </div>
-      </div>
-      <div className="card">
-        <button className="secondary wide" onClick={onLoad}>Load a saved game from a file</button>
-        {error && <p className="error">{error}</p>}
-      </div>
+      <article className="title-page">
+        <p className="ornament" aria-hidden="true">~ ~ ~</p>
+        <h1>Banking Dynasty</h1>
+        <p className="subtitle">The ledgers of a Frankfurt house, 1815 to 1850</p>
+        <p className="ornament" aria-hidden="true">~ ~ ~</p>
+        <p className="blurb">Lend to merchants, buy the debts of kings, back mills and railways, and raise heirs fit to keep the house. One quarter at a time, until the end of 1850.</p>
+
+        {onResume && (
+          <section className="title-block">
+            <button className="primary wide" onClick={onResume}>Back to the current game</button>
+            <p className="muted small">Starting or loading another game replaces the current one. Save it first if you want to keep it.</p>
+          </section>
+        )}
+
+        <section className="title-block">
+          <label className="field">
+            <span>Seed: the same seed replays the same run</span>
+            <input inputMode="numeric" value={seedText} onChange={(e) => setSeedText(e.target.value)} />
+          </label>
+          {!valid && <p className="error">The seed must be a whole number from 0 to 4,294,967,295.</p>}
+          <div className="row">
+            <button className="secondary" onClick={() => setSeedText(String(randomSeed()))}>New random seed</button>
+            <button className="seal" disabled={!valid} onClick={() => onStart(seed)}>Open the house</button>
+          </div>
+        </section>
+
+        <section className="title-block">
+          <button className="secondary wide" onClick={onLoad}>Load a saved game from a file</button>
+          {error && <p className="error">{error}</p>}
+        </section>
+      </article>
     </main>
   );
 }

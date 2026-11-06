@@ -2,7 +2,8 @@
  * A partner's desk in a Frankfurt counting house, seen from above: parchment sheets on walnut.
  * One screen, no scrolling: the base size follows the window's height, so everything (set in rem)
  * shrinks on a 1280x800 screen and grows on larger ones. Lists turn pages instead of scrolling.
- * Trackpad rules: large click targets, no hover-only information, no drag.
+ * Trackpad rules: large click targets (never under 44 px, whatever the screen), no hover-only
+ * information, no drag.
  */
 :root {
   --wood: #3a2819;
@@ -46,7 +47,7 @@ ul, ol { margin: 0; }
 /* Buttons are slips of heavier paper, inked at the edge. */
 button {
   font: inherit;
-  min-height: 2.6rem;
+  min-height: max(44px, 2.6rem);
   padding: 0.35rem 0.8rem;
   border-radius: 4px;
   border: 1px solid #9c8660;
@@ -64,7 +65,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--brass); out
 
 input {
   font: inherit;
-  min-height: 2.6rem;
+  min-height: max(44px, 2.6rem);
   padding: 0.3rem 0.6rem;
   border: none;
   border-bottom: 2px solid var(--ink);
@@ -184,7 +185,7 @@ input {
 /* Page turning, in place of scrolling. */
 .page-turner { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: auto; padding-top: 0.3rem; }
 .page-turner span { font-size: 0.85rem; color: var(--muted); font-style: italic; }
-button.turn { min-height: 2.4rem; padding: 0.2rem 0.7rem; font-size: 0.9rem; }
+button.turn { min-height: max(44px, 2.4rem); padding: 0.2rem 0.7rem; font-size: 0.9rem; }
 .page-turner.issues { margin-top: 0; border-top: 1px solid var(--rule); }
 
 /* ---------- The Gazette: newsprint ---------- */
@@ -217,7 +218,7 @@ button.turn { min-height: 2.4rem; padding: 0.2rem 0.7rem; font-size: 0.9rem; }
 .ledger-tabs { display: flex; flex-direction: column; min-height: 0; flex: 1; }
 .ribbons { display: flex; gap: 0.4rem; border-bottom: 2px solid var(--ink); }
 .ribbon {
-  min-height: 2.4rem; border-radius: 0; border: none; box-shadow: none;
+  min-height: max(44px, 2.4rem); border-radius: 0; border: none; box-shadow: none;
   background: linear-gradient(#7a2d2d, #5a1e1e); color: var(--paper-light);
   font-family: var(--display); font-size: 1rem; padding: 0.2rem 0.9rem;
   clip-path: polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%);
@@ -281,7 +282,7 @@ button.turn { min-height: 2.4rem; padding: 0.2rem 0.7rem; font-size: 0.9rem; }
 .card-hint { font-size: 0.8rem; color: var(--muted); font-style: italic; }
 .crisis-card { border-left-color: var(--oxblood); }
 .crisis-card .card-name { color: var(--oxblood); }
-.letters { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; min-height: 2.6rem; }
+.letters { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; min-height: max(44px, 2.6rem); }
 .letters > .muted { font-style: italic; }
 .letter-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.9rem; }
 .letter {
@@ -327,13 +328,29 @@ button.turn { min-height: 2.4rem; padding: 0.2rem 0.7rem; font-size: 0.9rem; }
 .game-over h2 { font-size: 2rem; text-align: center; }
 .game-over-bankrupt h2 { color: var(--oxblood); }
 .final-worth { font-family: var(--display); font-size: 1.6rem; text-align: center; }
-.chronicle { flex: 1; min-height: 0; line-height: 1.5; font-size: 1.05rem; }
+/* The chronicle as a book spread: two columns of text. */
+.chronicle { flex: 1; min-height: 0; line-height: 1.5; font-size: 1.15rem; column-count: 2; column-gap: 2.4rem; column-rule: 1px solid var(--rule); text-align: justify; hyphens: auto; }
+.chronicle p { break-inside: avoid; margin: 0 0 0.6rem; }
 .chronicle p:first-child::first-letter { font-family: var(--display); font-size: 2.6rem; float: left; line-height: 0.9; padding-right: 0.3rem; }
 
-.start { max-width: 560px; margin: 0 auto; padding: 4vh 1rem; height: 100vh; overflow: hidden; color: var(--paper-light); }
-.start h1 { font-size: 2.6rem; text-align: center; }
-.start > p { text-align: center; font-style: italic; }
-.start .card { padding: 1rem; margin-top: 1rem; color: var(--ink); }
+.start { height: 100vh; overflow: hidden; display: grid; place-items: center; padding: 1rem; }
+.title-page {
+  width: min(34rem, 100%); max-height: calc(100vh - 2rem); overflow: hidden;
+  padding: 1.6rem 2.2rem; text-align: center;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.45), transparent 60%),
+    radial-gradient(ellipse at 50% 120%, rgba(120, 90, 40, 0.2), transparent 60%),
+    var(--paper);
+  border: 1px solid var(--rule);
+  outline: 1px solid var(--rule); outline-offset: -0.6rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+}
+.title-page h1 { font-size: 2.8rem; }
+.subtitle { font-family: var(--display); font-style: italic; font-size: 1.15rem; color: var(--muted); }
+.ornament { color: var(--brass); letter-spacing: 0.6em; margin: 0.3rem 0; }
+.blurb { font-style: italic; margin: 0.6rem 0 0.4rem; }
+.title-block { text-align: left; border-top: 1px solid var(--rule); padding-top: 0.6rem; margin-top: 0.6rem; }
+.title-block .seal { flex: 1; }
 .field { display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.6rem; }
 .field label { display: flex; flex-direction: column; gap: 0.3rem; }
 
@@ -352,7 +369,7 @@ button.turn { min-height: 2.4rem; padding: 0.2rem 0.7rem; font-size: 0.9rem; }
 .choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.5rem; }
 .choice {
   display: flex; flex-direction: column; align-items: flex-start; gap: 0.15rem; text-align: left;
-  min-height: 2.8rem; width: 100%; border: 1px solid #9c8660; border-left: 4px solid var(--rule);
+  min-height: max(44px, 2.8rem); width: 100%; border: 1px solid #9c8660; border-left: 4px solid var(--rule);
 }
 .choice[data-state="on"] { border-left-color: var(--bottle); background: linear-gradient(160deg, #eef2e6, #dfe6d2); }
 .choice[data-state="on"]::before { content: "Chosen"; font-size: 0.8rem; color: var(--bottle); font-weight: 700; font-style: italic; }

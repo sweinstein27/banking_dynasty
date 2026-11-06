@@ -3,10 +3,11 @@ import { gameData } from "../data";
 import { chronicle } from "../sim/chronicle";
 import { netWorth } from "../sim/turn";
 import type { GameState } from "../sim/types";
-import { dateLabel, fl, previousQuarter } from "./format";
+import { dateLabel, fl, keepUnits, previousQuarter } from "./format";
 import { PageTurner, usePages } from "./Pager";
 
-const PARAGRAPHS_PER_PAGE = 2;
+// A chronicle has at most six paragraphs, so the whole of it fits one spread.
+const PARAGRAPHS_PER_PAGE = 6;
 
 export function GameOver({ state, reason, seed, onNewGame, onSave, onShowBooks }: {
   state: GameState;
@@ -33,7 +34,7 @@ export function GameOver({ state, reason, seed, onNewGame, onSave, onShowBooks }
       </header>
       <h3>The chronicle of the house</h3>
       <div className="chronicle">
-        {pages.items.map((para, i) => <p key={i}>{para}</p>)}
+        {pages.items.map((para, i) => <p key={i}>{keepUnits(para)}</p>)}
       </div>
       <PageTurner pages={pages} label="Page" />
       <div className="row">

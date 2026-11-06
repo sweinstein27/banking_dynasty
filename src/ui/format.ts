@@ -12,6 +12,9 @@ export function previousQuarter(w: Pick<WorldState, "year" | "quarter">): Pick<W
   return w.quarter === 1 ? { year: w.year - 1, quarter: 4 } : { year: w.year, quarter: (w.quarter - 1) as WorldState["quarter"] };
 }
 
+/** Keeps every amount on one line with its unit: "9,500 fl." never breaks before "fl.". */
+export const keepUnits = (text: string) => text.replace(/ fl\./g, "\u00a0fl.");
+
 /** Parses a typed amount ("12,000" or "12000") to a number, or NaN. The sim decides if it is valid. */
 export const parseAmount = (text: string) => (text.trim() === "" ? NaN : Number(text.replace(/[,\s]/g, "")));
 
