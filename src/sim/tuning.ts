@@ -37,6 +37,8 @@ export interface Tuning {
       /** Reputation lost when a trained or an untrained heir takes over. */
       reputation_trained: number;
       reputation_untrained: number;
+      /** Reputation lost when the new head is not the eldest living heir (named or not). */
+      passed_over_reputation: number;
       /** An untrained head's stats count this much lower, for this many quarters. */
       inexperience_penalty: number;
       inexperience_quarters: number;

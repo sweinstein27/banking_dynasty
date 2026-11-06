@@ -7,7 +7,7 @@ import { freeCash } from "./reserves";
 import type { Rng } from "./rng";
 import type { GameData, Tuning } from "./tuning";
 import { birthTrait, comingOfAgeTrait, drawTrait, traitEffects } from "./traits";
-import type { GameState, InvestFamilyDecision, Person } from "./types";
+import type { DesignateHeirDecision, GameState, InvestFamilyDecision, Person } from "./types";
 
 export type Stat = "acumen" | "prudence" | "connections";
 export const STATS: Stat[] = ["acumen", "prudence", "connections"];
@@ -104,9 +104,11 @@ export function successor(state: GameState, data: GameData): Person | undefined 
 }
 
 /**
- * The head dies this quarter and the successor takes over at once. A trained heir costs a little
- * reputation; an untrained one (a child, or poorly taught) costs more and is inexperienced for a
- * while. With no heir left, a distant cousin takes over, untrained. Mutates `state`.
+ * The head dies this quarter and the successor takes over at once: the heir the head named, if
+ * still living, else the automatic choice. A trained heir costs a little reputation; an untrained
+ * one (a child, or poorly taught) costs more and is inexperienced for a while; passing over the
+ * eldest living heir costs more again. With no heir left, a distant cousin takes over, untrained.
+ * Mutates `state`.
  */
 export function succeed(state: GameState, data: GameData): void {
   const t = data.tuning.family.succession;
@@ -115,7 +117,11 @@ export function succeed(state: GameState, data: GameData): void {
   if (!dead) return;
   dead.death_year = year;
   dead.is_head = false;
-  let next = successor(state, data);
+  const eldest = heirsOf(state)[0];
+  // The heir the head named, if still living; otherwise the automatic choice.
+  const named = heirsOf(state).find((p) => p.id === state.house.designated_heir);
+  let next = named ?? successor(state, data);
+  state.house.designated_heir = null;
   if (!next) {
     const c = data.family.cousin;
     next = {
@@ -127,9 +133,10 @@ export function succeed(state: GameState, data: GameData): void {
   const trained = isTrained(next, year, data);
   next.is_head = true;
   if (!trained) next.inexperienced_until = turn + t.inexperience_quarters;
-  const loss = trained ? t.reputation_trained : t.reputation_untrained;
+  const passedOver = eldest && eldest.id !== next.id ? eldest.id : null;
+  const loss = (trained ? t.reputation_trained : t.reputation_untrained) + (passedOver !== null ? t.passed_over_reputation : 0);
   state.house.reputation = Math.max(0, state.house.reputation - loss);
-  state.successions.push({ turn, from: dead.id, to: next.id, trained });
+  state.successions.push({ turn, from: dead.id, to: next.id, trained, named: named !== undefined, passed_over: passedOver });
 }
 
 /**
@@ -248,4 +255,24 @@ export function heirTalent(state: GameState, gain: number, rng: Rng, tuning: Tun
   const heir = heirs[Math.floor(rng.next() * heirs.length)]!;
   const stat = STATS[Math.floor(rng.next() * STATS.length)]!;
   heir[stat] = Math.min(tuning.family.max_stat, heir[stat] + gain);
+}
+
+/** Returns why a designate_heir decision is invalid, or null if it can go ahead. */
+export function checkDesignateHeir(state: GameState, d: DesignateHeirDecision, data: GameData): string | null {
+  const noAction = checkActionLeft(state, data.tuning);
+  if (noAction) return noAction;
+  const heir = heirsOf(state).find((p) => p.id === d.heir);
+  if (!heir) return `No living heir #${d.heir}`;
+  if (state.house.designated_heir === heir.id) return `${heir.name} is already the named heir`;
+  return null;
+}
+
+/** Names the heir who will take over. No money moves. Returns a new state; the input is not changed. */
+export function designateHeir(state: GameState, d: DesignateHeirDecision, data: GameData): DecisionResult {
+  const reason = checkDesignateHeir(state, d, data);
+  if (reason) return { ok: false, reason };
+  const next = cloneState(state);
+  next.house.designated_heir = d.heir;
+  next.actions_this_turn += 1;
+  return { ok: true, state: next };
 }

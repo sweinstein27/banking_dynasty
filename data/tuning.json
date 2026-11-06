@@ -24,6 +24,7 @@
       "trained_total": 12,
       "reputation_trained": 3,
       "reputation_untrained": 10,
+      "passed_over_reputation": 5,
       "inexperience_penalty": 2,
       "inexperience_quarters": 8,
       "cousin_stat": 2

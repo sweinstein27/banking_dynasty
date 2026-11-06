@@ -41,6 +41,11 @@ export function chronicle(state: GameState, data: GameData): string[] {
   const t = data.tuning;
   const { house, people, ledger } = state;
   const paragraphs: string[] = [];
+  // ", passing over the elder Friedrich", or nothing when the eldest took over.
+  const passedOver = (id: number | null) => {
+    const p = people.find((x) => x.id === id);
+    return p ? `, passing over the elder ${p.name.split(" ")[0]}` : "";
+  };
   // ", prudent and aloof" after a name, or nothing for someone without traits.
   const described = (p: Person) => (p.traits.length ? `, ${traitWords(p, data)}` : "");
 
@@ -57,7 +62,7 @@ export function chronicle(state: GameState, data: GameData): string[] {
       const year = yearOf(sc.turn, t);
       const dead = people.find((p) => p.id === sc.from)!;
       const heir = people.find((p) => p.id === sc.to)!;
-      return `In ${year} ${dead.name} died, aged ${ageIn(dead, year)}, and ${heir.name}${described(heir)}${heir.traits.length ? "," : ""} took over at ${ageIn(heir, year)}${sc.trained ? "" : ", untrained and unready"}.`;
+      return `In ${year} ${dead.name} died, aged ${ageIn(dead, year)}, and ${heir.name}${described(heir)}${heir.traits.length ? "," : ""} took over at ${ageIn(heir, year)}${sc.named ? `, as ${dead.name.split(" ")[0]} had named` : ""}${passedOver(sc.passed_over)}${sc.trained ? "" : ", untrained and unready"}.`;
     });
     paragraphs.push(lines.join(" "));
   } else {

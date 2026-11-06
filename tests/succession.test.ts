@@ -73,7 +73,7 @@ describe("succession", () => {
     expect(headOf(s)!.name).toBe("Heir 2");
     expect(s.house.reputation).toBe(50 - sc.reputation_trained);
     expect(headStat(s, "prudence", gameData)).toBe(7);
-    expect(s.successions).toEqual([{ turn: 1, from: 1, to: 2, trained: true }]);
+    expect(s.successions).toEqual([{ turn: 1, from: 1, to: 2, trained: true, named: false, passed_over: null }]);
   });
 
   it("an untrained heir costs more reputation and acts weaker for inexperience_quarters", () => {

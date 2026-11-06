@@ -170,7 +170,13 @@ async function askFamily(preview: GameState): Promise<Decision | null> {
   console.log(`  e) Educate an heir (${fl(investCost("educate", preview, gameData))}, one stat +${inv.educate.gain})`);
   console.log(`  c) Charity (${fl(investCost("charity", preview, gameData))}, reputation +${reputationGain(inv.charity.reputation, preview, gameData)})`);
   console.log(`  p) Patronage (${fl(investCost("patronage", preview, gameData))}, head's connections +${inv.patronage.connections}, reputation +${reputationGain(inv.patronage.reputation, preview, gameData)})`);
-  const pick = (await ask("Form (e/c/p): "))?.trim();
+  console.log(`  n) Name an heir to take over (passing over the eldest costs ${tuning.family.succession.passed_over_reputation} reputation)`);
+  const pick = (await ask("Choice (e/c/p/n): "))?.trim();
+  if (pick === "n") {
+    const heirs = heirsOf(preview);
+    const heir = heirs[Number(await ask(`Heir (1-${heirs.length}): `)) - 1];
+    return heir ? { kind: "designate_heir", heir: heir.id } : (console.log("Unknown heir."), null);
+  }
   if (pick === "c") return { kind: "invest_family", form: "charity" };
   if (pick === "p") return { kind: "invest_family", form: "patronage" };
   if (pick !== "e") return console.log("Unknown form."), null;
@@ -188,7 +194,7 @@ function printFamily(s: GameState) {
   const stats = (p: Person) => STATS.map((k) => `${k} ${effectiveStat(p, k, gameData)}`).join(", ");
   const traits = (p: Person) => (p.traits.length ? `, ${traitWords(p, gameData)}` : "");
   if (head) console.log(`Head: ${head.name}${traits(head)}, aged ${ageIn(head, year)}, ${stats(head)}`);
-  heirsOf(s).forEach((p, i) => console.log(`  Heir ${i + 1}) ${p.name}${traits(p)}, aged ${ageIn(p, year)}, ${stats(p)}`));
+  heirsOf(s).forEach((p, i) => console.log(`  Heir ${i + 1}) ${p.name}${traits(p)}, aged ${ageIn(p, year)}, ${stats(p)}${s.house.designated_heir === p.id ? "  [named heir]" : ""}`));
 }
 
 async function askReserve(preview: GameState): Promise<Decision> {
@@ -225,6 +231,7 @@ async function main() {
           else if (d.kind === "invest_venture") console.log("Venture backed.");
           else if (d.kind === "set_reserve") console.log(`Reserve set to ${fl(d.amount)}`);
           else if (d.kind === "invest_family") console.log("Money spent on the family.");
+          else if (d.kind === "designate_heir") console.log("Heir named.");
           else console.log("Crisis measure taken.");
         }
       } else if (choice === "6") printHoldings(preview);

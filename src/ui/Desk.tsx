@@ -21,6 +21,7 @@ const HINTS: Record<DecisionKind, string> = {
   invest_venture: "Mills, ships, railways",
   set_reserve: "Cash kept back for runs",
   invest_family: "Tutors, charity, patronage",
+  designate_heir: "Choose who takes over",
   borrow: "From Bankhaus Kessler",
   pay_slowly: "Pay depositors in part",
   suspend: "Close the doors a quarter",
@@ -103,6 +104,8 @@ export function describe(d: Decision, state: GameState): string {
       if (d.form === "patronage") return `Spend ${cost} on patronage`;
       return `Educate ${state.people.find((p) => p.id === d.heir)?.name ?? "an heir"} in ${d.stat} (${cost})`;
     }
+    case "designate_heir":
+      return `Name ${state.people.find((p) => p.id === d.heir)?.name ?? "an heir"} as heir to the house`;
     case "borrow":
       return `Borrow ${fl(d.amount)} from ${gameData.tuning.crisis.rival.name}`;
     case "pay_slowly":

@@ -28,6 +28,7 @@ export function newGame(data: GameData, rng: Rng): GameState {
       reputation: s.reputation,
       reserve: s.reserve,
       status: "solvent",
+      designated_heir: null,
     },
     loans: [],
     bonds: [],

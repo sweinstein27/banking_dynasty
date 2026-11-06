@@ -22,6 +22,8 @@ export interface House {
   reserve: number;
   /** A bankrupt house cannot play another turn: the run is over. */
   status: HouseStatus;
+  /** The heir the head has named to take over, or null to leave it to the automatic choice. */
+  designated_heir: number | null;
 }
 
 export type HouseStatus = "solvent" | "bankrupt";
@@ -61,6 +63,10 @@ export interface Succession {
   from: number;
   to: number;
   trained: boolean;
+  /** The new head was the heir the old one had named. */
+  named: boolean;
+  /** The eldest living heir, if the new head was not them; null when the eldest took over. */
+  passed_over: number | null;
 }
 
 /** A merchant house that borrows from the player. Quality is hidden: the player sees estimateRange. */
@@ -311,6 +317,12 @@ export interface CallLoanDecision {
 }
 
 /** Invest in the family: educate one heir in one stat, give to charity, or act as a patron. */
+/** Name the heir who will take over when the head dies. */
+export interface DesignateHeirDecision {
+  kind: "designate_heir";
+  heir: number;
+}
+
 export type InvestFamilyDecision =
   | { kind: "invest_family"; form: "educate"; heir: number; stat: "acumen" | "prudence" | "connections" }
   | { kind: "invest_family"; form: "charity" }
@@ -318,4 +330,4 @@ export type InvestFamilyDecision =
 
 export type CrisisDecision = BorrowDecision | PaySlowlyDecision | SuspendDecision | CallLoanDecision;
 
-export type Decision = LendDecision | ReportDecision | SetReserveDecision | BuyBondDecision | InvestVentureDecision | InvestFamilyDecision | CrisisDecision;
+export type Decision = LendDecision | ReportDecision | SetReserveDecision | BuyBondDecision | InvestVentureDecision | InvestFamilyDecision | DesignateHeirDecision | CrisisDecision;

@@ -89,9 +89,19 @@ export function quarterNews(before: GameState, after: GameState, data: GameData)
     const heir = after.people.find((p) => p.id === sc.to)!;
     const year = after.world.year;
     const cousin = !before.people.some((p) => p.id === heir.id);
-    const who = cousin ? `With no heir left, a distant cousin, ${heir.name}, aged ${ageIn(heir, year)}, comes to take over.` : `${heir.name}, aged ${ageIn(heir, year)}, takes over the house.`;
+    const who = cousin
+      ? `With no heir left, a distant cousin, ${heir.name}, aged ${ageIn(heir, year)}, comes to take over.`
+      : `${heir.name}, aged ${ageIn(heir, year)}, takes over the house${sc.named ? `, as ${dead.name} had named` : ""}.`;
+    const elder = after.people.find((p) => p.id === sc.passed_over);
+    const passed = elder ? ` The elder ${elder.name} is passed over, and the bourse mutters.` : "";
     const how = sc.trained ? "" : " Untrained and unready, the new head will need time, and the bourse knows it.";
-    add("family", `${dead.name} has died, aged ${ageIn(dead, year)}. ${who}${how}`);
+    add("family", `${dead.name} has died, aged ${ageIn(dead, year)}. ${who}${passed}${how}`);
+  }
+  const namedNow = after.house.designated_heir;
+  if (namedNow !== null && namedNow !== before.house.designated_heir) {
+    const head = after.people.find((p) => p.is_head && p.death_year === null);
+    const heir = after.people.find((p) => p.id === namedNow);
+    if (head && heir) add("family", `${head.name} names ${heir.name} as heir to the house.`);
   }
   // Stats that rose this quarter (education, or an event), for living people already in the house.
   for (const p of after.people) {
