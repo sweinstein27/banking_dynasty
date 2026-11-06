@@ -97,7 +97,15 @@ describe("targets", () => {
     add("bond_heavy", [50_000, 60_000, 70_000, 80_000, 90_000, 95_000, 100_000, 140_000, 150_000, 155_000]);
     add("venture_heavy", [-10_000, 0, 10_000, 20_000, 30_000, 40_000, 60_000, 200_000, 300_000, 600_000], 1);
     const results = checkTargets(rows, gameData);
-    expect(results.map((r) => [r.id, r.pass])).toEqual([["T1", true], ["T2", true], ["T3", true], ["T4", true], ["T5", true], ["T6", true]]);
+    expect(results.map((r) => [r.id, r.pass])).toEqual([["T1", true], ["T2", true], ["T3", true], ["T4", true], ["T5", true], ["T6", true], ["T7", null]]);
+  });
+
+  it("T7 passes when educating pays and fails when it does not", () => {
+    const t7 = (withFamily: number, without: number) =>
+      checkTargets([row("cautious", withFamily), row("cautious_no_family", without)], gameData).find((r) => r.id === "T7")!.pass;
+    expect(t7(90_000, 80_000)).toBe(true);
+    expect(t7(80_000, 80_000)).toBe(true);
+    expect(t7(74_000, 91_000)).toBe(false);
   });
 
   it("report n/a when a needed strategy was not run", () => {

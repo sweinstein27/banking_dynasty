@@ -52,6 +52,6 @@ results.sort((a, b) => b.passed - a.passed || b.weakest - a.weakest);
 console.log(`\n${results.length} combinations, seeds 1 to ${runs}. Best first.`);
 for (const r of results) {
   const med = r.sums.map((s) => `${s.strategy} ${Math.round(s.median / 1000)}k/${(s.bankrupt_rate * 100).toFixed(0)}%/${(s.strong * 100).toFixed(0)}%`).join("  ");
-  console.log(`\n${r.passed}/6 passed  ${r.label}\n  median/bankrupt/strong: ${med}\n  median final reputation: ${r.reputation}`);
+  console.log(`\n${r.passed}/${r.targets.length} passed  ${r.label}\n  median/bankrupt/strong: ${med}\n  median final reputation: ${r.reputation}`);
   for (const t of r.targets) if (!t.pass) console.log(`  ${t.pass === null ? "n/a " : "FAIL"} ${t.id}: ${t.detail}`);
 }

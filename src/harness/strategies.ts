@@ -33,10 +33,19 @@ export const idle: Strategy = () => [];
 /**
  * Cautious: keeps 40% of deposits in reserve (60% from the first warning sign), checks borrowers
  * before lending, lends only where even the low end of the estimate is 0.6 or better, buys bonds
- * only from the safest states (risk 0.25 or less), and educates the heir who would take over until their stats are enough
- * to be trained. In a panic it pays depositors slowly when cash is short.
+ * only from the safest states (risk 0.25 or less), and educates the heir who would take over until
+ * their stats are enough to be trained. In a panic it pays depositors slowly when cash is short.
  */
 export function cautious(state: GameState, data: GameData): Decision[] {
+  return cautiousPlay(state, data, true);
+}
+
+/** The cautious strategy without any investment in the family, to measure whether educating pays (T7). */
+export function cautiousNoFamily(state: GameState, data: GameData): Decision[] {
+  return cautiousPlay(state, data, false);
+}
+
+function cautiousPlay(state: GameState, data: GameData, educate: boolean): Decision[] {
   const worried = state.panic_warning !== null || state.world.sentiment !== "calm";
   const wanted: Maker[] = [];
   if (state.world.sentiment === "panic" && shortForWithdrawals(state, data)) wanted.push(() => ({ kind: "pay_slowly" }));
@@ -52,7 +61,7 @@ export function cautious(state: GameState, data: GameData): Decision[] {
       return o && o.estimate.low >= 0.6 ? lendShare(s, o, 0.25) : null;
     });
   }
-  wanted.push((s) => {
+  if (educate) wanted.push((s) => {
     // Only the heir who would take over, and only until their stats reach the trained total
     // (age does the rest).
     const heir = successor(s, data.tuning);
@@ -139,4 +148,5 @@ export const STRATEGIES: Record<string, Strategy> = {
   aggressive,
   bond_heavy: bondHeavy,
   venture_heavy: ventureHeavy,
+  cautious_no_family: cautiousNoFamily,
 };

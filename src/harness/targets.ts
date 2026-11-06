@@ -1,4 +1,5 @@
-// The Week 7 balance targets (agreed in the plan), checked against a set of harness runs.
+// The balance targets: T1 to T6 from the Week 7 plan, T7 from the deposits plan, checked
+// against a set of harness runs.
 import { dateOfTurn } from "../sim/chronicle";
 import type { GameData } from "../sim/tuning";
 import type { RunRow } from "./run";
@@ -83,6 +84,15 @@ export function checkTargets(rows: RunRow[], data: GameData): TargetResult[] {
     description: "Aggressive bankruptcy between 30% and 60%",
     pass: have("aggressive") ? by("aggressive")!.bankrupt_rate >= 0.3 && by("aggressive")!.bankrupt_rate <= 0.6 : null,
     detail: have("aggressive") ? pct(by("aggressive")!.bankrupt_rate) : "not run",
+  });
+
+  results.push({
+    id: "T7",
+    description: "Educating the heir pays: cautious median at least cautious_no_family's",
+    pass: have("cautious", "cautious_no_family") ? by("cautious")!.median >= by("cautious_no_family")!.median : null,
+    detail: have("cautious", "cautious_no_family")
+      ? `cautious ${Math.round(by("cautious")!.median)}, without family ${Math.round(by("cautious_no_family")!.median)}`
+      : "not run",
   });
   return results;
 }
