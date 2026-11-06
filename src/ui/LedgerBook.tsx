@@ -7,6 +7,7 @@ import { gameData } from "../data";
 import { bondBook, bondValue, quarterlyCoupon } from "../sim/bonds";
 import { estimateRange } from "../sim/borrowers";
 import { debtBook, debtInterest } from "../sim/crisis";
+import { depositLevel } from "../sim/deposits";
 import { headStat } from "../sim/family";
 import { freeCash } from "../sim/reserves";
 import { loanBook, netWorth } from "../sim/turn";
@@ -90,6 +91,7 @@ function Accounts({ state }: { state: GameState }) {
         <dt>Reserve</dt><dd>{fl(house.reserve)}</dd>
         <dt>Free cash</dt><dd>{fl(freeCash(state))}</dd>
         <dt>Reputation</dt><dd>{house.reputation} of 100</dd>
+        <dt>Draws deposits of</dt><dd>{fl(depositLevel(house.reputation, gameData.tuning))}</dd>
       </dl>
     </>
   );

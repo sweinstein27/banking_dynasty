@@ -396,12 +396,12 @@ function InvestFamilyForm(props: FormProps) {
         </Choice>
         <Choice value="charity">
           <strong>Charity ({fl(inv.charity.cost)})</strong>
-          <span>A gift to the poor of Frankfurt: reputation +{inv.charity.reputation}.</span>
+          <span>A gift to the poor of Frankfurt: reputation +{inv.charity.reputation}, drawing about {fl(inv.charity.reputation * gameData.tuning.deposits.per_reputation)} more in deposits over calm years.</span>
         </Choice>
         <Choice value="patronage">
           <strong>Patronage ({fl(inv.patronage.cost)})</strong>
           <span>
-            Sponsor the arts: {head?.name ?? "the head"}'s connections +{inv.patronage.connections}, reputation +{inv.patronage.reputation}.
+            Sponsor the arts: {head?.name ?? "the head"}'s connections +{inv.patronage.connections}, reputation +{inv.patronage.reputation} (about {fl(inv.patronage.reputation * gameData.tuning.deposits.per_reputation)} more in deposits).
           </span>
         </Choice>
       </Choices>

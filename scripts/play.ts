@@ -9,6 +9,7 @@ import { chronicle } from "../src/sim/chronicle";
 import { borrowingRoom, debtBook, inCrisis } from "../src/sim/crisis";
 import { ageIn, headOf, heirsOf, STATS } from "../src/sim/family";
 import { applyDecision } from "../src/sim/decisions";
+import { depositLevel } from "../src/sim/deposits";
 import { freeCash } from "../src/sim/reserves";
 import { createRng } from "../src/sim/rng";
 import { endTurn, loanBook, netWorth } from "../src/sim/turn";
@@ -59,7 +60,7 @@ function printStatus(s: GameState) {
   const { world, house } = s;
   console.log(`\n=== ${house.name}, ${house.city}. ${world.year} Q${world.quarter} (turn ${world.turn}) ===`);
   console.log(`Cash ${fl(house.cash)}  Loans ${fl(loanBook(s))}  Bonds ${fl(bondBook(s))}  Ventures ${fl(ventureBook(s))}  Deposits ${fl(house.deposits)}  Borrowings ${fl(debtBook(s))}  Net worth ${fl(netWorth(s))}`);
-  console.log(`Reserve ${fl(house.reserve)}  Free cash ${fl(freeCash(s))}`);
+  console.log(`Reserve ${fl(house.reserve)}  Free cash ${fl(freeCash(s))}  Reputation ${house.reputation}, drawing deposits of ${fl(depositLevel(house.reputation, tuning))}`);
   console.log(`Sentiment ${world.sentiment}  Base rate ${pct(world.base_rate)}  Actions left ${actionsLeft(s, tuning)}`);
   if (s.panic_warning) console.log(`WARNING: panic expected in ${s.panic_warning.turns_left} quarter(s).`);
 }
