@@ -1,0 +1,8 @@
+{
+  "vary": {
+    "tuning.family.invest.educate.cost": [500, 1000],
+    "tuning.family.succession.reputation_untrained": [10, 20, 30],
+    "tuning.deposits.interest_rate": [0.01, 0.02],
+    "tuning.deposits.per_reputation": [1000, 2000]
+  }
+}

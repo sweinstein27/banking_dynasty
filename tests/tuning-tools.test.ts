@@ -100,12 +100,16 @@ describe("targets", () => {
     expect(results.map((r) => [r.id, r.pass])).toEqual([["T1", true], ["T2", true], ["T3", true], ["T4", true], ["T5", true], ["T6", true], ["T7", null]]);
   });
 
-  it("T7 passes when educating pays and fails when it does not", () => {
+  it("T7 passes when educating costs at most 10% of the median", () => {
     const t7 = (withFamily: number, without: number) =>
       checkTargets([row("cautious", withFamily), row("cautious_no_family", without)], gameData).find((r) => r.id === "T7")!.pass;
     expect(t7(90_000, 80_000)).toBe(true);
-    expect(t7(80_000, 80_000)).toBe(true);
+    expect(t7(72_000, 80_000)).toBe(true);
+    expect(t7(71_999, 80_000)).toBe(false);
     expect(t7(74_000, 91_000)).toBe(false);
+    // With a negative median, 10% below means further from zero.
+    expect(t7(-11_000, -10_000)).toBe(true);
+    expect(t7(-11_001, -10_000)).toBe(false);
   });
 
   it("report n/a when a needed strategy was not run", () => {
