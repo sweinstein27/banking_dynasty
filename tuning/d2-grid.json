@@ -1,0 +1,8 @@
+{
+  "vary": {
+    "tuning.sentiment.withdrawal_share.panic": [0.2, 0.25],
+    "states.naples.coupon": [0.11, 0.12],
+    "ventures.mill.expected_return": [0.4, 0.5],
+    "ventures.railway.expected_return": [0.9, 1.1]
+  }
+}

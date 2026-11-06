@@ -88,7 +88,7 @@ describe("targets", () => {
   });
 
   it("all pass for a balanced field, and each fails on its own measure", () => {
-    // 10 runs each. Aggressive: 4 bankrupt in 1826 (turn 45), so 40% overall and 40% in 1825-29 (floor 15%).
+    // 10 runs each. Aggressive: 4 bankrupt in 1826 (turn 45), so 40% overall and 40% in 1825-29 (floor 12%).
     const rows: RunRow[] = [];
     const add = (name: string, worths: number[], bankrupt = 0) => worths.forEach((w, i) => rows.push(row(name, w, i < bankrupt ? "bankrupt" : "finished", i < bankrupt ? 45 : 144)));
     add("idle", Array(10).fill(45_000));

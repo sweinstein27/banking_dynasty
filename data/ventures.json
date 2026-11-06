@@ -19,7 +19,7 @@
     "id": "railway",
     "name": "Railway",
     "term_quarters": 12,
-    "expected_return": 0.9,
+    "expected_return": 1.1,
     "failure_risk": 0.2,
     "unlock_year": 1836
   }

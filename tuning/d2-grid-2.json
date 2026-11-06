@@ -1,0 +1,6 @@
+{
+  "vary": {
+    "tuning.sentiment.withdrawal_share.panic": [0.2, 0.22, 0.25],
+    "ventures.railway.expected_return": [0.9, 1.1]
+  }
+}

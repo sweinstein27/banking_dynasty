@@ -76,9 +76,9 @@ export function checkTargets(rows: RunRow[], data: GameData): TargetResult[] {
   const a1825 = have("aggressive") ? bankruptBetween(rows, "aggressive", 1825, 1829, data) : NaN;
   results.push({
     id: "T5",
-    // The aggressive floor was 25% in the plan; lowered to 15% on 2026-11-06 (see docs/decisions.md).
-    description: "1825-29: cautious at most 5% bankrupt, aggressive at least 15%",
-    pass: have("cautious", "aggressive") ? c1825 <= 0.05 && a1825 >= 0.15 : null,
+    // The aggressive floor was 25% in the plan; lowered to 15%, then to 12% (Scott, 2026-11-06; see docs/decisions.md).
+    description: "1825-29: cautious at most 5% bankrupt, aggressive at least 12%",
+    pass: have("cautious", "aggressive") ? c1825 <= 0.05 && a1825 >= 0.12 : null,
     detail: have("cautious", "aggressive") ? `cautious ${pct(c1825)}, aggressive ${pct(a1825)}` : "not run",
   });
 
