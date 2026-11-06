@@ -25,6 +25,7 @@ const HINTS: Record<DecisionKind, string> = {
   designate_heir: "Choose who takes over",
   answer_letter: "Reply to a letter",
   court_house: "Win another house's favour",
+  arrange_marriage: "A match for an heir",
   borrow: "From another house",
   pay_slowly: "Pay depositors in part",
   suspend: "Close the doors a quarter",
@@ -122,6 +123,12 @@ export function describe(d: Decision, state: GameState): string {
     }
     case "borrow":
       return `Borrow ${fl(d.amount)} from ${state.houses.find((h) => h.id === d.house)?.name ?? d.house}`;
+    case "arrange_marriage": {
+      const who = state.people.find((p) => p.id === d.member)?.name ?? "a member of the house";
+      if (d.with === "merchant") return `Marry ${who} to a merchant family`;
+      const h = state.houses.find((x) => x.id === d.with)?.name ?? d.with;
+      return d.form === "out" ? `Marry ${who} into ${h}` : `Marry ${who} to a son or daughter of ${h}`;
+    }
     case "court_house":
       return `Court ${state.houses.find((h) => h.id === d.house)?.name ?? d.house} (${fl(gameData.tuning.houses.court.cost)})`;
     case "pay_slowly":

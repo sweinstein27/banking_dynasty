@@ -249,6 +249,8 @@ describe("heir_trait", () => {
     // Rolls: the chance (0: comes up), then the heir.
     const s1 = endTurn(r.state, [], fixedRng(0, 0, CALM, CALM), d);
     expect(sickly(s1)).toHaveLength(1);
+    // Told plainly, not as a coming of age.
+    expect(s1.news.some((n) => n.kind === "family" && n.text.startsWith(`${sickly(s1)[0]} is left sickly.`))).toBe(true);
   });
 });
 

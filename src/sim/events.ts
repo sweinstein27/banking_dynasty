@@ -31,6 +31,7 @@ export function conditionsMet(state: GameState, c: EventConditions, date: Quarte
   if (c.has_active_loans !== undefined && state.loans.some((l) => l.status === "active") !== c.has_active_loans) return false;
   if (c.has_heirs !== undefined && (heirsOf(state).length > 0) !== c.has_heirs) return false;
   if (c.default_within_quarters !== undefined && !state.borrowers.some((b) => b.last_default_turn !== null && state.world.turn - b.last_default_turn < c.default_within_quarters!)) return false;
+  if (c.house_not_allied !== undefined && state.marriages.some((m) => m.house === c.house_not_allied)) return false;
   if (c.house_opinion) {
     const h = state.houses.find((x) => x.id === c.house_opinion!.house);
     if (!h || h.failed_turn !== null) return false;

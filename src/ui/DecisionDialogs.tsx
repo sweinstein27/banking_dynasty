@@ -24,6 +24,7 @@ export const DECISION_LABELS: Record<DecisionKind, string> = {
   designate_heir: "Name an heir",
   answer_letter: "Answer a letter",
   court_house: "Court a house",
+  arrange_marriage: "Arrange a marriage",
   borrow: "Borrow from another house",
   pay_slowly: "Pay depositors slowly",
   suspend: "Suspend withdrawals",

@@ -124,6 +124,22 @@ export function quarterNews(before: GameState, after: GameState, data: GameData)
     const heir = after.people.find((p) => p.id === namedNow);
     if (head && heir) add("family", `${head.name} names ${heir.name} as heir to the house.`);
   }
+
+  for (const m of after.marriages.slice(before.marriages.length)) {
+    const member = after.people.find((p) => p.id === m.member);
+    const spouse = after.people.find((p) => p.id === m.spouse);
+    const house = after.houses.find((h) => h.id === m.house);
+    if (!member) continue;
+    if (m.form === "out" && house) add("family", `${member.name} marries into ${house.name} and leaves the house of ${data.family.surname}, with a dowry of ${fl(-m.dowry)}`);
+    else if (m.form === "in" && house && spouse) add("family", `${member.name} marries ${spouse.name.split(" ")[0]} ${house.surname}, of ${house.name}, who brings a dowry of ${fl(m.dowry)} The two houses are allied.`);
+    else if (spouse) add("family", `${member.name} marries ${spouse.name.split(" ")[0]}, of a Frankfurt merchant family.`);
+  }
+
+  for (const p of after.people) {
+    if (p.role !== "spouse" || p.death_year === null || before.people.find((x) => x.id === p.id)?.death_year !== null) continue;
+    const partner = after.people.find((x) => x.id === p.spouse);
+    add("family", `${p.name}, ${p.gender === "f" ? "wife" : "husband"} of ${partner?.name ?? "the late head"}, has died, aged ${ageIn(p, before.world.year)}.`);
+  }
   // Stats that rose this quarter (education, or an event), for living people already in the house.
   for (const p of after.people) {
     const was = before.people.find((x) => x.id === p.id);
@@ -139,12 +155,20 @@ export function quarterNews(before: GameState, after: GameState, data: GameData)
       const trait = data.traits.find((t) => t.id === id);
       if (!trait) continue;
       const schooled = trait.virtue_for !== undefined && p[trait.virtue_for] >= data.tuning.family.traits.virtue_stat;
+      const comingOfAge = before.world.quarter === 4 && ageIn(p, before.world.year + 1) === data.tuning.family.succession.adult_age;
+      // A trait gained any other way (the fever letter, say) is told plainly.
+      if (!comingOfAge) {
+        add("family", `${p.name} is left ${trait.name.toLowerCase()}. ${trait.description}`);
+        continue;
+      }
       add("family", schooled
         ? `${p.name} comes of age, and the years of schooling show: ${trait.name.toLowerCase()}. ${trait.description}`
         : `${p.name} comes of age and proves ${trait.name.toLowerCase()}. ${trait.description}`);
     }
   }
   for (const p of after.people.slice(before.people.length)) {
+    // Newborns only: not a cousin taking over, nor a spouse marrying in.
+    if (p.role !== "line" || p.parents.length === 0) continue;
     if (after.successions.some((sc) => sc.to === p.id && !before.successions.includes(sc))) continue;
     const trait = data.traits.find((t) => t.id === p.traits[0]);
     add("family", `A child, ${p.name}, is born to the house.${trait ? ` The nurse already calls the child ${trait.name.toLowerCase()}.` : ""}`);

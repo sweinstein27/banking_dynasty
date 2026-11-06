@@ -31,6 +31,13 @@
     },
     "births": { "min_mother_age": 18, "max_mother_age": 42, "max_heirs": 6, "chance": 0.15 },
     "spouse_stats": { "min": 2, "max": 5 },
+    "marriage": {
+      "min_age": 18,
+      "in": { "min_opinion": 20, "reputation_gap": 15, "dowry_share": 0.01, "opinion": 30, "baseline": 20 },
+      "out": { "min_opinion": 0, "dowry": 2000, "opinion": 40, "baseline": 30 },
+      "merchant": { "cost": 500, "stat": 3 },
+      "ally_failure_reputation": 5
+    },
     "invest": {
       "educate": { "cost": 500, "gain": 1 },
       "charity": { "cost": 2000, "reputation": 3 },

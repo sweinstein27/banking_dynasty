@@ -190,7 +190,8 @@
     "historical": false,
     "weight": 1,
     "conditions": {
-      "house_opinion": { "house": "kessler", "below": -20 }
+      "house_opinion": { "house": "kessler", "below": -20 },
+      "house_not_allied": "kessler"
     },
     "effects": [],
     "options": [

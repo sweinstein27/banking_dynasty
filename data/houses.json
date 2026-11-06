@@ -9,7 +9,8 @@
       "heir": { "name": "Friedrich Kessler", "birth_year": 1797 },
       "wealth": 300000,
       "reputation": 55,
-      "opinion": -30
+      "opinion": -30,
+      "spouse_trait": "shrewd"
     },
     {
       "id": "albrecht",
@@ -20,7 +21,8 @@
       "heir": { "name": "Johanna Albrecht", "birth_year": 1789 },
       "wealth": 500000,
       "reputation": 70,
-      "opinion": 0
+      "opinion": 0,
+      "spouse_trait": "prudent"
     },
     {
       "id": "winter",
@@ -31,7 +33,8 @@
       "heir": { "name": "Paul Winter", "birth_year": 1806 },
       "wealth": 150000,
       "reputation": 50,
-      "opinion": 10
+      "opinion": 10,
+      "spouse_trait": "gambler"
     },
     {
       "id": "stellmann",
@@ -42,7 +45,8 @@
       "heir": { "name": "Theodor Stellmann", "birth_year": 1798 },
       "wealth": 200000,
       "reputation": 60,
-      "opinion": 20
+      "opinion": 20,
+      "spouse_trait": "frugal"
     },
     {
       "id": "rautenberg",
@@ -53,7 +57,8 @@
       "heir": { "name": "Clara Rautenberg", "birth_year": 1811 },
       "wealth": 80000,
       "reputation": 40,
-      "opinion": 0
+      "opinion": 0,
+      "spouse_trait": "charismatic"
     }
   ],
   "heir_names": ["Moritz", "Henriette", "August", "Luise", "Konrad", "Sophie", "Eduard", "Marie", "Julius", "Wilhelmine"]

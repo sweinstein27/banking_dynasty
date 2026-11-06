@@ -52,8 +52,25 @@ export interface Tuning {
      * number fewer than max_heirs.
      */
     births: { min_mother_age: number; max_mother_age: number; max_heirs: number; chance: number };
-    /** Stats of a spouse who marries in, each drawn from this range. */
+    /** A spouse from a house has stats of 2 + its reputation / 25, kept in this range. */
     spouse_stats: { min: number; max: number };
+    /**
+     * Arranging a marriage (one action) for a member of the line aged min_age or more with no living
+     * spouse. "in": a son or daughter of a house joins this one; the house must think at least
+     * min_opinion of yours and your reputation be no more than reputation_gap below its own; it pays a
+     * dowry of dowry_share of its wealth; its opinion rises by `opinion` and its baseline by
+     * `baseline`. "out": an heir joins the other house and leaves the line; the house must think at
+     * least min_opinion of yours; you pay `dowry`. A merchant's family: always willing; costs `cost`;
+     * the spouse's stats are `stat`. When a house allied by marriage fails, reputation falls by
+     * ally_failure_reputation.
+     */
+    marriage: {
+      min_age: number;
+      in: { min_opinion: number; reputation_gap: number; dowry_share: number; opinion: number; baseline: number };
+      out: { min_opinion: number; dowry: number; opinion: number; baseline: number };
+      merchant: { cost: number; stat: number };
+      ally_failure_reputation: number;
+    };
     /** The three forms of investing in the family, each one action. */
     invest: {
       /** One heir's chosen stat rises by gain, up to max_stat. */
@@ -213,6 +230,8 @@ export interface HousesData {
     reputation: number;
     /** Starting opinion of the player's house, and the baseline it drifts back to. */
     opinion: number;
+    /** The trait a son or daughter of this house brings when marrying in. */
+    spouse_trait: string;
   }[];
   /** First names for heirs born to the houses during the run. */
   heir_names: string[];
@@ -232,6 +251,8 @@ export interface EventConditions {
   has_heirs?: boolean;
   /** A borrower defaulted on the house within this many quarters (the current one included). */
   default_within_quarters?: number;
+  /** The player's house is not allied by marriage to this house (or the house has failed). */
+  house_not_allied?: string;
   /** A house still trading whose opinion of the player is at least `at_least` and below `below` (either may be left out). */
   house_opinion?: { house: string; at_least?: number; below?: number };
 }

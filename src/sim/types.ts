@@ -131,7 +131,7 @@ export interface Loan {
 /** Which balance an entry moves. Summing entries per account reproduces that balance. */
 export type LedgerAccount = "cash" | "loans" | "bonds" | "ventures" | "deposits" | "borrowings";
 
-export type LedgerCategory = "deposit_inflow" | "deposit_interest" | "event" | "courting" | "report" | "family" | "borrowing" | "debt_interest" | "debt_repayment" | "loan_called" | "opening" | "loan_out" | "interest" | "default" | "repayment"
+export type LedgerCategory = "deposit_inflow" | "deposit_interest" | "event" | "courting" | "dowry" | "report" | "family" | "borrowing" | "debt_interest" | "debt_repayment" | "loan_called" | "opening" | "loan_out" | "interest" | "default" | "repayment"
   | "withdrawal"
   | "forced_sale"
   | "bond_purchase"
@@ -241,6 +241,20 @@ export interface OtherHouse {
   failed_turn: number | null;
 }
 
+/** A marriage arranged by the player: who married whom, and how. */
+export interface Marriage {
+  turn: number;
+  /** The member of the line who married. */
+  member: number;
+  /** The spouse who joined the house, or null when the member married out. */
+  spouse: number | null;
+  /** The other house's id, or "merchant". */
+  house: string;
+  form: "in" | "out" | "merchant";
+  /** Dowry received (positive) or paid (negative). */
+  dowry: number;
+}
+
 /** A letter on the desk: an event's question, answered during the quarter after it fired. */
 export interface Letter {
   /** The event that sent it. At most one letter per event is open at a time. */
@@ -311,6 +325,8 @@ export interface GameState {
   news: NewsItem[];
   /** Events that have fired, in order. The spec's event.fired_turn. */
   fired_events: FiredEvent[];
+  /** Marriages arranged, oldest first. A house with any marriage tie is an ally. */
+  marriages: Marriage[];
   /** The other Frankfurt houses, failed ones included. */
   houses: OtherHouse[];
   /** Letters awaiting an answer this quarter. */
@@ -380,6 +396,18 @@ export interface BorrowDecision {
   amount: number;
 }
 
+/**
+ * Arrange a marriage for a member of the line (head or heir) with no living spouse. `with` is a
+ * house id or "merchant". "in": the spouse joins this house; "out": the heir joins the other house.
+ * One action.
+ */
+export interface ArrangeMarriageDecision {
+  kind: "arrange_marriage";
+  member: number;
+  with: string;
+  form: "in" | "out";
+}
+
 /** Court another house: dinners, gifts, a box at the opera. One action. */
 export interface CourtHouseDecision {
   kind: "court_house";
@@ -423,4 +451,4 @@ export type InvestFamilyDecision =
 
 export type CrisisDecision = BorrowDecision | PaySlowlyDecision | SuspendDecision | CallLoanDecision;
 
-export type Decision = LendDecision | ReportDecision | SetReserveDecision | BuyBondDecision | InvestVentureDecision | InvestFamilyDecision | DesignateHeirDecision | AnswerLetterDecision | CourtHouseDecision | CrisisDecision;
+export type Decision = LendDecision | ReportDecision | SetReserveDecision | BuyBondDecision | InvestVentureDecision | InvestFamilyDecision | DesignateHeirDecision | AnswerLetterDecision | CourtHouseDecision | ArrangeMarriageDecision | CrisisDecision;

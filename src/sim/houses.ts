@@ -95,6 +95,8 @@ function succeedHouse(state: GameState, h: OtherHouse, data: GameData): void {
 function failHouse(state: GameState, h: OtherHouse, tuning: Tuning): void {
   h.failed_turn = state.world.turn;
   if (state.house.status === "bankrupt") return;
+  // The bourse remembers a marriage tie to a failed house.
+  if (state.marriages.some((m) => m.house === h.id)) state.house.reputation = Math.max(0, state.house.reputation - tuning.family.marriage.ally_failure_reputation);
   const amount = Math.round((tuning.houses.depositors_share * h.wealth * state.house.reputation) / 100 / 100) * 100;
   if (amount <= 0) return;
   state.house.cash += amount;
@@ -127,7 +129,8 @@ export function checkHouseData(data: GameData): string[] {
     if (!(h.reputation >= 0 && h.reputation <= 100)) p("reputation must be 0 to 100");
     if (!(h.opinion >= o.min && h.opinion <= o.max)) p(`opinion must be ${o.min} to ${o.max}`);
     if (!h.head.name.endsWith(h.surname) || !h.heir.name.endsWith(h.surname)) p("head and heir carry the house's surname");
-    if (/[—–]/.test(JSON.stringify(h))) p("uses a dash; the writing style forbids em dashes");
+    if (/[\u2014\u2013]/.test(JSON.stringify(h))) p("uses a dash; the writing style forbids em dashes");
+    if (!data.traits.some((t) => t.id === h.spouse_trait)) p(`unknown spouse_trait "${h.spouse_trait}"`);
   }
   if (!data.houses.heir_names.length) problems.push("heir_names is empty");
   return problems;

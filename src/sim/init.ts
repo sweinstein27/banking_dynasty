@@ -44,6 +44,7 @@ export function newGame(data: GameData, rng: Rng): GameState {
     next_ledger_id: 1,
     news: [],
     fired_events: [],
+    marriages: [],
     houses: createHouses(data),
     letters: [],
     letter_outcomes: [],
