@@ -50,9 +50,18 @@ function TraitLabels({ p }: { p: Person }) {
 }
 
 /** A person's sheet: who they are, their traits and what each one does. Opened by a click, never by hover. */
-function PersonSheet({ p, state, onClose }: { p: Person | null; state: GameState; onClose: () => void }) {
+function PersonSheet({ p, state, onClose, onNameHeir }: {
+  p: Person | null;
+  state: GameState;
+  onClose: () => void;
+  /** Queues naming this person as heir; returns the sim's reason if refused. Absent once the run is over. */
+  onNameHeir?: (id: number) => string | null;
+}) {
+  const [refused, setRefused] = useState<string | null>(null);
+  const canName = p !== null && onNameHeir && !p.is_head && p.death_year === null;
+  const eldest = heirsOf(state)[0];
   return (
-    <Dialog.Root open={p !== null} onOpenChange={(open) => !open && onClose()}>
+    <Dialog.Root open={p !== null} onOpenChange={(open) => { if (!open) { setRefused(null); onClose(); } }}>
       <Dialog.Portal>
         <Dialog.Overlay className="overlay" />
         <Dialog.Content className="dialog person-sheet" aria-describedby={undefined}>
@@ -81,10 +90,30 @@ function PersonSheet({ p, state, onClose }: { p: Person | null; state: GameState
                   })}
                 </ul>
               )}
+              {canName && state.house.designated_heir !== p.id && (
+                <p className="small muted">
+                  Naming an heir uses one of the quarter's actions.
+                  {eldest && eldest.id !== p.id && ` Passing over the elder ${eldest.name} will cost ${gameData.tuning.family.succession.passed_over_reputation} reputation when ${p.name} takes over.`}
+                </p>
+              )}
+              {canName && state.house.designated_heir === p.id && <p className="good">{p.name} is the named heir.</p>}
+              {refused && <p className="error">Refused: {refused}</p>}
               <div className="row dialog-buttons">
                 <Dialog.Close asChild>
                   <button className="secondary">Close</button>
                 </Dialog.Close>
+                {canName && state.house.designated_heir !== p.id && (
+                  <button
+                    className="primary"
+                    onClick={() => {
+                      const reason = onNameHeir!(p.id);
+                      if (reason) setRefused(reason);
+                      else onClose();
+                    }}
+                  >
+                    Name as heir
+                  </button>
+                )}
               </div>
             </>
           )}
@@ -94,13 +123,15 @@ function PersonSheet({ p, state, onClose }: { p: Person | null; state: GameState
   );
 }
 
-export function FamilyPanel({ state }: { state: GameState }) {
+export function FamilyPanel({ state, onNameHeir }: { state: GameState; onNameHeir?: (id: number) => string | null }) {
   const { tuning } = gameData;
   const { world } = state;
   const max = tuning.family.max_stat;
   const head = headOf(state);
   const heirs = heirsOf(state);
-  const next = successor(state, gameData);
+  // Who would take over now: the named heir if living, else the automatic choice.
+  const named = heirs.find((p) => p.id === state.house.designated_heir);
+  const next = named ?? successor(state, gameData);
   const pages = usePages(heirs, HEIRS_PER_PAGE);
   const dead = state.people.filter((p) => p.death_year !== null);
   const green = head?.inexperienced_until != null && world.turn < head.inexperienced_until;
@@ -144,7 +175,7 @@ export function FamilyPanel({ state }: { state: GameState }) {
                 <div className="person-body">
                   <p className="person-name">
                     {p.name}
-                    {p.id === next?.id && <span className="ribbon-tag">Heir</span>}
+                    {p.id === next?.id && <span className="ribbon-tag">{named ? "Heir: named" : "Heir: by right"}</span>}
                   </p>
                   <TraitLabels p={p} />
                   <p className="small">
@@ -161,7 +192,7 @@ export function FamilyPanel({ state }: { state: GameState }) {
       )}
       <PageTurner pages={pages} />
 
-      <PersonSheet p={open} state={state} onClose={() => setOpen(null)} />
+      <PersonSheet p={open} state={state} onClose={() => setOpen(null)} onNameHeir={onNameHeir} />
 
       {dead.length > 0 && (
         <p className="remembered small muted">
