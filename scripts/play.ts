@@ -8,7 +8,8 @@ import { bondOffers, lendOffers, ventureOffers } from "../src/sim/offers";
 import { chronicle } from "../src/sim/chronicle";
 import { borrowingRoom, debtBook, inCrisis, lenders, lendingTerms } from "../src/sim/crisis";
 import { houseRanking, opinionWord } from "../src/sim/houses";
-import { ageIn, effectiveStat, headOf, heirsOf, investCost, reputationGain, STATS } from "../src/sim/family";
+import { ageIn, effectiveStat, headOf, heirsOf, investCost, livingSpouse, reputationGain, STATS } from "../src/sim/family";
+import { checkMarriage, marriageable, matchMoney } from "../src/sim/marriages";
 import { traitWords } from "../src/sim/traits";
 import { applyDecision } from "../src/sim/decisions";
 import { depositLevel } from "../src/sim/deposits";
@@ -16,7 +17,7 @@ import { checkAnswerLetter, describeOption, unansweredLetters } from "../src/sim
 import { freeCash } from "../src/sim/reserves";
 import { createRng } from "../src/sim/rng";
 import { endTurn, loanBook, netWorth } from "../src/sim/turn";
-import type { Decision, GameState, LedgerEntry, Person } from "../src/sim/types";
+import type { ArrangeMarriageDecision, Decision, GameState, LedgerEntry, Person } from "../src/sim/types";
 import { quartersLeft, ventureBook, venturePayout } from "../src/sim/ventures";
 
 function argValue(name: string): number | undefined {
@@ -179,7 +180,9 @@ async function askFamily(preview: GameState): Promise<Decision | null> {
   console.log(`  c) Charity (${fl(investCost("charity", preview, gameData))}, reputation +${reputationGain(inv.charity.reputation, preview, gameData)})`);
   console.log(`  p) Patronage (${fl(investCost("patronage", preview, gameData))}, head's connections +${inv.patronage.connections}, reputation +${reputationGain(inv.patronage.reputation, preview, gameData)})`);
   console.log(`  n) Name an heir to take over (passing over the eldest costs ${tuning.family.succession.passed_over_reputation} reputation)`);
-  const pick = (await ask("Choice (e/c/p/n): "))?.trim();
+  console.log("  m) Arrange a marriage (children need a married couple)");
+  const pick = (await ask("Choice (e/c/p/n/m): "))?.trim();
+  if (pick === "m") return askMarriage(preview);
   if (pick === "n") {
     const heirs = heirsOf(preview);
     const heir = heirs[Number(await ask(`Heir (1-${heirs.length}): `)) - 1];
@@ -196,13 +199,41 @@ async function askFamily(preview: GameState): Promise<Decision | null> {
   return { kind: "invest_family", form: "educate", heir: heir.id, stat };
 }
 
+async function askMarriage(preview: GameState): Promise<Decision | null> {
+  const free = marriageable(preview, gameData);
+  if (!free.length) return console.log("No one of the line is of age and unmarried."), null;
+  free.forEach((p, i) => console.log(`  ${i + 1}) ${p.name}, aged ${ageIn(p, preview.world.year)}`));
+  const member = free[Number(await ask(`Who (1-${free.length}): `)) - 1];
+  if (!member) return console.log("Unknown person."), null;
+  const options: ArrangeMarriageDecision[] = [
+    ...preview.houses.filter((h) => h.failed_turn === null).flatMap((h) => [
+      { kind: "arrange_marriage", member: member.id, with: h.id, form: "in" } as const,
+      ...(member.is_head ? [] : [{ kind: "arrange_marriage", member: member.id, with: h.id, form: "out" } as const]),
+    ]),
+    { kind: "arrange_marriage", member: member.id, with: "merchant", form: "in" },
+  ];
+  options.forEach((d, i) => {
+    const h = preview.houses.find((x) => x.id === d.with);
+    const what = d.with === "merchant" ? "a merchant family" : d.form === "in" ? `a son or daughter of ${h!.name} joins` : `marry into ${h!.name}`;
+    const n = matchMoney(preview, d, gameData);
+    const refused = checkMarriage(preview, d, gameData);
+    console.log(`  ${i + 1}) ${what}: ${n > 0 ? `dowry +${fl(n)}` : `costs ${fl(-n)}`}${refused ? ` (refused: ${refused})` : ""}`);
+  });
+  return options[Number(await ask(`Match (1-${options.length}): `)) - 1] ?? (console.log("Unknown match."), null);
+}
+
 function printFamily(s: GameState) {
   const year = s.world.year;
   const head = headOf(s);
   const stats = (p: Person) => STATS.map((k) => `${k} ${effectiveStat(p, k, gameData)}`).join(", ");
   const traits = (p: Person) => (p.traits.length ? `, ${traitWords(p, gameData)}` : "");
   if (head) console.log(`Head: ${head.name}${traits(head)}, aged ${ageIn(head, year)}, ${stats(head)}`);
-  heirsOf(s).forEach((p, i) => console.log(`  Heir ${i + 1}) ${p.name}${traits(p)}, aged ${ageIn(p, year)}, ${stats(p)}${s.house.designated_heir === p.id ? "  [named heir]" : ""}`));
+  const married = (p: Person) => {
+    const sp = livingSpouse(s, p);
+    return sp ? `, married to ${sp.name}` : "";
+  };
+  if (head && married(head)) console.log(`  ${married(head).slice(2)}`);
+  heirsOf(s).forEach((p, i) => console.log(`  Heir ${i + 1}) ${p.name}${traits(p)}, aged ${ageIn(p, year)}, ${stats(p)}${married(p)}${s.house.designated_heir === p.id ? "  [named heir]" : ""}`));
 }
 
 async function askReserve(preview: GameState): Promise<Decision> {
@@ -291,6 +322,7 @@ async function main() {
           else if (d.kind === "set_reserve") console.log(`Reserve set to ${fl(d.amount)}`);
           else if (d.kind === "invest_family") console.log("Money spent on the family.");
           else if (d.kind === "designate_heir") console.log("Heir named.");
+          else if (d.kind === "arrange_marriage") console.log("The match is made.");
           else console.log("Crisis measure taken.");
         }
       } else if (choice === "h") {

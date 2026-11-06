@@ -111,7 +111,7 @@ export function App() {
           <Gazette key={base.world.turn} state={base} />
           <LedgerBook base={base} preview={preview} />
           {over ? <RunOverCard onChronicle={() => setShowBooks(false)} /> : <Desk api={api} game={game} />}
-          <FamilyPanel state={preview} onNameHeir={over ? undefined : (heir) => api.queue({ kind: "designate_heir", heir })} />
+          <FamilyPanel state={preview} onDecide={over ? undefined : api.queue} />
         </main>
       )}
     </div>

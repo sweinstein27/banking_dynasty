@@ -3,9 +3,11 @@
 import { Dialog } from "radix-ui";
 import { useState } from "react";
 import { gameData } from "../data";
-import { ageIn, effectiveStat, headEffects, headOf, headStat, heirsOf, isTrained, STATS, successor, yearlyDeathChance, type Stat } from "../sim/family";
+import { ageIn, effectiveStat, headEffects, headOf, headStat, heirsOf, isTrained, livingSpouse, STATS, successor, yearlyDeathChance, type Stat } from "../sim/family";
 import { describeEffects, traitById } from "../sim/traits";
-import type { GameState, Person } from "../sim/types";
+import { marriageable } from "../sim/marriages";
+import type { Decision, GameState, Person } from "../sim/types";
+import { MarriageDialog } from "./MarriageDialog";
 import { pct } from "./format";
 import { PageTurner, usePages } from "./Pager";
 
@@ -49,16 +51,30 @@ function TraitLabels({ p }: { p: Person }) {
   );
 }
 
+/** Who a member of the line is married to, in a line under their name. */
+function SpouseLine({ p, state }: { p: Person; state: GameState }) {
+  const spouse = livingSpouse(state, p);
+  if (spouse) {
+    const from = spouse.origin && spouse.origin !== "merchant" ? state.houses.find((h) => h.id === spouse.origin)?.name : null;
+    return <p className="small spouse-line">Married to {spouse.name}{spouse.born ? `, born ${spouse.born}` : ""}{from ? `, of ${from}` : ", of a merchant family"}</p>;
+  }
+  const widowed = p.spouse !== null;
+  if (ageIn(p, state.world.year) < gameData.tuning.family.marriage.min_age) return null;
+  return <p className="small muted spouse-line">{widowed ? "Widowed" : "Unmarried"}: no children without a spouse</p>;
+}
+
 /** A person's sheet: who they are, their traits and what each one does. Opened by a click, never by hover. */
-function PersonSheet({ p, state, onClose, onNameHeir }: {
+function PersonSheet({ p, state, onClose, onDecide, onMarry }: {
   p: Person | null;
   state: GameState;
   onClose: () => void;
-  /** Queues naming this person as heir; returns the sim's reason if refused. Absent once the run is over. */
-  onNameHeir?: (id: number) => string | null;
+  /** Queues a decision; returns the sim's reason if refused. Absent once the run is over. */
+  onDecide?: (d: Decision) => string | null;
+  onMarry: (p: Person) => void;
 }) {
   const [refused, setRefused] = useState<string | null>(null);
-  const canName = p !== null && onNameHeir && !p.is_head && p.death_year === null;
+  const canName = p !== null && onDecide && p.role === "line" && !p.is_head && p.death_year === null;
+  const canMarry = p !== null && onDecide && marriageable(state, gameData).some((x) => x.id === p.id);
   const eldest = heirsOf(state)[0];
   return (
     <Dialog.Root open={p !== null} onOpenChange={(open) => { if (!open) { setRefused(null); onClose(); } }}>
@@ -70,7 +86,11 @@ function PersonSheet({ p, state, onClose, onNameHeir }: {
               <Dialog.Title>{p.name}</Dialog.Title>
               <p className="muted">
                 Born {p.birth_year}{p.death_year !== null ? `, died ${p.death_year}` : `, aged ${ageIn(p, state.world.year)}`}.{" "}
-                {p.is_head ? "Head of the house: these traits act on the business now." : "Their traits will act on the business if they become head."}
+                {p.role === "spouse"
+                  ? `Married into the house${p.born ? `, born ${p.born}` : ""}. A spouse never leads the house, but can pass traits to the children.`
+                  : p.role === "left"
+                    ? "Married out of the house; no longer in the line."
+                    : p.is_head ? "Head of the house: these traits act on the business now." : "Their traits will act on the business if they become head."}
               </p>
               <p>{STATS.map((k) => `${STAT_NAMES[k]} ${effectiveStat(p, k, gameData)}`).join(", ")} (traits included)</p>
               {p.traits.length === 0 ? (
@@ -102,11 +122,14 @@ function PersonSheet({ p, state, onClose, onNameHeir }: {
                 <Dialog.Close asChild>
                   <button className="secondary">Close</button>
                 </Dialog.Close>
+                {canMarry && (
+                  <button className="secondary" onClick={() => onMarry(p)}>Arrange a marriage</button>
+                )}
                 {canName && state.house.designated_heir !== p.id && (
                   <button
                     className="primary"
                     onClick={() => {
-                      const reason = onNameHeir!(p.id);
+                      const reason = onDecide!({ kind: "designate_heir", heir: p.id });
                       if (reason) setRefused(reason);
                       else onClose();
                     }}
@@ -123,7 +146,7 @@ function PersonSheet({ p, state, onClose, onNameHeir }: {
   );
 }
 
-export function FamilyPanel({ state, onNameHeir }: { state: GameState; onNameHeir?: (id: number) => string | null }) {
+export function FamilyPanel({ state, onDecide }: { state: GameState; onDecide?: (d: Decision) => string | null }) {
   const { tuning } = gameData;
   const { world } = state;
   const max = tuning.family.max_stat;
@@ -136,6 +159,7 @@ export function FamilyPanel({ state, onNameHeir }: { state: GameState; onNameHei
   const dead = state.people.filter((p) => p.death_year !== null);
   const green = head?.inexperienced_until != null && world.turn < head.inexperienced_until;
   const [open, setOpen] = useState<Person | null>(null);
+  const [marrying, setMarrying] = useState<Person | null>(null);
 
   return (
     <section className="panel family" aria-label="The Family">
@@ -147,6 +171,7 @@ export function FamilyPanel({ state, onNameHeir }: { state: GameState; onNameHei
           <div className="person-body">
             <p className="person-name">{head.name}, head of house, aged {ageIn(head, world.year)}</p>
             <TraitLabels p={head} />
+            <SpouseLine p={head} state={state} />
             <ul className="stat-list">
               {STATS.map((k) => (
                 <li key={k}>
@@ -178,6 +203,7 @@ export function FamilyPanel({ state, onNameHeir }: { state: GameState; onNameHei
                     {p.id === next?.id && <span className="ribbon-tag">{named ? "Heir: named" : "Heir: by right"}</span>}
                   </p>
                   <TraitLabels p={p} />
+                  <SpouseLine p={p} state={state} />
                   <p className="small">
                     {STATS.map((k) => `${STAT_NAMES[k]} ${effectiveStat(p, k, gameData)}`).join(", ")}
                   </p>
@@ -192,7 +218,8 @@ export function FamilyPanel({ state, onNameHeir }: { state: GameState; onNameHei
       )}
       <PageTurner pages={pages} />
 
-      <PersonSheet p={open} state={state} onClose={() => setOpen(null)} onNameHeir={onNameHeir} />
+      <PersonSheet p={open} state={state} onClose={() => setOpen(null)} onDecide={onDecide} onMarry={(p) => { setOpen(null); setMarrying(p); }} />
+      {onDecide && <MarriageDialog member={marrying} state={state} onClose={() => setMarrying(null)} onSubmit={onDecide} />}
 
       {dead.length > 0 && (
         <p className="remembered small muted">

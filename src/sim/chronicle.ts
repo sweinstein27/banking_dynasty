@@ -73,6 +73,22 @@ export function chronicle(state: GameState, data: GameData): string[] {
     paragraphs.push(`${founder.name} led the house to the end.`);
   }
 
+  // Marriages.
+  if (state.marriages.length) {
+    const lines = state.marriages.map((m) => {
+      const member = people.find((p) => p.id === m.member)!;
+      const spouse = people.find((p) => p.id === m.spouse);
+      const h = state.houses.find((x) => x.id === m.house);
+      const when = `In ${yearOf(m.turn, t)} ${member.name}`;
+      if (m.form === "out") return `${when} married into ${h?.name ?? "another house"}.`;
+      if (m.form === "in" && h) return `${when} married ${spouse?.name.split(" ")[0] ?? "a child"} ${h.surname}, of ${h.name}, and the houses were allied.`;
+      return `${when} married ${spouse ? `${spouse.name.split(" ")[0]}, ` : ""}of a merchant family.`;
+    });
+    const grandchildren = people.filter((p) => p.parents.length && p.parents.some((id) => people.find((x) => x.id === id)?.parents.length)).length;
+    if (grandchildren) lines.push(`${grandchildren === 1 ? "One grandchild was" : `${COUNTS[grandchildren] ?? grandchildren} grandchildren were`} born to the house.`);
+    paragraphs.push(lines.join(" "));
+  }
+
   // The history it lived through.
   const lived = state.fired_events
     .map((f) => data.events.find((e) => e.id === f.id))

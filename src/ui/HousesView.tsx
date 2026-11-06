@@ -10,6 +10,7 @@ import { dateOfTurn } from "../sim/chronicle";
 import { lendingTerms } from "../sim/crisis";
 import { ageIn } from "../sim/family";
 import { checkCourtHouse, houseRanking, opinionWord } from "../sim/houses";
+import { allies } from "../sim/marriages";
 import { netWorth } from "../sim/turn";
 import type { GameState, OtherHouse } from "../sim/types";
 import { fl, keepUnits, pct, seasonLabel } from "./format";
@@ -46,6 +47,7 @@ export function HousesView({ state, onCourt }: { state: GameState; onCourt?: (ho
   const failed = state.houses.filter((h) => h.failed_turn !== null);
   const left = actionsLeft(state, gameData.tuning);
   const court = gameData.tuning.houses.court;
+  const tied = allies(state);
 
   return (
     <main className="houses-view">
@@ -72,6 +74,7 @@ export function HousesView({ state, onCourt }: { state: GameState; onCourt?: (ho
       {state.houses.map((h) => (
         <section key={h.id} className={`panel house-card ${h.failed_turn !== null ? "failed" : ""}`} aria-label={h.name}>
           <h2>{h.name}</h2>
+          {tied.has(h.id) && <p className="ribbon-tag allied">Allied by marriage: {marriageNames(state, h.id)}</p>}
           {h.failed_turn !== null ? (
             <p className="stamp">Closed its doors, {seasonLabel(dateOfTurn(h.failed_turn, gameData.tuning))}</p>
           ) : (
@@ -97,6 +100,18 @@ export function HousesView({ state, onCourt }: { state: GameState; onCourt?: (ho
       <HouseSheet house={open} state={state} onClose={() => setOpen(null)} />
     </main>
   );
+}
+
+/** "Amalie Adler (married into it)" or "Friedrich Adler and Elisabeth Stellmann", for an ally's card. */
+function marriageNames(state: GameState, house: string): string {
+  return state.marriages
+    .filter((m) => m.house === house)
+    .map((m) => {
+      const member = state.people.find((p) => p.id === m.member)?.name ?? "";
+      const spouse = state.people.find((p) => p.id === m.spouse);
+      return m.form === "out" ? `${member}, married into it` : `${member} and ${spouse?.name.split(" ")[0] ?? ""} ${spouse?.born ?? ""}`.trim();
+    })
+    .join("; ");
 }
 
 function CourtButton({ state, house, onCourt }: { state: GameState; house: OtherHouse; onCourt: (house: string) => string | null }) {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { gameData } from "../src/data";
+import { chronicle } from "../src/sim/chronicle";
 import { applyDecisions } from "../src/sim/decisions";
 import { conditionsMet } from "../src/sim/events";
 import { heirsOf, resolveFamily } from "../src/sim/family";
@@ -182,5 +183,17 @@ describe("news and saves", () => {
     delete old.marriages;
     const bad = parseSave(toSave(old as GameState, 1, 1, []), gameData);
     expect(bad.ok ? "" : bad.reason).toBe('Save file state is missing "marriages"');
+  });
+});
+
+describe("the chronicle", () => {
+  it("records each marriage", () => {
+    const s0 = in1825();
+    house(s0, "stellmann").opinion = 40;
+    s0.house.reputation = 60;
+    const s = endTurn(s0, [marry(FRIEDRICH, "stellmann"), marry(AMALIE, "winter", "out")], fixedRng(CALM), quiet);
+    const text = chronicle(s, gameData).join(" ");
+    expect(text).toContain(`In 1815 Friedrich Adler married ${gameData.family.spouse_names.f[0]} Stellmann, of Haus Stellmann, and the houses were allied.`);
+    expect(text).toContain("In 1815 Amalie Adler married into Gebrüder Winter.");
   });
 });

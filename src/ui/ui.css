@@ -344,6 +344,15 @@ button.turn { min-height: max(44px, 2.4rem); padding: 0.2rem 0.7rem; font-size: 
 .opinion-word { font-weight: 700; white-space: nowrap; }
 .news-houses { color: var(--bottle); }
 
+/* Marriages */
+.spouse-line { margin: 0; font-style: italic; }
+.ribbon-tag.allied { align-self: flex-start; margin: 0; }
+.marriage-dialog { width: min(64rem, calc(100vw - 32px)); }
+.match-grid { list-style: none; padding: 0; margin: 0.5rem 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }
+.match { display: flex; flex-direction: column; gap: 0.3rem; }
+.match-head { margin: 0; }
+.match .response { min-height: max(44px, 3.2rem); }
+
 /* ---------- The Family: cameo portraits ---------- */
 
 .family h2 { text-align: center; border-bottom: 1px solid var(--rule); padding-bottom: 0.2rem; }
