@@ -67,7 +67,7 @@ describe("chronicle", () => {
     expect(all).toContain("Peace after Waterloo (1815)");
     expect(all).toContain("Panic reaches the continent (1826)");
     expect(all).toMatch(/Net worth at the close of 1815: [-\d,]+ fl\., 1820: /);
-    expect(text.at(-1)).toMatch(/^By the end of 1850 the house was worth [-\d,]+ fl\., led by .+, aged \d+\.$/);
+    expect(text.at(-1)).toMatch(/^By the end of 1850 the house was worth [-\d,]+ fl\., led by .+, aged \d+\. It stood (first|second|third|fourth|fifth|sixth) of the (two|three|four|five|six) houses still trading in Frankfurt\.$/);
     expect(all).not.toMatch(/undefined|NaN|—|\.\./);
   });
 

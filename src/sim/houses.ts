@@ -51,17 +51,23 @@ export function opinionWord(opinion: number): string {
 
 /**
  * One quarter for every house still trading, in data order. For each: wealth moves by its
- * temperament's growth, the quarter's mood and noise (one roll), and reputation follows the
- * direction (+1 or -1); opinion drifts toward its baseline; a head old enough to die gets a death
+ * temperament's growth, the quarter's mood and noise (one roll), and reputation wanders with the
+ * noise, falls for a bold house in a panic, and is pulled back toward the house's usual standing; opinion drifts toward its baseline; a head old enough to die gets a death
  * roll and is succeeded by the heir; in a panic, a failure roll. Mutates `state`.
  */
 export function resolveHouses(state: GameState, rng: Rng, data: GameData): void {
   const t = data.tuning.houses;
   const mood = state.world.sentiment;
   for (const h of tradingHouses(state)) {
-    const r = t.growth[h.temperament] + t.shock[mood][h.temperament] + t.noise * (2 * rng.next() - 1);
+    const noise = t.noise * (2 * rng.next() - 1);
+    const r = t.growth[h.temperament] + t.shock[mood][h.temperament] + noise;
     h.wealth = Math.max(0, Math.round(h.wealth * (1 + r)));
-    h.reputation = Math.min(100, Math.max(0, h.reputation + (r >= 0 ? 1 : -1)));
+    // Reputation: a point up for a quarter better than the market allowed, a point down for a worse
+    // one, another point down for a bold house in a panic, and a pull back toward its usual standing.
+    const usual = data.houses.houses.find((x) => x.id === h.id)?.reputation ?? h.reputation;
+    const pull = Math.round((usual - h.reputation) * t.reputation_pull);
+    const panicked = mood === "panic" && h.temperament === "bold" ? 1 : 0;
+    h.reputation = Math.min(100, Math.max(0, h.reputation + (noise >= 0 ? 1 : -1) - panicked + pull));
     h.opinion = clampOpinion(h.opinion + (h.baseline - h.opinion) * t.opinion.drift, data.tuning);
 
     const age = ageIn(h.head, state.world.year);

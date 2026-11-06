@@ -3,6 +3,7 @@
 import { runOver } from "./actions";
 import { ageIn } from "./family";
 import { fl } from "./format";
+import { houseRanking } from "./houses";
 import type { GameData, Tuning } from "./tuning";
 import { netWorth } from "./turn";
 import { traitWords } from "./traits";
@@ -13,6 +14,9 @@ export function dateOfTurn(turn: number, tuning: Tuning): { year: number; quarte
   const index = tuning.start.year * 4 + (tuning.start.quarter - 1) + (turn - 1);
   return { year: Math.floor(index / 4), quarter: ((index % 4) + 1) as Quarter };
 }
+
+const COUNTS = ["none", "one", "two", "three", "four", "five", "six", "seven"];
+const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh"];
 
 const yearOf = (turn: number, tuning: Tuning) => dateOfTurn(turn, tuning).year;
 
@@ -103,6 +107,8 @@ export function chronicle(state: GameState, data: GameData): string[] {
     const vname = data.ventures.find((x) => x.id === v?.type)?.name ?? "a venture";
     blows.push(`Its best stroke was the ${vname} venture, which paid out ${fl(best.amount)} in ${yearOf(best.turn, t)}.`);
   }
+  const fell = state.houses.filter((h) => h.failed_turn !== null);
+  if (fell.length) blows.push(`${list(fell.map((h) => `${h.name} (${yearOf(h.failed_turn!, t)})`))} failed while the house stood.`);
   if (blows.length) paragraphs.push(blows.join(" "));
 
   // Net worth at each decade.
@@ -117,7 +123,10 @@ export function chronicle(state: GameState, data: GameData): string[] {
     paragraphs.push(sentence(`In ${last.year} the house could not meet its obligations, even after selling its assets, and closed its doors, worth ${fl(netWorth(state))}`));
   } else {
     const who = head ? `, led by ${head.name}, aged ${ageIn(head, last.year)}` : "";
-    paragraphs.push(sentence(`${over === "finished" ? `By the end of ${last.year}` : `At ${last.year} Q${last.quarter}`} the house was worth ${fl(netWorth(state))}${who}`));
+    const ranking = houseRanking(state, netWorth(state));
+    const place = ranking.findIndex((r) => r.player) + 1;
+    const standing = state.houses.length ? ` It stood ${ORDINALS[place - 1] ?? `number ${place}`} of the ${COUNTS[ranking.length] ?? ranking.length} houses still trading in Frankfurt.` : "";
+    paragraphs.push(sentence(`${over === "finished" ? `By the end of ${last.year}` : `At ${last.year} Q${last.quarter}`} the house was worth ${fl(netWorth(state))}${who}`) + standing);
   }
   return paragraphs;
 }

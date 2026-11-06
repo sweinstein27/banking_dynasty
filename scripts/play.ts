@@ -6,7 +6,8 @@ import { actionsLeft, runOver } from "../src/sim/actions";
 import { bondBook, bondValue, quarterlyCoupon } from "../src/sim/bonds";
 import { bondOffers, lendOffers, ventureOffers } from "../src/sim/offers";
 import { chronicle } from "../src/sim/chronicle";
-import { borrowingRoom, debtBook, inCrisis, lenders } from "../src/sim/crisis";
+import { borrowingRoom, debtBook, inCrisis, lenders, lendingTerms } from "../src/sim/crisis";
+import { houseRanking, opinionWord } from "../src/sim/houses";
 import { ageIn, effectiveStat, headOf, heirsOf, investCost, reputationGain, STATS } from "../src/sim/family";
 import { traitWords } from "../src/sim/traits";
 import { applyDecision } from "../src/sim/decisions";
@@ -241,6 +242,21 @@ async function askLetters(preview: GameState): Promise<{ decisions: Decision[]; 
   return { decisions, preview };
 }
 
+/** The houses of Frankfurt: the standing, each house's opinion and terms, and the choice to court one. */
+async function askHouses(preview: GameState): Promise<Decision | null> {
+  console.log("\n--- The Bourse ---");
+  houseRanking(preview, netWorth(preview)).forEach((r, i) => console.log(`  ${i + 1}. ${r.name}${r.player ? " (yours)" : ""}: ${fl(Math.round(r.worth / 1000) * 1000)}`));
+  const trading = preview.houses.filter((h) => h.failed_turn === null);
+  trading.forEach((h, i) => {
+    const t = lendingTerms(preview, h, tuning);
+    console.log(`  [${i + 1}] ${h.name} (${h.temperament}), ${h.head.name} ${ageIn(h.head, preview.world.year)}, reputation ${h.reputation}, opinion ${opinionWord(h.opinion)} (${h.opinion}); ${t.refused ? `would not lend: ${t.refused}` : `would lend at ${pct(t.rate)}, up to ${fl(t.room)}`}`);
+  });
+  for (const h of preview.houses.filter((x) => x.failed_turn !== null)) console.log(`  ${h.name}: failed`);
+  const pick = (await ask(`Court a house for ${fl(tuning.houses.court.cost)} and one action (1-${trading.length}), or Enter to go back: `))?.trim();
+  const h = trading[Number(pick) - 1];
+  return h ? { kind: "court_house", house: h.id } : null;
+}
+
 async function main() {
   console.log(`Banking Dynasty, terminal mode. Seed ${seed}.`);
   let state = newGame(gameData, rng);
@@ -257,7 +273,7 @@ async function main() {
 
     while (!ended) {
       printStatus(preview);
-      const choice = (await ask("[1] Lend  [2] Report  [3] Buy bonds  [4] Back venture  [5] Set reserve  [6] View holdings  [7] End turn  [8] Crisis measures  [9] Invest in family  [q] Quit: "))?.trim();
+      const choice = (await ask("[1] Lend  [2] Report  [3] Buy bonds  [4] Back venture  [5] Set reserve  [6] View holdings  [7] End turn  [8] Crisis measures  [9] Invest in family  [h] Houses  [q] Quit: "))?.trim();
       if (choice === null || choice === undefined || choice === "q") return;
       if (choice === "1" || choice === "2" || choice === "3" || choice === "4" || choice === "5" || choice === "8" || choice === "9") {
         const askFor = { "1": askLend, "2": askReport, "3": askBond, "4": askVenture, "5": askReserve, "8": askCrisis, "9": askFamily }[choice];
@@ -276,6 +292,16 @@ async function main() {
           else if (d.kind === "invest_family") console.log("Money spent on the family.");
           else if (d.kind === "designate_heir") console.log("Heir named.");
           else console.log("Crisis measure taken.");
+        }
+      } else if (choice === "h") {
+        const d = await askHouses(preview);
+        if (!d) continue;
+        const r = applyDecision(preview, d, gameData);
+        if (!r.ok) console.log(`Refused: ${r.reason}`);
+        else {
+          queued.push(d);
+          preview = r.state;
+          console.log("The house is courted.");
         }
       } else if (choice === "6") printHoldings(preview);
       else if (choice === "7") ended = true;

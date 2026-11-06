@@ -315,6 +315,35 @@ button.turn { min-height: max(44px, 2.4rem); padding: 0.2rem 0.7rem; font-size: 
 .response .odds { font-style: italic; color: var(--amber); }
 .news-letter { font-style: italic; }
 
+/* ---------- The houses of Frankfurt: a second view ---------- */
+
+.views { display: flex; border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; }
+.views .view { border: none; border-radius: 0; box-shadow: none; font-family: var(--display); }
+.views .view.on { background: linear-gradient(#3d6b47, var(--bottle)); color: var(--paper-light); }
+.houses-view {
+  min-height: 0;
+  display: grid; gap: var(--gap);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+.houses-view h2 { border-bottom: 1px solid var(--rule); padding-bottom: 0.15rem; }
+.ranking { margin: 0; padding-left: 1.6rem; display: flex; flex-direction: column; gap: 0.15rem; }
+.ranking li { display: flex; justify-content: space-between; gap: 0.5rem; border-bottom: 1px solid var(--ledger-line); }
+.ranking li.you { font-weight: 700; color: var(--bottle); }
+.ranking .num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.house-facts { display: grid; grid-template-columns: auto 1fr; gap: 0.1rem 0.8rem; margin: 0; }
+.house-facts dt { font-style: italic; color: var(--muted); }
+.house-facts dd { margin: 0; }
+.house-card.failed { opacity: 0.8; }
+.card-buttons { margin-top: auto; flex-wrap: wrap; align-items: center; }
+.opinion { display: flex; align-items: center; gap: 0.6rem; }
+.opinion-bar { position: relative; flex: 1; max-width: 10rem; height: 0.7rem; background: var(--paper-dark); border: 1px solid #9c8660; border-radius: 2px; }
+.opinion-fill { position: absolute; top: 0; bottom: 0; background: var(--bottle); }
+.opinion-fill.cold { background: var(--oxblood); }
+.opinion-mid { position: absolute; left: 50%; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: var(--ink); }
+.opinion-word { font-weight: 700; white-space: nowrap; }
+.news-houses { color: var(--bottle); }
+
 /* ---------- The Family: cameo portraits ---------- */
 
 .family h2 { text-align: center; border-bottom: 1px solid var(--rule); padding-bottom: 0.2rem; }

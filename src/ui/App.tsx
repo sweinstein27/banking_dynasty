@@ -8,6 +8,7 @@ import { downloadText, pickTextFile } from "./files";
 import { seasonLabel, previousQuarter } from "./format";
 import { Gazette } from "./Gazette";
 import { GameOver, RunOverCard } from "./GameOver";
+import { HousesView } from "./HousesView";
 import { LedgerBook } from "./LedgerBook";
 import { NewGame } from "./NewGame";
 import { useGame } from "./useGame";
@@ -20,6 +21,7 @@ export function App() {
   const [onStartScreen, setOnStartScreen] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [showBooks, setShowBooks] = useState(false);
+  const [view, setView] = useState<"desk" | "houses">("desk");
   const { game } = api;
 
   const load = async () => {
@@ -82,6 +84,12 @@ export function App() {
           </div>
         </div>
         <div className="masthead-buttons">
+          {!(over && !showBooks) && (
+            <div className="views" role="group" aria-label="View">
+              <button className={view === "desk" ? "view on" : "view"} aria-pressed={view === "desk"} onClick={() => setView("desk")}>The Desk</button>
+              <button className={view === "houses" ? "view on" : "view"} aria-pressed={view === "houses"} onClick={() => setView("houses")}>The Houses</button>
+            </div>
+          )}
           <button className="secondary" onClick={save}>Save</button>
           <button className="secondary" onClick={() => setOnStartScreen(true)}>New or load</button>
           <button className="seal" onClick={api.endTurn} disabled={over !== null || unanswered > 0}>
@@ -96,6 +104,8 @@ export function App() {
         <main className="ending">
           <GameOver state={base} reason={over} seed={game.seed} onNewGame={() => setOnStartScreen(true)} onSave={save} onShowBooks={() => setShowBooks(true)} />
         </main>
+      ) : view === "houses" ? (
+        <HousesView state={preview} onCourt={over ? undefined : (house) => api.queue({ kind: "court_house", house })} />
       ) : (
         <main className="desk-grid">
           <Gazette key={base.world.turn} state={base} />

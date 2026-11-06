@@ -64,7 +64,9 @@ describe("a house's quarter", () => {
     const [a, w] = s.houses;
     expect(a!.wealth / a!.start_wealth - 1).toBeCloseTo(t.growth.cautious + t.shock.panic.cautious, 4);
     expect(w!.wealth / w!.start_wealth - 1).toBeCloseTo(t.growth.bold + t.shock.panic.bold, 4);
-    expect(w!.reputation).toBe(49);
+    // Noise of 0 counts as a good quarter (+1), and a bold house loses a point in a panic: no change.
+    expect(w!.reputation).toBe(50);
+    expect(a!.reputation).toBe(71);
   });
 
   it("opinion drifts toward the house's baseline", () => {

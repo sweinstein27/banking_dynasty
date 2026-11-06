@@ -62,6 +62,8 @@ export interface Tuning {
     growth: Record<Temperament, number>;
     shock: Record<Sentiment, Record<Temperament, number>>;
     noise: number;
+    /** Each quarter a house's reputation moves this share of the way back to its starting reputation. */
+    reputation_pull: number;
     /** In each panic quarter a house fails with this chance, times start wealth / wealth (between 0.5 and 3). */
     fail_chance: Record<Temperament, number>;
     /** When a house fails, this share of its wealth, times the player's reputation / 100, comes to the player as deposits. */
