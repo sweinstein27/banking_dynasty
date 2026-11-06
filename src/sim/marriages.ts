@@ -1,7 +1,8 @@
 // Marriages: a member of the line marries into another house's family, a house's son or daughter
 // marries into this one, or a spouse comes from a merchant family outside the bourse. Matches bring
 // dowries and alliances; children need a married couple (see resolveFamily).
-import { checkActionLeft, type DecisionResult } from "./actions";
+import type { DecisionResult } from "./actions";
+import { checkCapacity, useCapacity } from "./capacity";
 import { ageIn, person } from "./family";
 import { fl } from "./format";
 import { changeOpinion } from "./houses";
@@ -44,7 +45,7 @@ export function matchMoney(state: GameState, d: Pick<ArrangeMarriageDecision, "w
 
 /** Returns why a match is refused, or null if it can go ahead. */
 export function checkMarriage(state: GameState, d: ArrangeMarriageDecision, data: GameData): string | null {
-  const noAction = checkActionLeft(state, data.tuning);
+  const noAction = checkCapacity(state, "arrange_marriage", data.tuning);
   if (noAction) return noAction;
   const m = data.tuning.family.marriage;
   const p = state.people.find((x) => x.id === d.member);
@@ -81,7 +82,7 @@ export function arrangeMarriage(state: GameState, d: ArrangeMarriageDecision, da
   const h = next.houses.find((x) => x.id === d.with);
   const money = matchMoney(next, d, data);
   const name = h ? h.name : "a merchant family";
-  next.actions_this_turn += 1;
+  useCapacity(next, "arrange_marriage", data.tuning);
   if (money !== 0) {
     next.house.cash += money;
     addEntry(next, "cash", "dowry", money, money > 0 ? `Dowry from ${name}: ${member.name}'s marriage` : `${member.name}'s marriage into ${name}`);

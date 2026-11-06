@@ -10,6 +10,10 @@ A turn-based banking dynasty game set in Frankfurt, 1815 to 1850. The full desig
 - **Fix root causes**, not symptoms. If a test fails, find out why before changing the test.
 - **Ask, don't assume,** when the spec is unclear. Note the question in `docs/decisions.md` with the answer once settled.
 
+## Parallel work
+
+- Several sessions may build milestones at once. Read `docs/parallel.md` first: it says which files each session owns and the rules for saves, golden runs, tuning and notes.
+
 ## Architecture rules
 
 - TypeScript throughout, strict mode on.

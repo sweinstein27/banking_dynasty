@@ -1,7 +1,8 @@
 // Named borrowers with hidden quality. The player sees an estimate range; the market's own estimate
 // sets the rate a borrower will pay, so a better estimate than the market's is how you find bargains.
 import { cloneState } from "./state";
-import { checkActionLeft, type DecisionResult } from "./actions";
+import type { DecisionResult } from "./actions";
+import { checkCapacity, useCapacity } from "./capacity";
 import { fl } from "./format";
 import { addEntry } from "./ledger";
 import { freeCash } from "./reserves";
@@ -105,7 +106,7 @@ export function recordRepayment(state: GameState, loan: Loan, tuning: Tuning): v
 export function checkReport(state: GameState, d: ReportDecision, tuning: Tuning): string | null {
   const b = state.borrowers.find((x) => x.id === d.borrower);
   if (!b) return `Unknown borrower #${d.borrower}`;
-  const noAction = checkActionLeft(state, tuning);
+  const noAction = checkCapacity(state, "report", tuning);
   if (noAction) return noAction;
   if (!state.requests.some((r) => r.borrower_id === b.id)) return `${b.name} is not asking for a loan this quarter`;
   if (b.reported) return `You already have a report on ${b.name}`;
@@ -123,7 +124,7 @@ export function buyReport(state: GameState, d: ReportDecision, data: GameData): 
   const cost = data.tuning.loans.estimate.report_cost;
   b.reported = true;
   next.house.cash -= cost;
-  next.actions_this_turn += 1;
+  useCapacity(next, "report", data.tuning);
   addEntry(next, "cash", "report", -cost, `Correspondent's report on ${b.name}`);
   return { ok: true, state: next };
 }

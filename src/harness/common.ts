@@ -8,6 +8,15 @@ import { freeCash } from "../sim/reserves";
 import type { GameData } from "../sim/tuning";
 import type { Decision, GameState } from "../sim/types";
 
+/** Makes one decision from the state the earlier ones left, or null to skip. */
+export type Maker = (s: GameState) => Decision | null;
+
+/** A system's makers for one strategy: `early` ones go before the strategy's other wants, `late` ones after. */
+export interface SystemMakers {
+  early: Maker[];
+  late: Maker[];
+}
+
 /** A scripted player: given the state at the start of a turn, the decisions it queues. */
 export type Strategy = (state: GameState, data: GameData) => Decision[];
 

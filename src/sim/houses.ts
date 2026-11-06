@@ -1,7 +1,8 @@
 // The other Frankfurt houses. Their books are not modelled: each has a head and an heir, wealth that
 // moves with its temperament and the market, a reputation, and an opinion of the player's house.
 // A house can fail in a panic, and some of its depositors then come to the player.
-import { checkActionLeft, type DecisionResult } from "./actions";
+import type { DecisionResult } from "./actions";
+import { checkCapacity, useCapacity } from "./capacity";
 import { ageIn, quarterlyDeathChance } from "./family";
 import { fl } from "./format";
 import { addEntry } from "./ledger";
@@ -138,7 +139,7 @@ export function checkHouseData(data: GameData): string[] {
 
 /** Returns why a court_house decision is invalid, or null if it can go ahead. */
 export function checkCourtHouse(state: GameState, d: CourtHouseDecision, data: GameData): string | null {
-  const noAction = checkActionLeft(state, data.tuning);
+  const noAction = checkCapacity(state, "court_house", data.tuning);
   if (noAction) return noAction;
   const h = state.houses.find((x) => x.id === d.house);
   if (!h) return `Unknown house "${d.house}"`;
@@ -159,6 +160,6 @@ export function courtHouse(state: GameState, d: CourtHouseDecision, data: GameDa
   next.house.cash -= cost;
   addEntry(next, "cash", "courting", -cost, `Courting ${h.name}`);
   changeOpinion(next, h.id, opinion, data.tuning);
-  next.actions_this_turn += 1;
+  useCapacity(next, "court_house", data.tuning);
   return { ok: true, state: next };
 }

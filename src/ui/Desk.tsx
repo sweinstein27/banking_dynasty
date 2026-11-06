@@ -3,10 +3,11 @@
 import { Tabs } from "radix-ui";
 import { useState } from "react";
 import { gameData } from "../data";
-import { actionsLeft } from "../sim/actions";
+import { capacityLeft } from "../sim/capacity";
 import { inCrisis } from "../sim/crisis";
 import { investCost } from "../sim/family";
-import type { Decision, GameState } from "../sim/types";
+import { describeSystemDecision } from "../sim/decisions";
+import type { CoreDecision, Decision, GameState } from "../sim/types";
 import { CRISIS_KINDS, DECISION_LABELS, DecisionDialog, type DecisionKind } from "./DecisionDialogs";
 import { fl, pct } from "./format";
 import { LetterStack } from "./Letters";
@@ -34,7 +35,7 @@ const HINTS: Record<DecisionKind, string> = {
 
 export function Desk({ api, game }: { api: GameApi; game: Game }) {
   const { tuning } = gameData;
-  const left = actionsLeft(game.preview, tuning);
+  const left = capacityLeft(game.preview, tuning);
   const crisis = inCrisis(game.preview);
   const [open, setOpen] = useState<DecisionKind | null>(null);
   const [tab, setTab] = useState("business");
@@ -97,6 +98,12 @@ export function Desk({ api, game }: { api: GameApi; game: Game }) {
 }
 
 export function describe(d: Decision, state: GameState): string {
+  const system = describeSystemDecision(d, state, gameData);
+  if (system !== null) return system;
+  return describeCore(d as CoreDecision, state);
+}
+
+function describeCore(d: CoreDecision, state: GameState): string {
   const borrower = (id: number) => state.borrowers.find((b) => b.id === id)?.name ?? `borrower #${id}`;
   switch (d.kind) {
     case "lend":

@@ -1,6 +1,7 @@
 import { cloneState } from "./state";
 import { fl } from "./format";
-import { checkActionLeft, type DecisionResult } from "./actions";
+import type { DecisionResult } from "./actions";
+import { checkCapacity, useCapacity } from "./capacity";
 import { addEntry } from "./ledger";
 import type { Tuning } from "./tuning";
 import type { GameState, SetReserveDecision } from "./types";
@@ -12,7 +13,7 @@ export function freeCash(state: GameState): number {
 
 /** Returns why a set_reserve decision is invalid, or null if it can go ahead. */
 export function checkSetReserve(state: GameState, d: SetReserveDecision, tuning: Tuning): string | null {
-  const noAction = checkActionLeft(state, tuning);
+  const noAction = checkCapacity(state, "set_reserve", tuning);
   if (noAction) return noAction;
   if (!Number.isInteger(d.amount)) return "Reserve must be whole gulden";
   if (d.amount < 0) return "Reserve cannot be negative";
@@ -29,7 +30,7 @@ export function setReserve(state: GameState, d: SetReserveDecision, tuning: Tuni
   if (reason) return { ok: false, reason };
   const next = cloneState(state);
   next.house.reserve = d.amount;
-  next.actions_this_turn += 1;
+  useCapacity(next, "set_reserve", tuning);
   return { ok: true, state: next };
 }
 

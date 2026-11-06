@@ -2,7 +2,7 @@
 // and is answered during the next one. A response's certain effects apply the moment it is chosen,
 // so they show in the preview; anything that draws on the RNG (its chance, a random heir, a loan
 // picked at random, a follow-up's timing) is settled when that quarter ends.
-import { checkActionLeft, type DecisionResult } from "./actions";
+import { runOver, type DecisionResult } from "./actions";
 import { applyEffectList, isUncertain, optionCost } from "./events";
 import { fl } from "./format";
 import { freeCash } from "./reserves";
@@ -33,8 +33,8 @@ export function unansweredLetters(state: GameState): Letter[] {
 
 /** Returns why a response can't be chosen, or null if it can. Uses no action, so a full desk is no bar. */
 export function checkAnswerLetter(state: GameState, d: AnswerLetterDecision, data: GameData): string | null {
-  const over = checkActionLeft({ ...state, actions_this_turn: 0 }, data.tuning);
-  if (over) return over;
+  const over = runOver(state, data.tuning);
+  if (over) return over === "bankrupt" ? "The house is bankrupt" : "The run is over";
   const letter = state.letters.find((l) => l.event === d.event);
   if (!letter) return `No letter from "${d.event}" awaits an answer`;
   if (letter.answer !== null) return "That letter has already been answered";

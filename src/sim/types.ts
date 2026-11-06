@@ -1,4 +1,7 @@
 // Field names follow the data model in docs/spec.md so save files line up with it.
+import type { CountingCategory, CountingDecision, CountingState } from "./systems/counting";
+import type { CreditCategory, CreditDecision, CreditState } from "./systems/credit";
+import type { MarketsAccount, MarketsCategory, MarketsDecision, MarketsState } from "./systems/markets";
 
 export type Sentiment = "calm" | "uneasy" | "panic";
 export type Quarter = 1 | 2 | 3 | 4;
@@ -129,9 +132,12 @@ export interface Loan {
 }
 
 /** Which balance an entry moves. Summing entries per account reproduces that balance. */
-export type LedgerAccount = "cash" | "loans" | "bonds" | "ventures" | "deposits" | "borrowings";
+export type LedgerAccount = "cash" | "loans" | "bonds" | "ventures" | "deposits" | "borrowings" | MarketsAccount;
 
-export type LedgerCategory = "deposit_inflow" | "deposit_interest" | "event" | "courting" | "dowry" | "report" | "family" | "borrowing" | "debt_interest" | "debt_repayment" | "loan_called" | "opening" | "loan_out" | "interest" | "default" | "repayment"
+/** Ledger categories: the core ones, then each system's own. */
+export type LedgerCategory = CoreCategory | CreditCategory | CountingCategory | MarketsCategory;
+
+export type CoreCategory = "deposit_inflow" | "deposit_interest" | "event" | "courting" | "dowry" | "report" | "family" | "borrowing" | "debt_interest" | "debt_repayment" | "loan_called" | "opening" | "loan_out" | "interest" | "default" | "repayment"
   | "withdrawal"
   | "forced_sale"
   | "bond_purchase"
@@ -325,6 +331,10 @@ export interface GameState {
   news: NewsItem[];
   /** Events that have fired, in order. The spec's event.fired_turn. */
   fired_events: FiredEvent[];
+  /** Each system's own state (src/sim/systems/). */
+  credit: CreditState;
+  counting: CountingState;
+  markets: MarketsState;
   /** Marriages arranged, oldest first. A house with any marriage tie is an ally. */
   marriages: Marriage[];
   /** The other Frankfurt houses, failed ones included. */
@@ -451,4 +461,8 @@ export type InvestFamilyDecision =
 
 export type CrisisDecision = BorrowDecision | PaySlowlyDecision | SuspendDecision | CallLoanDecision;
 
-export type Decision = LendDecision | ReportDecision | SetReserveDecision | BuyBondDecision | InvestVentureDecision | InvestFamilyDecision | DesignateHeirDecision | AnswerLetterDecision | CourtHouseDecision | ArrangeMarriageDecision | CrisisDecision;
+/** Decisions handled in src/sim/decisions.ts itself. */
+export type CoreDecision = LendDecision | ReportDecision | SetReserveDecision | BuyBondDecision | InvestVentureDecision | InvestFamilyDecision | DesignateHeirDecision | AnswerLetterDecision | CourtHouseDecision | ArrangeMarriageDecision | CrisisDecision;
+
+/** Every decision: the core ones, then each system's own (src/sim/systems/). */
+export type Decision = CoreDecision | CreditDecision | CountingDecision | MarketsDecision;

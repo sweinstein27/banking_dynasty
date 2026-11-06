@@ -8,9 +8,17 @@ import { bondOffers, lendOffers, ventureOffers } from "../sim/offers";
 import { withdrawalDemand } from "../sim/sentiment";
 import type { GameData } from "../sim/tuning";
 import type { Decision, GameState } from "../sim/types";
-import { accepted, letterReplies, lendShare, marriageMakers, safestFirst, shareOfFree, type Strategy } from "./common";
+import { accepted as acceptedCore, letterReplies, lendShare, marriageMakers, safestFirst, shareOfFree, type Maker, type Strategy } from "./common";
+import { countingMakers } from "./systems/counting";
+import { creditMakers } from "./systems/credit";
+import { marketsMakers } from "./systems/markets";
 
-type Maker = (s: GameState) => Decision | null;
+/** Every system's early makers, the strategy's own wants, then every system's late makers. */
+function accepted(name: string, state: GameState, data: GameData, wanted: Maker[]): Decision[] {
+  const systems = [creditMakers, countingMakers, marketsMakers].map((f) => f(name, state, data));
+  return acceptedCore(state, data, [...systems.flatMap((m) => m.early), ...wanted, ...systems.flatMap((m) => m.late)]);
+}
+
 
 const toThousand = (n: number) => Math.round(n / 1000) * 1000;
 
@@ -78,7 +86,7 @@ function cautiousPlay(state: GameState, data: GameData, educate: boolean): Decis
     const safe = bondOffers(s, data).filter((o) => !o.blocked && o.risk <= 0.25).sort((a, b) => a.risk - b.risk)[0];
     return safe && shareOfFree(s, 1) > 20000 ? { kind: "buy_bond", state: safe.id, face_value: shareOfFree(s, 0.2) } : null;
   });
-  return accepted(state, data, wanted);
+  return accepted(educate ? "cautious" : "cautious_no_family", state, data, wanted);
 }
 
 /**
@@ -109,7 +117,7 @@ export function aggressive(state: GameState, data: GameData): Decision[] {
     return risky ? { kind: "buy_bond", state: risky.id, face_value: shareOfFree(s, 0.5) } : null;
   });
   if (state.world.turn % 4 === 1) wanted.push((s) => ({ kind: "invest_venture", venture: "shipping", amount: shareOfFree(s, 0.5) }));
-  return accepted(state, data, wanted);
+  return accepted("aggressive", state, data, wanted);
 }
 
 /**
@@ -130,7 +138,7 @@ export function bondHeavy(state: GameState, data: GameData): Decision[] {
     const o = safestFirst(s, data)[0];
     return o ? lendShare(s, o, 0.1) : null;
   });
-  return accepted(state, data, wanted);
+  return accepted("bond_heavy", state, data, wanted);
 }
 
 /**
@@ -147,7 +155,7 @@ export function ventureHeavy(state: GameState, data: GameData): Decision[] {
       return o ? { kind: "invest_venture", venture: o.id, amount: shareOfFree(s, 0.5) } : null;
     });
   }
-  return accepted(state, data, wanted);
+  return accepted("venture_heavy", state, data, wanted);
 }
 
 /** The harness's strategies by name, in the order the summary lists them. */

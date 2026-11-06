@@ -5,7 +5,7 @@
 import { Dialog } from "radix-ui";
 import { useState } from "react";
 import { gameData } from "../data";
-import { actionsLeft } from "../sim/actions";
+import { capacityLeft } from "../sim/capacity";
 import { dateOfTurn } from "../sim/chronicle";
 import { lendingTerms } from "../sim/crisis";
 import { ageIn } from "../sim/family";
@@ -45,7 +45,7 @@ export function HousesView({ state, onCourt }: { state: GameState; onCourt?: (ho
   const [open, setOpen] = useState<OtherHouse | null>(null);
   const ranking = houseRanking(state, netWorth(state));
   const failed = state.houses.filter((h) => h.failed_turn !== null);
-  const left = actionsLeft(state, gameData.tuning);
+  const left = capacityLeft(state, gameData.tuning);
   const court = gameData.tuning.houses.court;
   const tied = allies(state);
 

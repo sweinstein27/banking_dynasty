@@ -17,11 +17,14 @@ import type { Rng } from "./rng";
 import { moodWithWarnings, nextSentiment } from "./sentiment";
 import type { GameData } from "./tuning";
 import type { Decision, GameState, Quarter } from "./types";
+import { resolveCounting } from "./systems/counting";
+import { resolveCredit } from "./systems/credit";
+import { marketsBook, resolveMarkets } from "./systems/markets";
 import { resolveVentures, ventureBook } from "./ventures";
 
-/** NetWorth = Cash + Loans + Bonds + Ventures - Deposits - Borrowings. Ventures count at cost until they resolve. */
+/** NetWorth = Cash + Loans + Bonds + Ventures + market holdings - Deposits - Borrowings. Ventures count at cost until they resolve. */
 export function netWorth(state: GameState): number {
-  return state.house.cash + loanBook(state) + bondBook(state) + ventureBook(state) - state.house.deposits - debtBook(state);
+  return state.house.cash + loanBook(state) + bondBook(state) + ventureBook(state) + marketsBook(state) - state.house.deposits - debtBook(state);
 }
 
 export function loanBook(state: GameState): number {
@@ -82,9 +85,12 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
     }
   }
 
+  resolveCredit(next, rng, data);
   resolveBonds(next, rng, data);
   resolveVentures(next, rng, data);
+  resolveMarkets(next, rng, data);
   serviceDebts(next, data.tuning);
+  resolveCounting(next, rng, data);
   resolveWithdrawals(next, data.tuning, headEffects(next, data).withdrawals);
   resolveDeposits(next, data.tuning);
   resolveHouses(next, rng, data);

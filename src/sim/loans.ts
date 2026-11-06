@@ -1,6 +1,7 @@
 import { cloneState } from "./state";
 import { fl } from "./format";
-import { checkActionLeft, type DecisionResult } from "./actions";
+import type { DecisionResult } from "./actions";
+import { checkCapacity, useCapacity } from "./capacity";
 import { addEntry } from "./ledger";
 import { freeCash } from "./reserves";
 import type { GameData, Tuning } from "./tuning";
@@ -11,7 +12,7 @@ export function checkLend(state: GameState, d: LendDecision, tuning: Tuning): st
   const t = tuning.loans;
   const b = state.borrowers.find((x) => x.id === d.borrower);
   if (!b) return `Unknown borrower #${d.borrower}`;
-  const noAction = checkActionLeft(state, tuning);
+  const noAction = checkCapacity(state, "lend", tuning);
   if (noAction) return noAction;
   const request = state.requests.find((r) => r.borrower_id === b.id);
   if (!request) return `${b.name} is not asking for a loan this quarter`;
@@ -46,7 +47,7 @@ export function lend(state: GameState, d: LendDecision, data: GameData): Decisio
   // One loan per request: the borrower has what they asked for this quarter.
   next.requests = next.requests.filter((r) => r.borrower_id !== b.id);
   next.house.cash -= d.amount;
-  next.actions_this_turn += 1;
+  useCapacity(next, "lend", data.tuning);
   const note = `Loan #${loan.id} to ${loan.borrower_name} at ${(d.rate * 100).toFixed(1)}%`;
   addEntry(next, "cash", "loan_out", -d.amount, note);
   addEntry(next, "loans", "loan_out", d.amount, note);

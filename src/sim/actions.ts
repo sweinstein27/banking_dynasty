@@ -12,16 +12,3 @@ export function runOver(state: GameState, tuning: Tuning): "bankrupt" | "finishe
   if (year > end.year || (year === end.year && quarter > end.quarter)) return "finished";
   return null;
 }
-
-export function actionsLeft(state: GameState, tuning: Tuning): number {
-  return Math.max(0, tuning.actions_per_turn - state.actions_this_turn);
-}
-
-/** Returns a reason if the turn's actions are used up, or null if one is left. */
-export function checkActionLeft(state: GameState, tuning: Tuning): string | null {
-  const over = runOver(state, tuning);
-  if (over === "bankrupt") return "The house is bankrupt";
-  if (over === "finished") return "The run is over";
-  if (actionsLeft(state, tuning) > 0) return null;
-  return `No actions left this turn (max ${tuning.actions_per_turn})`;
-}

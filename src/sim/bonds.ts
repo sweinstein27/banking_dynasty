@@ -1,7 +1,8 @@
 import { cloneState } from "./state";
 import { connectionsBonus, headStat } from "./family";
 import { fl } from "./format";
-import { checkActionLeft, type DecisionResult } from "./actions";
+import type { DecisionResult } from "./actions";
+import { checkCapacity, useCapacity } from "./capacity";
 import { addEntry } from "./ledger";
 import { freeCash } from "./reserves";
 import type { Rng } from "./rng";
@@ -55,7 +56,7 @@ export function checkBuyBond(state: GameState, d: BuyBondDecision, data: GameDat
   const t = data.tuning;
   const issuer = data.states.find((s) => s.id === d.state);
   if (!issuer) return `Unknown state "${d.state}"`;
-  const noAction = checkActionLeft(state, t);
+  const noAction = checkCapacity(state, "buy_bond", t);
   if (noAction) return noAction;
   if (state.defaulted_states.includes(issuer.id)) return `${issuer.name} has defaulted and sells no new bonds`;
   const gate = reputationGate(state, issuer, data);
@@ -88,7 +89,7 @@ export function buyBond(state: GameState, d: BuyBondDecision, data: GameData): D
   const cost = bondValue(bond);
   next.bonds.push(bond);
   next.house.cash -= cost;
-  next.actions_this_turn += 1;
+  useCapacity(next, "buy_bond", data.tuning);
   const note = `Bond #${bond.id}: ${d.face_value} face of ${issuer.name} at ${bond.price}`;
   addEntry(next, "cash", "bond_purchase", -cost, note);
   addEntry(next, "bonds", "bond_purchase", cost, note);

@@ -10,10 +10,28 @@ import { arrangeMarriage } from "./marriages";
 import { setReserve } from "./reserves";
 import { investVenture } from "./ventures";
 import type { GameData } from "./tuning";
-import type { Decision, GameState } from "./types";
+import { applyCountingDecision, describeCountingDecision, isCountingDecision } from "./systems/counting";
+import { applyCreditDecision, describeCreditDecision, isCreditDecision } from "./systems/credit";
+import { applyMarketsDecision, describeMarketsDecision, isMarketsDecision } from "./systems/markets";
+import type { CoreDecision, Decision, GameState } from "./types";
 
-/** Applies one decision of any kind. Returns a new state, or the reason it was refused. */
+/** Applies one decision of any kind, each system's own first. Returns a new state, or the reason it was refused. */
 export function applyDecision(state: GameState, d: Decision, data: GameData): DecisionResult {
+  if (isCreditDecision(d)) return applyCreditDecision(state, d, data);
+  if (isCountingDecision(d)) return applyCountingDecision(state, d, data);
+  if (isMarketsDecision(d)) return applyMarketsDecision(state, d, data);
+  return applyCoreDecision(state, d, data);
+}
+
+/** A one-line description of a system's decision, or null for a core decision (the UI and terminal describe those). */
+export function describeSystemDecision(d: Decision, state: GameState, data: GameData): string | null {
+  if (isCreditDecision(d)) return describeCreditDecision(d, state, data);
+  if (isCountingDecision(d)) return describeCountingDecision(d, state, data);
+  if (isMarketsDecision(d)) return describeMarketsDecision(d, state, data);
+  return null;
+}
+
+function applyCoreDecision(state: GameState, d: CoreDecision, data: GameData): DecisionResult {
   switch (d.kind) {
     case "lend":
       return lend(state, d, data);

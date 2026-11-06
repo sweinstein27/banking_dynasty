@@ -1,6 +1,7 @@
 // The family: the head of house, whose stats shape the business, and the heirs who will follow.
 import { cloneState } from "./state";
-import { checkActionLeft, type DecisionResult } from "./actions";
+import type { DecisionResult } from "./actions";
+import { checkCapacity, useCapacity } from "./capacity";
 import { fl } from "./format";
 import { addEntry } from "./ledger";
 import { freeCash } from "./reserves";
@@ -248,7 +249,7 @@ export function reputationGain(points: number, state: GameState, data: GameData)
 /** Returns why an invest_family decision is invalid, or null if it can go ahead. */
 export function checkInvestFamily(state: GameState, d: InvestFamilyDecision, data: GameData): string | null {
   const tuning = data.tuning;
-  const noAction = checkActionLeft(state, tuning);
+  const noAction = checkCapacity(state, "invest_family", tuning);
   if (noAction) return noAction;
   const max = tuning.family.max_stat;
   if (d.form === "educate") {
@@ -289,7 +290,7 @@ export function investFamily(state: GameState, d: InvestFamilyDecision, data: Ga
     note = "Patronage of the arts";
   }
   next.house.cash -= cost;
-  next.actions_this_turn += 1;
+  useCapacity(next, "invest_family", data.tuning);
   addEntry(next, "cash", "family", -cost, note);
   return { ok: true, state: next };
 }
@@ -312,7 +313,7 @@ export function heirTrait(state: GameState, trait: string, rng: Rng, data: GameD
 
 /** Returns why a designate_heir decision is invalid, or null if it can go ahead. */
 export function checkDesignateHeir(state: GameState, d: DesignateHeirDecision, data: GameData): string | null {
-  const noAction = checkActionLeft(state, data.tuning);
+  const noAction = checkCapacity(state, "designate_heir", data.tuning);
   if (noAction) return noAction;
   const heir = heirsOf(state).find((p) => p.id === d.heir);
   if (!heir) return `No living heir #${d.heir}`;
@@ -326,6 +327,6 @@ export function designateHeir(state: GameState, d: DesignateHeirDecision, data: 
   if (reason) return { ok: false, reason };
   const next = cloneState(state);
   next.house.designated_heir = d.heir;
-  next.actions_this_turn += 1;
+  useCapacity(next, "designate_heir", data.tuning);
   return { ok: true, state: next };
 }

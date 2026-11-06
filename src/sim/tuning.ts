@@ -1,3 +1,6 @@
+import type { CountingData } from "./systems/counting";
+import type { CreditData } from "./systems/credit";
+import type { MarketsData } from "./systems/markets";
 import type { Quarter, Sentiment } from "./types";
 
 export interface Tuning {
@@ -213,6 +216,10 @@ export interface GameData {
   events: GameEvent[];
   /** The other Frankfurt houses, from data/houses.json. Names are invented. */
   houses: HousesData;
+  /** Each system's own data (src/sim/systems/), from data/credit.json, data/counting.json and data/markets.json. */
+  credit: CreditData;
+  counting: CountingData;
+  markets: MarketsData;
 }
 
 export type Temperament = "cautious" | "bold";

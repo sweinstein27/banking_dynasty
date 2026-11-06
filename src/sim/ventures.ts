@@ -1,7 +1,8 @@
 import { cloneState } from "./state";
 import { acumenFactor, headEffects, headStat } from "./family";
 import { fl } from "./format";
-import { checkActionLeft, type DecisionResult } from "./actions";
+import type { DecisionResult } from "./actions";
+import { checkCapacity, useCapacity } from "./capacity";
 import { addEntry } from "./ledger";
 import { freeCash } from "./reserves";
 import type { Rng } from "./rng";
@@ -33,7 +34,7 @@ export function checkInvestVenture(state: GameState, d: InvestVentureDecision, d
   const t = data.tuning;
   const type = data.ventures.find((v) => v.id === d.venture);
   if (!type) return `Unknown venture "${d.venture}"`;
-  const noAction = checkActionLeft(state, t);
+  const noAction = checkCapacity(state, "invest_venture", t);
   if (noAction) return noAction;
   if (state.world.year < type.unlock_year) return `${type.name} ventures cannot be backed before ${type.unlock_year}`;
   if (!Number.isInteger(d.amount)) return "Amount must be whole gulden";
@@ -62,7 +63,7 @@ export function investVenture(state: GameState, d: InvestVentureDecision, data: 
   };
   next.ventures.push(venture);
   next.house.cash -= d.amount;
-  next.actions_this_turn += 1;
+  useCapacity(next, "invest_venture", data.tuning);
   const note = `Venture #${venture.id}: ${type.name}, ${type.term_quarters} quarters`;
   addEntry(next, "cash", "venture_in", -d.amount, note);
   addEntry(next, "ventures", "venture_in", d.amount, note);

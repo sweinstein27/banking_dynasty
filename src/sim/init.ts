@@ -1,6 +1,9 @@
 import { createBorrowers, drawRequests } from "./borrowers";
 import { createFamily } from "./family";
 import { createHouses } from "./houses";
+import { createCounting } from "./systems/counting";
+import { createCredit } from "./systems/credit";
+import { createMarkets } from "./systems/markets";
 import { addEntry } from "./ledger";
 import type { Rng } from "./rng";
 import type { GameData } from "./tuning";
@@ -44,6 +47,9 @@ export function newGame(data: GameData, rng: Rng): GameState {
     next_ledger_id: 1,
     news: [],
     fired_events: [],
+    credit: {} as GameState["credit"],
+    counting: {} as GameState["counting"],
+    markets: {} as GameState["markets"],
     marriages: [],
     houses: createHouses(data),
     letters: [],
@@ -56,6 +62,10 @@ export function newGame(data: GameData, rng: Rng): GameState {
     withdrawal_policy: "normal",
     actions_this_turn: 0,
   };
+  // Each system's starting state, after the core state (so any rolls come after the family's).
+  state.credit = createCredit(data, rng);
+  state.counting = createCounting(data, rng);
+  state.markets = createMarkets(data, rng);
   addEntry(state, "cash", "opening", s.cash, "Opening cash");
   addEntry(state, "deposits", "opening", s.deposits, "Opening deposits owed");
   state.requests = drawRequests(state, data, rng);

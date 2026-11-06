@@ -9,10 +9,11 @@ import { opinionWord } from "../sim/houses";
 import { ageIn, headOf, heirsOf, investCost, reputationGain, type Stat, STATS } from "../sim/family";
 import { bondOffers, lendOffers, ventureOffers, type LendOffer } from "../sim/offers";
 import { freeCash } from "../sim/reserves";
-import type { Decision, GameState } from "../sim/types";
+import type { CoreDecision, Decision, GameState } from "../sim/types";
 import { fl, keepUnits, parseAmount, pct } from "./format";
 
-export type DecisionKind = Decision["kind"];
+/** Core decisions, which have their own cards and dialogs here. Systems' decisions get theirs in the new interface. */
+export type DecisionKind = CoreDecision["kind"];
 
 export const DECISION_LABELS: Record<DecisionKind, string> = {
   lend: "Lend to merchants",

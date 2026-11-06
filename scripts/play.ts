@@ -2,7 +2,8 @@
 import { createInterface } from "node:readline";
 import { gameData } from "../src/data";
 import { newGame } from "../src/sim/init";
-import { actionsLeft, runOver } from "../src/sim/actions";
+import { runOver } from "../src/sim/actions";
+import { capacityLeft } from "../src/sim/capacity";
 import { bondBook, bondValue, quarterlyCoupon } from "../src/sim/bonds";
 import { bondOffers, lendOffers, ventureOffers } from "../src/sim/offers";
 import { chronicle } from "../src/sim/chronicle";
@@ -65,7 +66,7 @@ function printStatus(s: GameState) {
   console.log(`\n=== ${house.name}, ${house.city}. ${world.year} Q${world.quarter} (turn ${world.turn}) ===`);
   console.log(`Cash ${fl(house.cash)}  Loans ${fl(loanBook(s))}  Bonds ${fl(bondBook(s))}  Ventures ${fl(ventureBook(s))}  Deposits ${fl(house.deposits)}  Borrowings ${fl(debtBook(s))}  Net worth ${fl(netWorth(s))}`);
   console.log(`Reserve ${fl(house.reserve)}  Free cash ${fl(freeCash(s))}  Reputation ${house.reputation}, drawing deposits of ${fl(depositLevel(house.reputation, tuning))}`);
-  console.log(`Sentiment ${world.sentiment}  Base rate ${pct(world.base_rate)}  Actions left ${actionsLeft(s, tuning)}`);
+  console.log(`Sentiment ${world.sentiment}  Base rate ${pct(world.base_rate)}  Actions left ${capacityLeft(s, tuning)}`);
   if (s.panic_warning) console.log(`WARNING: panic expected in ${s.panic_warning.turns_left} quarter(s).`);
 }
 

@@ -1,7 +1,8 @@
 // Crisis responses: what the house can do when the market is uneasy, panicking, or under a panic
 // warning. Borrow from another house, pay depositors slowly, suspend withdrawals, or call a loan in.
 import { cloneState } from "./state";
-import { checkActionLeft, type DecisionResult } from "./actions";
+import type { DecisionResult } from "./actions";
+import { checkCapacity, useCapacity } from "./capacity";
 import { fl } from "./format";
 import { changeOpinion } from "./houses";
 import { addEntry } from "./ledger";
@@ -66,7 +67,7 @@ export function callRecovery(principal: number, tuning: Tuning): number {
 
 /** Returns why a crisis response is invalid, or null if it can go ahead. */
 export function checkCrisis(state: GameState, d: CrisisDecision, tuning: Tuning): string | null {
-  const noAction = checkActionLeft(state, tuning);
+  const noAction = checkCapacity(state, d.kind, tuning);
   if (noAction) return noAction;
   if (!inCrisis(state)) return "Crisis measures are only open while the market is uneasy, panicking, or under a panic warning";
   const c = tuning.crisis;
@@ -100,7 +101,7 @@ export function applyCrisis(state: GameState, d: CrisisDecision, data: GameData)
   if (reason) return { ok: false, reason };
   const c = data.tuning.crisis;
   const next = cloneState(state);
-  next.actions_this_turn += 1;
+  useCapacity(next, d.kind, data.tuning);
   const loseReputation = (n: number) => (next.house.reputation = Math.max(0, next.house.reputation - n));
 
   switch (d.kind) {
