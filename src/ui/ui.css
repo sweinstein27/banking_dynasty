@@ -296,6 +296,7 @@ button.turn { min-height: max(44px, 2.4rem); padding: 0.2rem 0.7rem; font-size: 
 .family h2 { text-align: center; border-bottom: 1px solid var(--rule); padding-bottom: 0.2rem; }
 .person { display: grid; grid-template-columns: auto 1fr; gap: 0.6rem; align-items: start; }
 .person-name { font-weight: 700; margin: 0; }
+.person-sheet { width: min(44rem, calc(100vw - 32px)); }
 .cameo {
   width: 3.1rem; height: 3.8rem; border-radius: 50%;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -304,6 +305,10 @@ button.turn { min-height: max(44px, 2.4rem); padding: 0.2rem 0.7rem; font-size: 
   margin: 4px;
 }
 .cameo span { font-family: var(--display); font-size: 1.15rem; color: #4a3820; }
+button.cameo { padding: 0; min-height: 0; border: none; cursor: pointer; }
+.traits { display: flex; flex-wrap: wrap; gap: 0.25rem; margin: 0.1rem 0; }
+.trait { font-size: 0.75rem; font-style: italic; border: 1px solid var(--rule); border-radius: 2px; padding: 0 0.3rem; background: var(--paper-light); }
+.trait-list { list-style: none; padding: 0; }
 .cameo small { font-size: 0.7rem; color: #5a4630; }
 .stat-list { list-style: none; padding: 0; font-size: 0.85rem; }
 .stat-list li { display: grid; grid-template-columns: 6.5rem auto; column-gap: 0.4rem; }

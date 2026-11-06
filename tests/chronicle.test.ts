@@ -45,6 +45,17 @@ describe("chronicle", () => {
     expect(text).toContain("untrained and unready");
   });
 
+  it("describes people by their traits", () => {
+    const s = fresh();
+    s.people[0]!.traits = ["prudent", "aloof"];
+    expect(chronicle(s, gameData)[0]).toMatch(/^In 1815, Johann Adler, prudent and aloof, aged 50, opened the books/);
+    s.world.year = 1830;
+    s.world.turn = (1830 - 1815) * 4 + 1;
+    for (const p of s.people.slice(1)) p.traits = ["shrewd"];
+    succeed(s, quiet);
+    expect(chronicle(s, gameData)[1]).toMatch(/and \w+ Adler, shrewd, took over at \d+/);
+  });
+
   it("says the founder led to the end when no one died", () => {
     expect(chronicle(fresh(), gameData)).toContain("Johann Adler led the house to the end.");
   });

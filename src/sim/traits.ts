@@ -91,3 +91,26 @@ export function checkTraitData(data: GameData): string[] {
   }
   return problems;
 }
+
+/** A trait's effects in words, for the UI and the terminal: "Prudence +2", "chance of death x1.8". */
+export function describeEffects(t: TraitType): string[] {
+  const words: Record<string, string> = {
+    acumen: "Acumen",
+    prudence: "Prudence",
+    connections: "Connections",
+    death_chance: "chance of death",
+    venture_failure: "venture failure",
+    withdrawals: "withdrawals",
+    family_cost: "family spending",
+    reputation_gain: "reputation gains",
+  };
+  return Object.entries(t.effects).map(([k, v]) =>
+    (STAT_EFFECTS as readonly string[]).includes(k) ? `${words[k]} ${v! > 0 ? "+" : ""}${v}` : `${words[k]} x${v}`,
+  );
+}
+
+/** A person's traits as lower-case names joined for prose: "prudent and aloof". */
+export function traitWords(p: Pick<Person, "traits">, data: GameData): string {
+  const names = p.traits.map((id) => traitById(id, data)?.name.toLowerCase()).filter((x): x is string => !!x);
+  return names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
+}

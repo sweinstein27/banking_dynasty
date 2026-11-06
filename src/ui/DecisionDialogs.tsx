@@ -5,7 +5,7 @@ import { useState, type ReactNode } from "react";
 import { gameData } from "../data";
 import { bondCost } from "../sim/bonds";
 import { borrowingRoom, callRecovery, debtInterest } from "../sim/crisis";
-import { ageIn, headOf, heirsOf, STATS, type Stat } from "../sim/family";
+import { ageIn, headOf, heirsOf, investCost, reputationGain, type Stat, STATS } from "../sim/family";
 import { bondOffers, lendOffers, ventureOffers, type LendOffer } from "../sim/offers";
 import { freeCash } from "../sim/reserves";
 import type { Decision, GameState } from "../sim/types";
@@ -381,6 +381,9 @@ function InvestFamilyForm(props: FormProps) {
   const [heir, setHeir] = useState("");
   const [stat, setStat] = useState<"" | Stat>("");
   const inv = gameData.tuning.family.invest;
+  // Costs and reputation as the head's traits make them (a spendthrift pays more, a charismatic head gains more).
+  const charityGain = reputationGain(inv.charity.reputation, state, gameData);
+  const patronageGain = reputationGain(inv.patronage.reputation, state, gameData);
   const head = headOf(state);
   const heirs = heirsOf(state);
   const chosen = heirs.find((p) => String(p.id) === heir);
@@ -391,17 +394,17 @@ function InvestFamilyForm(props: FormProps) {
       <h3>How</h3>
       <Choices value={form} onChange={(v) => setForm(v as typeof form)}>
         <Choice value="educate" disabled={heirs.length === 0}>
-          <strong>Educate an heir ({fl(inv.educate.cost)})</strong>
+          <strong>Educate an heir ({fl(investCost("educate", state, gameData))})</strong>
           <span>Tutors raise one of an heir's stats by {inv.educate.gain}. A trained heir makes a smooth succession.</span>
         </Choice>
         <Choice value="charity">
-          <strong>Charity ({fl(inv.charity.cost)})</strong>
-          <span>A gift to the poor of Frankfurt: reputation +{inv.charity.reputation}, drawing about {fl(inv.charity.reputation * gameData.tuning.deposits.per_reputation)} more in deposits over calm years.</span>
+          <strong>Charity ({fl(investCost("charity", state, gameData))})</strong>
+          <span>A gift to the poor of Frankfurt: reputation +{charityGain}, drawing about {fl(charityGain * gameData.tuning.deposits.per_reputation)} more in deposits over calm years.</span>
         </Choice>
         <Choice value="patronage">
-          <strong>Patronage ({fl(inv.patronage.cost)})</strong>
+          <strong>Patronage ({fl(investCost("patronage", state, gameData))})</strong>
           <span>
-            Sponsor the arts: {head?.name ?? "the head"}'s connections +{inv.patronage.connections}, reputation +{inv.patronage.reputation} (about {fl(inv.patronage.reputation * gameData.tuning.deposits.per_reputation)} more in deposits).
+            Sponsor the arts: {head?.name ?? "the head"}'s connections +{inv.patronage.connections}, reputation +{patronageGain} (about {fl(patronageGain * gameData.tuning.deposits.per_reputation)} more in deposits).
           </span>
         </Choice>
       </Choices>

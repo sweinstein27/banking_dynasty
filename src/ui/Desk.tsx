@@ -5,6 +5,7 @@ import { useState } from "react";
 import { gameData } from "../data";
 import { actionsLeft } from "../sim/actions";
 import { inCrisis } from "../sim/crisis";
+import { investCost } from "../sim/family";
 import type { Decision, GameState } from "../sim/types";
 import { CRISIS_KINDS, DECISION_LABELS, DecisionDialog, type DecisionKind } from "./DecisionDialogs";
 import { fl, pct } from "./format";
@@ -97,7 +98,7 @@ export function describe(d: Decision, state: GameState): string {
     case "set_reserve":
       return `Set the reserve to ${fl(d.amount)}`;
     case "invest_family": {
-      const cost = fl(gameData.tuning.family.invest[d.form].cost);
+      const cost = fl(investCost(d.form, state, gameData));
       if (d.form === "charity") return `Give ${cost} to charity`;
       if (d.form === "patronage") return `Spend ${cost} on patronage`;
       return `Educate ${state.people.find((p) => p.id === d.heir)?.name ?? "an heir"} in ${d.stat} (${cost})`;

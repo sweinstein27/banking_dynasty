@@ -1,6 +1,10 @@
-// The family: the head of house and the heirs as portraits, with what each stat does.
+// The family: the head of house and the heirs as portraits, with what each stat does. A click on a
+// portrait opens the person's sheet: their traits and what each one does.
+import { Dialog } from "radix-ui";
+import { useState } from "react";
 import { gameData } from "../data";
-import { ageIn, headOf, headStat, heirsOf, isTrained, STATS, successor, yearlyDeathChance, type Stat } from "../sim/family";
+import { ageIn, effectiveStat, headEffects, headOf, headStat, heirsOf, isTrained, STATS, successor, yearlyDeathChance, type Stat } from "../sim/family";
+import { describeEffects, traitById } from "../sim/traits";
 import type { GameState, Person } from "../sim/types";
 import { pct } from "./format";
 import { PageTurner, usePages } from "./Pager";
@@ -25,12 +29,68 @@ function Pips({ value, max }: { value: number; max: number }) {
   );
 }
 
-function Cameo({ p, year }: { p: Person; year: number }) {
+/** A portrait that opens the person's sheet. */
+function Cameo({ p, year, onOpen }: { p: Person; year: number; onOpen: (p: Person) => void }) {
   return (
-    <div className="cameo" aria-hidden="true">
+    <button className="cameo" onClick={() => onOpen(p)} aria-label={`About ${p.name}`}>
       <span>{initials(p.name)}</span>
       <small>{ageIn(p, year)}</small>
-    </div>
+    </button>
+  );
+}
+
+/** Trait names under a person's name. The sheet explains them. */
+function TraitLabels({ p }: { p: Person }) {
+  if (!p.traits.length) return <p className="small muted">No traits yet</p>;
+  return (
+    <p className="traits">
+      {p.traits.map((id) => <span key={id} className="trait">{traitById(id, gameData)?.name ?? id}</span>)}
+    </p>
+  );
+}
+
+/** A person's sheet: who they are, their traits and what each one does. Opened by a click, never by hover. */
+function PersonSheet({ p, state, onClose }: { p: Person | null; state: GameState; onClose: () => void }) {
+  return (
+    <Dialog.Root open={p !== null} onOpenChange={(open) => !open && onClose()}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="overlay" />
+        <Dialog.Content className="dialog person-sheet" aria-describedby={undefined}>
+          {p && (
+            <>
+              <Dialog.Title>{p.name}</Dialog.Title>
+              <p className="muted">
+                Born {p.birth_year}{p.death_year !== null ? `, died ${p.death_year}` : `, aged ${ageIn(p, state.world.year)}`}.{" "}
+                {p.is_head ? "Head of the house: these traits act on the business now." : "Their traits will act on the business if they become head."}
+              </p>
+              <p>{STATS.map((k) => `${STAT_NAMES[k]} ${effectiveStat(p, k, gameData)}`).join(", ")} (traits included)</p>
+              {p.traits.length === 0 ? (
+                <p className="muted">No traits yet. Heirs gain one when they come of age, shaped by their schooling.</p>
+              ) : (
+                <ul className="choices trait-list">
+                  {p.traits.map((id) => {
+                    const t = traitById(id, gameData);
+                    if (!t) return null;
+                    return (
+                      <li key={id} className="choice">
+                        <strong>{t.name}</strong>
+                        <span>{t.description}</span>
+                        <span className="small">{describeEffects(t).join("; ")}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              <div className="row dialog-buttons">
+                <Dialog.Close asChild>
+                  <button className="secondary">Close</button>
+                </Dialog.Close>
+              </div>
+            </>
+          )}
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
 
@@ -44,6 +104,7 @@ export function FamilyPanel({ state }: { state: GameState }) {
   const pages = usePages(heirs, HEIRS_PER_PAGE);
   const dead = state.people.filter((p) => p.death_year !== null);
   const green = head?.inexperienced_until != null && world.turn < head.inexperienced_until;
+  const [open, setOpen] = useState<Person | null>(null);
 
   return (
     <section className="panel family" aria-label="The Family">
@@ -51,9 +112,10 @@ export function FamilyPanel({ state }: { state: GameState }) {
 
       {head && (
         <div className="person head">
-          <Cameo p={head} year={world.year} />
+          <Cameo p={head} year={world.year} onOpen={setOpen} />
           <div className="person-body">
             <p className="person-name">{head.name}, head of house, aged {ageIn(head, world.year)}</p>
+            <TraitLabels p={head} />
             <ul className="stat-list">
               {STATS.map((k) => (
                 <li key={k}>
@@ -64,7 +126,7 @@ export function FamilyPanel({ state }: { state: GameState }) {
               ))}
             </ul>
             {green && <p className="stamp">Untrained: stats count lower for {head.inexperienced_until! - world.turn} more quarters</p>}
-            <p className="muted small">Chance of death this year: {pct(yearlyDeathChance(ageIn(head, world.year), tuning))}</p>
+            <p className="muted small">Chance of death this year: {pct(Math.min(1, yearlyDeathChance(ageIn(head, world.year), tuning) * headEffects(state, gameData).death_chance))}</p>
           </div>
         </div>
       )}
@@ -78,14 +140,15 @@ export function FamilyPanel({ state }: { state: GameState }) {
             const trained = isTrained(p, world.year, gameData);
             return (
               <li key={p.id} className="person heir">
-                <Cameo p={p} year={world.year} />
+                <Cameo p={p} year={world.year} onOpen={setOpen} />
                 <div className="person-body">
                   <p className="person-name">
                     {p.name}
                     {p.id === next?.id && <span className="ribbon-tag">Heir</span>}
                   </p>
+                  <TraitLabels p={p} />
                   <p className="small">
-                    {STATS.map((k) => `${STAT_NAMES[k]} ${p[k]}`).join(", ")}
+                    {STATS.map((k) => `${STAT_NAMES[k]} ${effectiveStat(p, k, gameData)}`).join(", ")}
                   </p>
                   <p className={trained ? "small good" : "small muted"}>
                     {trained ? "Trained" : `Untrained: needs ${tuning.family.succession.adult_age}+ and a total of ${tuning.family.succession.trained_total}`}
@@ -97,6 +160,8 @@ export function FamilyPanel({ state }: { state: GameState }) {
         </ul>
       )}
       <PageTurner pages={pages} />
+
+      <PersonSheet p={open} state={state} onClose={() => setOpen(null)} />
 
       {dead.length > 0 && (
         <p className="remembered small muted">

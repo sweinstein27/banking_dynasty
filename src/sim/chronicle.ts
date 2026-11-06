@@ -5,7 +5,8 @@ import { ageIn } from "./family";
 import { fl } from "./format";
 import type { GameData, Tuning } from "./tuning";
 import { netWorth } from "./turn";
-import type { GameState, LedgerEntry, Quarter } from "./types";
+import { traitWords } from "./traits";
+import type { GameState, LedgerEntry, Person, Quarter } from "./types";
 
 /** The calendar date of a turn: turn 1 is the start quarter. */
 export function dateOfTurn(turn: number, tuning: Tuning): { year: number; quarter: Quarter } {
@@ -40,12 +41,14 @@ export function chronicle(state: GameState, data: GameData): string[] {
   const t = data.tuning;
   const { house, people, ledger } = state;
   const paragraphs: string[] = [];
+  // ", prudent and aloof" after a name, or nothing for someone without traits.
+  const described = (p: Person) => (p.traits.length ? `, ${traitWords(p, data)}` : "");
 
   // The founding.
   const founder = people[0]!;
   const opening = (account: string) => ledger.find((e) => e.category === "opening" && e.account === account)?.amount ?? 0;
   paragraphs.push(
-    `In ${t.start.year}, ${founder.name}, aged ${ageIn(founder, t.start.year)}, opened the books of ${house.name} in ${house.city} with ${fl(opening("cash"))} in cash and ${fl(opening("deposits"))} owed to depositors.`,
+    `In ${t.start.year}, ${founder.name}${described(founder)}, aged ${ageIn(founder, t.start.year)}, opened the books of ${house.name} in ${house.city} with ${fl(opening("cash"))} in cash and ${fl(opening("deposits"))} owed to depositors.`,
   );
 
   // The heads of house.
@@ -54,7 +57,7 @@ export function chronicle(state: GameState, data: GameData): string[] {
       const year = yearOf(sc.turn, t);
       const dead = people.find((p) => p.id === sc.from)!;
       const heir = people.find((p) => p.id === sc.to)!;
-      return `In ${year} ${dead.name} died, aged ${ageIn(dead, year)}, and ${heir.name} took over at ${ageIn(heir, year)}${sc.trained ? "" : ", untrained and unready"}.`;
+      return `In ${year} ${dead.name} died, aged ${ageIn(dead, year)}, and ${heir.name}${described(heir)}${heir.traits.length ? "," : ""} took over at ${ageIn(heir, year)}${sc.trained ? "" : ", untrained and unready"}.`;
     });
     paragraphs.push(lines.join(" "));
   } else {

@@ -7,13 +7,14 @@ import { bondBook, bondValue, quarterlyCoupon } from "../src/sim/bonds";
 import { bondOffers, lendOffers, ventureOffers } from "../src/sim/offers";
 import { chronicle } from "../src/sim/chronicle";
 import { borrowingRoom, debtBook, inCrisis } from "../src/sim/crisis";
-import { ageIn, headOf, heirsOf, STATS } from "../src/sim/family";
+import { ageIn, effectiveStat, headOf, heirsOf, investCost, reputationGain, STATS } from "../src/sim/family";
+import { traitWords } from "../src/sim/traits";
 import { applyDecision } from "../src/sim/decisions";
 import { depositLevel } from "../src/sim/deposits";
 import { freeCash } from "../src/sim/reserves";
 import { createRng } from "../src/sim/rng";
 import { endTurn, loanBook, netWorth } from "../src/sim/turn";
-import type { Decision, GameState, LedgerEntry } from "../src/sim/types";
+import type { Decision, GameState, LedgerEntry, Person } from "../src/sim/types";
 import { quartersLeft, ventureBook, venturePayout } from "../src/sim/ventures";
 
 function argValue(name: string): number | undefined {
@@ -166,9 +167,9 @@ async function askCrisis(preview: GameState): Promise<Decision | null> {
 async function askFamily(preview: GameState): Promise<Decision | null> {
   const inv = tuning.family.invest;
   printFamily(preview);
-  console.log(`  e) Educate an heir (${fl(inv.educate.cost)}, one stat +${inv.educate.gain})`);
-  console.log(`  c) Charity (${fl(inv.charity.cost)}, reputation +${inv.charity.reputation})`);
-  console.log(`  p) Patronage (${fl(inv.patronage.cost)}, head's connections +${inv.patronage.connections}, reputation +${inv.patronage.reputation})`);
+  console.log(`  e) Educate an heir (${fl(investCost("educate", preview, gameData))}, one stat +${inv.educate.gain})`);
+  console.log(`  c) Charity (${fl(investCost("charity", preview, gameData))}, reputation +${reputationGain(inv.charity.reputation, preview, gameData)})`);
+  console.log(`  p) Patronage (${fl(investCost("patronage", preview, gameData))}, head's connections +${inv.patronage.connections}, reputation +${reputationGain(inv.patronage.reputation, preview, gameData)})`);
   const pick = (await ask("Form (e/c/p): "))?.trim();
   if (pick === "c") return { kind: "invest_family", form: "charity" };
   if (pick === "p") return { kind: "invest_family", form: "patronage" };
@@ -184,9 +185,10 @@ async function askFamily(preview: GameState): Promise<Decision | null> {
 function printFamily(s: GameState) {
   const year = s.world.year;
   const head = headOf(s);
-  const stats = (p: { acumen: number; prudence: number; connections: number }) => `acumen ${p.acumen}, prudence ${p.prudence}, connections ${p.connections}`;
-  if (head) console.log(`Head: ${head.name}, aged ${ageIn(head, year)}, ${stats(head)}`);
-  heirsOf(s).forEach((p, i) => console.log(`  Heir ${i + 1}) ${p.name}, aged ${ageIn(p, year)}, ${stats(p)}`));
+  const stats = (p: Person) => STATS.map((k) => `${k} ${effectiveStat(p, k, gameData)}`).join(", ");
+  const traits = (p: Person) => (p.traits.length ? `, ${traitWords(p, gameData)}` : "");
+  if (head) console.log(`Head: ${head.name}${traits(head)}, aged ${ageIn(head, year)}, ${stats(head)}`);
+  heirsOf(s).forEach((p, i) => console.log(`  Heir ${i + 1}) ${p.name}${traits(p)}, aged ${ageIn(p, year)}, ${stats(p)}`));
 }
 
 async function askReserve(preview: GameState): Promise<Decision> {
