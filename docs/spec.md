@@ -177,6 +177,119 @@ Eight weeks part-time (about 5 to 8 hours a week). The sim works in a terminal b
 
 The first prototype ends here. The scope then widened (2026-11-06) toward the pitch: Crusader Kings' dynasty layer first, then Victoria 3's world. Each milestone is planned and approved before code, goes sim first with tests, then the terminal, then the UI, and ends with the harness re-run against the balance targets and a browser check.
 
+Phase 1, the dynasty (D1 to D5 done; D6 moved into B3 below):
+
+- D1, characters with traits: each person has one or two traits (data/traits.json) that change real numbers, and education can shape a child's traits.
+- D2, choosing your heir: the player names the successor; passing over the eldest costs reputation.
+- D3, events with choices: events offer two or three responses, answered as letters on the desk before the quarter ends (plain JSON, not Ink).
+- D4, other houses: five invented Frankfurt houses, Kessler among them, each with a head, wealth, reputation and an opinion of the player's house.
+- D5, marriages and alliances: children marry into other houses for dowries, allies and grandchildren; births need a spouse.
+
+The scope widened again after the D5 playtest (2026-11-06): a deeper bank, a grand-strategy interface, rivals that act, a living world, and the game around the game. Agreed decisions: sim before interface; staff capacity plus money replace the three actions a turn; explanations open on click (no hover-only information); a darker, ornate grand-strategy frame with inline SVG icons and parchment for documents; ventures are long projects built in instalments, then running, then listed on the bourse if they succeed; commodities arrive with the markets (pulling W2 forward); companies appear on the bourse when history allows. Old saves need not load until a first release. From Phase C the screen is the only full way to play; the terminal stays as a test tool.
+
+Phase A, the bank:
+
+- A1, credit: borrowers' books instead of a quality score, bought in tiers (bourse talk, a correspondent's report, a full inquiry); loans of many lengths, from bills of a quarter to ten-year mortgages; selling loans.
+- A2, the counting house: staff (clerks, correspondents, analysts, tellers, a partner) and facilities (counting room, strongroom, archive, courier stable, reception rooms, warehouse) with wages and upkeep replace the three actions a turn; The House view; an advisor council who advise by letter.
+- A3, markets: shares, utilities and commodities on the Frankfurt bourse; ventures from 1 to 25 years that list as companies when they succeed; harvests and weather driving commodity prices.
+- A4, the interface: a grand-strategy top bar, side menu, panels, clickable breakdowns of every number and click-open explanations.
+- A5, high finance: sovereign loan contracts, lending to other houses, bankruptcy auctions, insurance.
+
+Phase B, rivals and the dynasty:
+
+- B1, rivals that act: houses bid for contracts, poach staff, buy your debts; schemes for you and for them.
+- B2, people with agendas: personalities and loyalty, succession claims and feuds (a disloyal heir can found a rival house), education paths.
+- B3, legacy: the family tree view and ambitions each decade (was D6), titles, and a prestige score across wealth, standing, family, influence and legacy, which the balance targets then use.
+
+Phase C, the world (absorbs W1 to W4):
+
+- C1, Europe: a living map with cities, markets and news that travels by courier; branches run by family members; currencies and bills of exchange.
+- C2, politics: seats in the Frankfurt Senate and the Federal Diet; court banker to a prince.
+- C3, war and revolution: wars as campaigns over several quarters; unrest building to 1830 and 1848.
+- C4, progress: technology waves (steam, railways, telegraph, gas) opening ventures and speeding news.
+- C5, real rates: interest rates and coupons calibrated against historical data.
+
+Phase D, the game around the game:
+
+- D1, ways to play: scenarios and starts; difficulty and pacing, including yearly turns.
+- D2, the keepsake: an illustrated chronicle with the family tree and portraits; a hall of fame of dynasties.
+
+A playtest closes each phase.
+
+Week 8's buffer absorbs the overflow.
+
+### Moved into the build plan (2026-11-06)
+
+- Heirs with traits, and succession as a real choice between strengths and flaws: Phase 1, D1 and D2
+- Ambitions: player-picked goals per decade, such as underwriting a state loan by 1830: Phase 1, D6
+- A reactive rival that can stumble in a panic and be rescued for a stake: Phase 1, D4
+- Hard political choices, such as lending to governments suppressing the 1848 revolutions: Phase 2, W3
+
+### Still after the build plan (do not build yet)
+
+- Information as a resource: news arrives late; a correspondent network gives earlier warning
+- Rivals that bid against you for each deal
+
+### Always
+
+- Fast turns: loans auto-renew unless changed; a "same as last quarter" option
+- No dominant strategy: the Week 6 harness must show cautious, aggressive and bond-heavy play can all win
+- Clear feedback: a year-end report with a net worth chart and one line on what went right and wrong
+
+## Data model
+
+| Table | Key columns |
+| --- | --- |
+| world_state | turn, year, quarter, base_rate, sentiment |
+| house | id, name, city, cash, deposits, reputation |
+| person | id, house_id, name, birth_year, death_year, is_head, acumen, prudence, connections |
+| loan | id, borrower_name, principal, rate, quality, start_turn, term_quarters, status |
+| bond | id, issuer_state, face_value, coupon, price, risk |
+| venture | id, type, invested, expected_return, failure_risk, unlock_year, status |
+| event | id, title, text, is_historical, year, conditions_json, effects_json, fired_turn |
+| ledger_entry | id, turn, category, amount, note |
+
+## Tech stack and UI
+
+TypeScript and React web app, runs in a browser on a Mac.
+
+- Sim core as pure functions: (state, decisions) -> next state. No UI code inside.
+- Seeded randomness: same seed, same run.
+- Events and starting data in JSON files.
+- Save as one JSON file per game.
+
+### Libraries (reuse, don't build)
+
+| Need | Choice | When |
+| --- | --- | --- |
+| Seeded RNG | Keep the existing mulberry32 in src/sim/rng.ts (stores state for saves) | Done |
+| Immutable state updates | Immer | Optional; adopt if sim updates get verbose |
+| Event text and choices | Ink (inkjs); evaluate at the start of Week 4 against plain JSON | Week 4 |
+| UI components | React with Radix UI or shadcn/ui | Week 3 |
+| Ledger tables | TanStack Table | Week 3 |
+| Charts (net worth over time) | Recharts | Week 3 or later |
+| Balancing analysis | Harness writes CSV; analyze with DuckDB or pandas outside the game | Week 6 |
+| Historical calibration | Bank of England "A millennium of macroeconomic data" (interest rates, prices) | Week 6 to 7 |
+| Desktop and Steam | Tauri or Electron, plus steamworks.js | After the prototype |
+
+Not using: a full game engine (Godot, Unity, Phaser), an off-the-shelf economic sim, or an AI model inside the shipped game.
+
+UI: one screen with no scrolling, a counting-house desk: the Gazette (news), the Ledger, the Desk (decisions) and the Family, plus End the quarter. New views (the family tree, the map of Europe) are tabs in the masthead, never longer pages; lists turn pages. Everything is a click: no dragging, no hover-only information, targets of at least 44 px. Must be fully playable on a trackpad.
+
+## Build plan
+
+Eight weeks part-time (about 5 to 8 hours a week). The sim works in a terminal before it gets a screen.
+
+1. Week 1, sim core: state, loans, interest, defaults, End Turn. Print the ledger to the console.
+2. Week 2, the rest of the economy: bonds, ventures, reserves, sentiment, bankruptcy.
+3. Week 3, first screen: the four panels and End Turn. Play a full run, ugly but complete.
+4. Week 4, events: the event system plus the first 6 historical and 10 random events.
+5. Week 5, family: stats, heirs, ageing, succession.
+6. Week 6, balancing harness: auto-play 1,000 runs with simple strategies (cautious, aggressive, bond-heavy); compare final net worth and bankruptcy rates.
+7. Week 7, tune and playtest: adjust numbers until more than one strategy can win. Done, with a one-screen UI redesign after the first playtest and a reputation-driven deposits rule.
+
+The first prototype ends here. The scope then widened (2026-11-06) toward the pitch: Crusader Kings' dynasty layer first, then Victoria 3's world. Each milestone is planned and approved before code, goes sim first with tests, then the terminal, then the UI, and ends with the harness re-run against the balance targets and a browser check.
+
 Phase 1, the dynasty:
 
 - D1, characters with traits: each person has one or two traits (data/traits.json) that change real numbers, and education can shape a child's traits.
