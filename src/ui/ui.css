@@ -291,6 +291,30 @@ button.turn { min-height: max(44px, 2.4rem); padding: 0.2rem 0.7rem; font-size: 
 }
 .letter::before { content: ""; position: absolute; left: 0.5rem; top: 50%; width: 0.75rem; height: 0.75rem; margin-top: -0.375rem; border-radius: 50%; background: var(--oxblood); }
 
+/* The post: letters that ask for an answer, as a small stack of envelopes. */
+.post {
+  position: relative; display: flex; align-items: center; gap: 0.5rem;
+  min-height: max(44px, 2.6rem); padding: 0.2rem 0.8rem 0.2rem 0.4rem;
+  background: linear-gradient(160deg, #fbf3df, #eadbb8);
+  border: 1px solid #9c8660; border-left: 4px solid var(--oxblood);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  font-family: var(--display); font-size: 1rem; color: var(--ink);
+}
+.post.stacked { box-shadow: 3px 3px 0 -1px #eadbb8, 3px 3px 0 0 #9c8660, 0 1px 2px rgba(0, 0, 0, 0.3); }
+.post-count {
+  display: grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: 50%;
+  color: var(--paper-light); font-size: 1rem;
+  background: radial-gradient(circle at 35% 30%, #c45050, #7a1414 70%);
+}
+.letter-dialog { width: min(52rem, calc(100vw - 32px)); }
+.letter-text { font-size: 1.1rem; font-style: italic; }
+.responses { list-style: none; padding: 0; margin: 0.6rem 0 0; }
+.response { min-height: max(44px, 5rem); border-left-color: var(--oxblood); }
+.response:disabled { opacity: 0.6; }
+.response .cost { color: var(--oxblood); font-weight: 700; }
+.response .odds { font-style: italic; color: var(--amber); }
+.news-letter { font-style: italic; }
+
 /* ---------- The Family: cameo portraits ---------- */
 
 .family h2 { text-align: center; border-bottom: 1px solid var(--rule); padding-bottom: 0.2rem; }

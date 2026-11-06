@@ -9,6 +9,7 @@ import { investCost } from "../sim/family";
 import type { Decision, GameState } from "../sim/types";
 import { CRISIS_KINDS, DECISION_LABELS, DecisionDialog, type DecisionKind } from "./DecisionDialogs";
 import { fl, pct } from "./format";
+import { LetterStack } from "./Letters";
 import type { Game, GameApi } from "./useGame";
 
 const BUSINESS: DecisionKind[] = ["lend", "report", "buy_bond", "invest_venture", "set_reserve", "invest_family"];
@@ -36,6 +37,9 @@ export function Desk({ api, game }: { api: GameApi; game: Game }) {
   const [open, setOpen] = useState<DecisionKind | null>(null);
   const [tab, setTab] = useState("business");
   const shown = crisis ? tab : "business";
+  // Replies to letters go out together on one line, so the list stays short.
+  const replies = game.queued.filter((d) => d.kind === "answer_letter");
+  const actions = game.queued.filter((d) => d.kind !== "answer_letter");
 
   const cards = (kinds: DecisionKind[], cls = "") =>
     kinds.map((k) => (
@@ -49,6 +53,7 @@ export function Desk({ api, game }: { api: GameApi; game: Game }) {
     <section className="panel desk" aria-label="The Desk">
       <header className="desk-head">
         <h2>The Desk</h2>
+        <LetterStack state={game.preview} onSubmit={api.queue} />
         <div className="coins" aria-label={`${left} of ${tuning.actions_per_turn} actions left this quarter`}>
           {Array.from({ length: tuning.actions_per_turn }, (_, i) => (
             <span key={i} className={i < left ? "coin" : "coin spent"} />
@@ -74,7 +79,10 @@ export function Desk({ api, game }: { api: GameApi; game: Game }) {
         ) : (
           <>
             <ol className="letter-list">
-              {game.queued.map((d, i) => <li key={i} className="letter">{describe(d, game.base)}</li>)}
+              {actions.map((d, i) => <li key={i} className="letter">{describe(d, game.base)}</li>)}
+              {replies.length > 0 && (
+                <li className="letter">{replies.length === 1 ? describe(replies[0]!, game.base) : `Replies to ${replies.length} letters`}</li>
+              )}
             </ol>
             <button className="turn" onClick={api.clearQueue}>Take back all</button>
           </>

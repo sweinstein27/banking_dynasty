@@ -4,7 +4,7 @@ import { applyDecisions } from "../src/sim/decisions";
 import { checkEventData, conditionsMet, optionCost } from "../src/sim/events";
 import { heirTrait } from "../src/sim/family";
 import { accountBalance } from "../src/sim/ledger";
-import { answerLetter, settleLetters, unansweredLetters } from "../src/sim/letters";
+import { answerLetter, describeOption, oddsWords, settleLetters, unansweredLetters } from "../src/sim/letters";
 import { createRng } from "../src/sim/rng";
 import { parseSave, toSave } from "../src/sim/save";
 import type { GameData, GameEvent } from "../src/sim/tuning";
@@ -282,5 +282,29 @@ describe("default_within_quarters", () => {
     expect(conditionsMet(s, c, date)).toBe(true);
     s.borrowers[0]!.last_default_turn = 6;
     expect(conditionsMet(s, c, date)).toBe(false);
+  });
+});
+
+describe("response cards in words", () => {
+  it("states odds in plain words", () => {
+    expect([0.5, 0.333, 0.25, 0.1, 2 / 3, 0.7, 0.04].map(oddsWords)).toEqual([
+      "an even chance", "one chance in three", "one chance in four", "one chance in ten", "two chances in three", "about seven chances in ten", "about one chance in ten",
+    ]);
+  });
+
+  it("lists cost, certain effects and odds, with no hidden numbers", () => {
+    const [prosecute, dismiss, forgive] = clerk.options!;
+    expect(describeOption(prosecute!, data)).toEqual({ cost: 500, effects: ["reputation +2"], odds: null });
+    expect(describeOption(dismiss!, data)).toEqual({ cost: 0, effects: [], odds: "one chance in three: reputation −6" });
+    expect(describeOption(forgive!, data).effects).toEqual(["reputation \u22121", "within a year, again"]);
+  });
+
+  it("every real response has something to say", () => {
+    for (const ev of gameData.events) {
+      for (const o of ev.options ?? []) {
+        const d = describeOption(o, gameData);
+        expect(d.cost > 0 || d.effects.length > 0 || d.odds !== null || o.id === ev.default_option, `${ev.id}/${o.id}`).toBe(true);
+      }
+    }
   });
 });

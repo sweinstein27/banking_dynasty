@@ -8,7 +8,8 @@ import { fl } from "./format";
 import { freeCash } from "./reserves";
 import type { Rng } from "./rng";
 import { cloneState } from "./state";
-import type { EventOption, GameData, GameEvent } from "./tuning";
+import { traitById } from "./traits";
+import type { EventEffect, EventOption, GameData, GameEvent } from "./tuning";
 import type { AnswerLetterDecision, GameState, Letter } from "./types";
 
 /** Certain effects never draw; this stands in for the RNG so a mistake fails loudly. */
@@ -79,4 +80,61 @@ export function settleLetters(state: GameState, rng: Rng, data: GameData): void 
     state.letter_outcomes.push({ turn: state.world.turn, event: letter.event, option: option.id, by_default: byDefault, chance });
   }
   state.letters = [];
+}
+
+const SMALL = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
+
+/** A probability in plain words: "an even chance", "one chance in three", "about seven chances in ten". */
+export function oddsWords(p: number): string {
+  if (Math.abs(p - 0.5) < 0.01) return "an even chance";
+  for (let n = 2; n <= 10; n++) {
+    if (Math.abs(p - 1 / n) < 0.01) return `one chance in ${SMALL[n]}`;
+    if (n > 2 && Math.abs(p - (n - 1) / n) < 0.01) return `${SMALL[n - 1]} chances in ${SMALL[n]}`;
+  }
+  const tenths = Math.min(9, Math.max(1, Math.round(p * 10)));
+  return `about ${SMALL[tenths]} ${tenths === 1 ? "chance" : "chances"} in ten`;
+}
+
+const signed = (n: number) => (n > 0 ? `+${n}` : `−${-n}`);
+
+/** One effect in plain words, for response cards and the terminal. Fixed costs are left to optionCost. */
+export function describeEffect(e: EventEffect, data: GameData): string | null {
+  switch (e.kind) {
+    case "cash":
+      if (e.amount !== undefined) return e.amount < 0 ? null : `brings in ${fl(e.amount)}`;
+      return `${(e.share ?? 0) < 0 ? "loses" : "gains"} ${Math.round(Math.abs(e.share ?? 0) * 100)}% of cash`;
+    case "reputation":
+      return `reputation ${signed(e.delta)}`;
+    case "heir_talent":
+      return `a child gains ${e.gain} in a stat, picked at random`;
+    case "heir_trait":
+      return `a child is left ${(traitById(e.trait, data)?.name ?? e.trait).toLowerCase()}`;
+    case "follow_up": {
+      const ev = data.events.find((x) => x.id === e.event);
+      const what = ev ? ev.effects.map((x) => describeEffect(x, data)).filter(Boolean).join(", ") : "";
+      const when = e.within_quarters === 4 ? "within a year" : `within ${e.within_quarters} quarters`;
+      return `${when}, ${ev?.title.toLowerCase() ?? "more trouble"}${what ? `: ${what}` : ""}`;
+    }
+    case "loan_default":
+      return "a loan picked at random defaults";
+    case "state_risk": {
+      const name = data.states.find((s) => s.id === e.state)?.name ?? e.state;
+      return `${name} bonds ${e.delta > 0 ? "riskier" : "safer"}`;
+    }
+    case "trade_risk":
+      return `merchant loans ${e.factor > 1 ? "riskier" : "safer"}`;
+    case "set_sentiment":
+      return `the market turns ${e.sentiment}`;
+    case "panic_warning":
+      return `a panic in ${e.quarters} quarters`;
+  }
+}
+
+/** A response card's lines: what it costs, what it does for certain, and its odds, all in words. */
+export function describeOption(o: EventOption, data: GameData): { cost: number; effects: string[]; odds: string | null } {
+  const effects = o.effects.map((e) => describeEffect(e, data)).filter((x): x is string => !!x);
+  const odds = o.chance
+    ? `${oddsWords(o.chance.p)}: ${o.chance.effects.map((e) => describeEffect(e, data)).filter(Boolean).join(", ") || "nothing more"}`
+    : null;
+  return { cost: optionCost(o), effects, odds };
 }

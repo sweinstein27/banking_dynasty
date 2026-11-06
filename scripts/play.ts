@@ -11,6 +11,7 @@ import { ageIn, effectiveStat, headOf, heirsOf, investCost, reputationGain, STAT
 import { traitWords } from "../src/sim/traits";
 import { applyDecision } from "../src/sim/decisions";
 import { depositLevel } from "../src/sim/deposits";
+import { checkAnswerLetter, describeOption, unansweredLetters } from "../src/sim/letters";
 import { freeCash } from "../src/sim/reserves";
 import { createRng } from "../src/sim/rng";
 import { endTurn, loanBook, netWorth } from "../src/sim/turn";
@@ -203,6 +204,37 @@ async function askReserve(preview: GameState): Promise<Decision> {
   return { kind: "set_reserve", amount };
 }
 
+/** Each unanswered letter in turn: shows the responses with cost and odds, and takes one. Null means quit. */
+async function askLetters(preview: GameState): Promise<{ decisions: Decision[]; preview: GameState } | null> {
+  const decisions: Decision[] = [];
+  for (const letter of unansweredLetters(preview)) {
+    const ev = gameData.events.find((e) => e.id === letter.event)!;
+    console.log(`\n--- A letter: ${ev.title} ---\n  ${ev.text}\n  (Answering uses no action.)`);
+    ev.options!.forEach((o, i) => {
+      const d = describeOption(o, gameData);
+      const refused = checkAnswerLetter(preview, { kind: "answer_letter", event: ev.id, option: o.id }, gameData);
+      const parts = [d.cost > 0 ? `costs ${fl(d.cost)}` : "no cost", ...d.effects, ...(d.odds ? [d.odds] : [])];
+      console.log(`  [${i + 1}] ${o.label}: ${parts.join("; ")}${refused ? ` (not open: ${refused})` : ""}`);
+    });
+    for (;;) {
+      const pick = await ask(`Response (1-${ev.options!.length}): `);
+      if (pick === null) return null;
+      const o = ev.options![Number(pick) - 1];
+      if (!o) continue;
+      const d: Decision = { kind: "answer_letter", event: ev.id, option: o.id };
+      const r = applyDecision(preview, d, gameData);
+      if (!r.ok) {
+        console.log(`Refused: ${r.reason}`);
+        continue;
+      }
+      decisions.push(d);
+      preview = r.state;
+      break;
+    }
+  }
+  return { decisions, preview };
+}
+
 async function main() {
   console.log(`Banking Dynasty, terminal mode. Seed ${seed}.`);
   let state = newGame(gameData, rng);
@@ -211,6 +243,11 @@ async function main() {
     const queued: Decision[] = [];
     let preview = state;
     let ended = false;
+
+    const answered = await askLetters(preview);
+    if (!answered) return;
+    queued.push(...answered.decisions);
+    preview = answered.preview;
 
     while (!ended) {
       printStatus(preview);

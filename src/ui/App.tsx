@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { gameData } from "../data";
 import { runOver } from "../sim/actions";
+import { unansweredLetters } from "../sim/letters";
 import { Desk } from "./Desk";
 import { FamilyPanel } from "./FamilyPanel";
 import { downloadText, pickTextFile } from "./files";
@@ -57,6 +58,7 @@ export function App() {
   const { base, preview } = game;
   const over = runOver(base, gameData.tuning);
   const mood = base.world.sentiment;
+  const unanswered = unansweredLetters(preview).length;
 
   return (
     <div className="screen">
@@ -82,8 +84,10 @@ export function App() {
         <div className="masthead-buttons">
           <button className="secondary" onClick={save}>Save</button>
           <button className="secondary" onClick={() => setOnStartScreen(true)}>New or load</button>
-          <button className="seal" onClick={api.endTurn} disabled={over !== null}>
-            End the quarter{game.queued.length ? ` (${game.queued.length})` : ""}
+          <button className="seal" onClick={api.endTurn} disabled={over !== null || unanswered > 0}>
+            {unanswered > 0 && !over
+              ? `Answer ${unanswered} letter${unanswered === 1 ? "" : "s"} first`
+              : `End the quarter${game.queued.length ? ` (${game.queued.length})` : ""}`}
           </button>
         </div>
       </header>
