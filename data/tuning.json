@@ -29,7 +29,7 @@
     },
     "births": { "min_head_age": 25, "max_head_age": 45, "max_heirs": 3, "chance": 0.15 },
     "invest": {
-      "educate": { "cost": 1500, "gain": 1 },
+      "educate": { "cost": 1000, "gain": 1 },
       "charity": { "cost": 2000, "reputation": 3 },
       "patronage": { "cost": 3000, "connections": 1, "reputation": 1 }
     }

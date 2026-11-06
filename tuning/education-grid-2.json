@@ -1,0 +1,7 @@
+{
+  "vary": {
+    "tuning.family.invest.educate.cost": [10000000, 1000],
+    "tuning.family.succession.reputation_untrained": [10, 20],
+    "tuning.family.succession.inexperience_quarters": [8, 16]
+  }
+}
