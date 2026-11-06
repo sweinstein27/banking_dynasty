@@ -54,7 +54,7 @@ describe("family helpers", () => {
   it("headStat falls back to the neutral value when there is no living head", () => {
     const s = fresh();
     s.people[0]!.death_year = 1815;
-    expect(headStat(s, "prudence", tuning)).toBe(f.neutral_stat);
+    expect(headStat(s, "prudence", gameData)).toBe(f.neutral_stat);
   });
 });
 
@@ -77,7 +77,7 @@ describe("Acumen: venture failure", () => {
     expect(acumenFactor(f.neutral_stat, tuning)).toBe(1);
     expect(acumenFactor(10, tuning)).toBeCloseTo(0.75);
     expect(acumenFactor(1, tuning)).toBeCloseTo(1.2);
-    expect(ventureFailureChance(0.2, "calm", tuning, 10)).toBeCloseTo(0.15);
+    expect(ventureFailureChance(0.2, "calm", tuning, 10, 1)).toBeCloseTo(0.15);
   });
 
   it("is shown in venture offers and decides venture rolls in End Turn", () => {
@@ -103,9 +103,9 @@ describe("Connections: access to state bonds", () => {
     const s = fresh();
     const prussia = gameData.states.find((st) => st.id === "prussia")!;
     expect(connectionsBonus(f.neutral_stat, tuning)).toBe(0);
-    expect(reputationGate(s, prussia, tuning)).toBe(prussia.min_reputation);
+    expect(reputationGate(s, prussia, gameData)).toBe(prussia.min_reputation);
     s.people[0]!.connections = 8;
-    expect(reputationGate(s, prussia, tuning)).toBe(prussia.min_reputation - 3 * f.connections_step);
+    expect(reputationGate(s, prussia, gameData)).toBe(prussia.min_reputation - 3 * f.connections_step);
   });
 
   it("opens Prussia's bonds to a well-connected head at reputation 50", () => {
@@ -122,6 +122,6 @@ describe("Connections: access to state bonds", () => {
     const s = fresh();
     s.people[0]!.connections = 2;
     const naples = gameData.states.find((st) => st.id === "naples")!;
-    expect(reputationGate(s, naples, tuning)).toBe(naples.min_reputation + 3 * f.connections_step);
+    expect(reputationGate(s, naples, gameData)).toBe(naples.min_reputation + 3 * f.connections_step);
   });
 });

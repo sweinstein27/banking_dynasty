@@ -22,8 +22,8 @@ export function stateRisk(state: GameState, issuer: BondIssuer): number {
 }
 
 /** Reputation a state requires before it sells to the house: its min_reputation, less the head's Connections bonus. */
-export function reputationGate(state: GameState, issuer: BondIssuer, tuning: Tuning): number {
-  return issuer.min_reputation - connectionsBonus(headStat(state, "connections", tuning), tuning);
+export function reputationGate(state: GameState, issuer: BondIssuer, data: GameData): number {
+  return issuer.min_reputation - connectionsBonus(headStat(state, "connections", data), data.tuning);
 }
 
 /** Book value of a holding at its last mark, in whole gulden. */
@@ -58,7 +58,7 @@ export function checkBuyBond(state: GameState, d: BuyBondDecision, data: GameDat
   const noAction = checkActionLeft(state, t);
   if (noAction) return noAction;
   if (state.defaulted_states.includes(issuer.id)) return `${issuer.name} has defaulted and sells no new bonds`;
-  const gate = reputationGate(state, issuer, t);
+  const gate = reputationGate(state, issuer, data);
   if (state.house.reputation < gate)
     return `${issuer.name} will only deal with houses of reputation ${gate} or more (yours is ${state.house.reputation})`;
   if (!Number.isInteger(d.face_value)) return "Face value must be whole gulden";

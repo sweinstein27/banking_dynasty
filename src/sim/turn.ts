@@ -8,7 +8,7 @@ import { drawRequests, recordDefault, recordRepayment } from "./borrowers";
 import { debtBook, serviceDebts } from "./crisis";
 import { resolveDeposits } from "./deposits";
 import { resolveEvents } from "./events";
-import { resolveFamily } from "./family";
+import { headEffects, resolveFamily } from "./family";
 import { quarterNews } from "./news";
 import { defaultChance, quarterlyInterest } from "./loans";
 import type { Rng } from "./rng";
@@ -80,7 +80,7 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
   resolveBonds(next, rng, data);
   resolveVentures(next, rng, data);
   serviceDebts(next, data.tuning);
-  resolveWithdrawals(next, data.tuning);
+  resolveWithdrawals(next, data.tuning, headEffects(next, data).withdrawals);
   resolveDeposits(next, data.tuning);
   const rolled = nextSentiment(world.sentiment, rng.next(), data.tuning);
   world.sentiment = moodWithWarnings(next, rolled, rng, data.tuning);

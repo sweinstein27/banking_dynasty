@@ -63,9 +63,10 @@ export function withdrawalDemand(deposits: number, sentiment: Sentiment, tuning:
  * Depositors withdraw their share for the current mood, paying what cash allows.
  * Any shortfall is handled by resolveWithdrawals in liquidity.ts. Mutates `state`; callers pass a draft copy.
  */
-export function applyWithdrawals(state: GameState, tuning: Tuning): WithdrawalResult | null {
+export function applyWithdrawals(state: GameState, tuning: Tuning, traitFactor = 1): WithdrawalResult | null {
   const { sentiment } = state.world;
-  const asked = withdrawalDemand(state.house.deposits, sentiment, tuning, state.house.reputation);
+  // The head's traits scale what depositors ask (a trusted face keeps more of them).
+  const asked = Math.min(state.house.deposits, Math.round(withdrawalDemand(state.house.deposits, sentiment, tuning, state.house.reputation) * traitFactor));
   const policy = state.withdrawal_policy;
   // Paying slowly pays a share now; a suspension pays nothing. Either way the deposits stay owed.
   const demand = policy === "suspended" ? 0 : policy === "slow" ? Math.round(asked * tuning.crisis.pay_slowly.share) : asked;

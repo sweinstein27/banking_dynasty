@@ -43,10 +43,12 @@ const testBorrowers: [number, string, number, number][] = [
 
 /**
  * A new game whose borrowers are the four test borrowers, each with an open request for any amount
- * up to 10,000,000 fl. Requests last one quarter, as in play.
+ * up to 10,000,000 fl. Requests last one quarter, as in play. Nobody has traits, so unit tests of
+ * other systems see neutral stats; trait tests add traits themselves.
  */
 export function fresh(): GameState {
   const s = newGame(quiet, createRng(1));
+  for (const p of s.people) p.traits = [];
   s.borrowers = testBorrowers.map(([id, name, quality]): Borrower => ({
     id, name, trade: "test trade", quality, market_quality: quality, estimate_noise: 0, reported: false, repaid: 0, defaulted: 0, last_default_turn: null, away_until: null,
   }));

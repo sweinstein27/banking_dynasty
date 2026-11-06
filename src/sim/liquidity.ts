@@ -102,9 +102,9 @@ export interface WithdrawalOutcome {
  * If selling everything still cannot pay depositors, the house goes bankrupt and the run ends.
  * Mutates `state`; callers pass a draft copy.
  */
-export function resolveWithdrawals(state: GameState, tuning: Tuning): WithdrawalOutcome {
+export function resolveWithdrawals(state: GameState, tuning: Tuning, traitFactor = 1): WithdrawalOutcome {
   if (state.house.status === "bankrupt") return { demanded: 0, raised: 0, bankrupt: true };
-  const first = applyWithdrawals(state, tuning);
+  const first = applyWithdrawals(state, tuning, traitFactor);
   if (!first) return { demanded: 0, raised: 0, bankrupt: false };
   const demanded = first.fromReserve + first.fromFreeCash + first.shortfall;
   if (first.shortfall === 0) return { demanded, raised: 0, bankrupt: false };

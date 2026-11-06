@@ -101,7 +101,7 @@ function Accounts({ state }: { state: GameState }) {
 function estimateText(state: GameState, borrowerId: number): string {
   const b = state.borrowers.find((x) => x.id === borrowerId);
   if (!b) return "no estimate";
-  const r = estimateRange(b, headStat(state, "prudence", gameData.tuning), gameData.tuning);
+  const r = estimateRange(b, headStat(state, "prudence", gameData), gameData.tuning);
   return `quality ${r.low.toFixed(2)} to ${r.high.toFixed(2)}`;
 }
 

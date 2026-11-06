@@ -30,7 +30,7 @@ describe("death chances", () => {
   });
 
   it("splits the yearly chance into four quarters", () => {
-    const q = quarterlyDeathChance(65, tuning);
+    const q = quarterlyDeathChance(65, tuning, 1);
     expect(1 - Math.pow(1 - q, 4)).toBeCloseTo(yearlyDeathChance(65, tuning));
   });
 
@@ -44,24 +44,24 @@ describe("death chances", () => {
 describe("choosing the successor", () => {
   it("prefers a trained heir over a better-stat child", () => {
     const s = house(1830, [{ age: 25, stat: 4 }, { age: 15, stat: 9 }]);
-    expect(successor(s, tuning)!.name).toBe("Heir 2");
+    expect(successor(s, gameData)!.name).toBe("Heir 2");
   });
 
   it("among the trained, the highest stat total, then the eldest", () => {
-    expect(successor(house(1830, [{ age: 30, stat: 4 }, { age: 25, stat: 6 }]), tuning)!.name).toBe("Heir 3");
-    expect(successor(house(1830, [{ age: 25, stat: 5 }, { age: 30, stat: 5 }]), tuning)!.name).toBe("Heir 3");
+    expect(successor(house(1830, [{ age: 30, stat: 4 }, { age: 25, stat: 6 }]), gameData)!.name).toBe("Heir 3");
+    expect(successor(house(1830, [{ age: 25, stat: 5 }, { age: 30, stat: 5 }]), gameData)!.name).toBe("Heir 3");
   });
 
   it("with no trained heir, the best untrained one", () => {
-    expect(successor(house(1830, [{ age: 12, stat: 2 }, { age: 10, stat: 3 }]), tuning)!.name).toBe("Heir 3");
+    expect(successor(house(1830, [{ age: 12, stat: 2 }, { age: 10, stat: 3 }]), gameData)!.name).toBe("Heir 3");
   });
 
   it("training needs adulthood and a stat total of at least trained_total", () => {
     const s = house(1830, [{ age: sc.adult_age, stat: 4 }, { age: sc.adult_age - 1, stat: 9 }, { age: 40, stat: 3 }]);
     const [adult, minor, weak] = heirsOf(s).sort((a, b) => a.id - b.id);
-    expect(isTrained(adult!, 1830, tuning)).toBe(true);
-    expect(isTrained(minor!, 1830, tuning)).toBe(false);
-    expect(isTrained(weak!, 1830, tuning)).toBe(false);
+    expect(isTrained(adult!, 1830, gameData)).toBe(true);
+    expect(isTrained(minor!, 1830, gameData)).toBe(false);
+    expect(isTrained(weak!, 1830, gameData)).toBe(false);
   });
 });
 
@@ -72,7 +72,7 @@ describe("succession", () => {
     expect(s.people[0]).toMatchObject({ death_year: 1830, is_head: false });
     expect(headOf(s)!.name).toBe("Heir 2");
     expect(s.house.reputation).toBe(50 - sc.reputation_trained);
-    expect(headStat(s, "prudence", tuning)).toBe(7);
+    expect(headStat(s, "prudence", gameData)).toBe(7);
     expect(s.successions).toEqual([{ turn: 1, from: 1, to: 2, trained: true }]);
   });
 
@@ -80,9 +80,9 @@ describe("succession", () => {
     const s = house(1830, [{ age: 14, stat: 3 }]);
     succeed(s, quiet);
     expect(s.house.reputation).toBe(50 - sc.reputation_untrained);
-    expect(headStat(s, "acumen", tuning)).toBe(Math.max(1, 3 - sc.inexperience_penalty));
+    expect(headStat(s, "acumen", gameData)).toBe(Math.max(1, 3 - sc.inexperience_penalty));
     s.world.turn += sc.inexperience_quarters;
-    expect(headStat(s, "acumen", tuning)).toBe(3);
+    expect(headStat(s, "acumen", gameData)).toBe(3);
   });
 
   it("with no heir left, a distant cousin takes over, untrained", () => {
@@ -110,7 +110,7 @@ describe("a head dying mid-year, in End Turn", () => {
     const s1 = endTurn(s0, [], fixedRng(CALM, CALM, 0, CALM), quiet);
     expect(s1.world).toMatchObject({ year: 1830, quarter: 3 });
     expect(headOf(s1)!.name).toBe("Heir 2");
-    expect(headStat(s1, "connections", tuning)).toBe(8);
+    expect(headStat(s1, "connections", gameData)).toBe(8);
     const news = s1.news.find((n) => n.kind === "family")!;
     expect(news.text).toBe("Johann Adler has died, aged 65. Heir 2, aged 27, takes over the house.");
   });

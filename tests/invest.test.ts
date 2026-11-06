@@ -34,7 +34,7 @@ describe("educating an heir", () => {
 
   it("refuses the head, the dead, unknown people, unknown stats, and a stat already at the maximum", () => {
     const s = fresh();
-    const educate = (heir: number, stat = "acumen") => checkInvestFamily(s, { kind: "invest_family", form: "educate", heir, stat: stat as "acumen" }, tuning);
+    const educate = (heir: number, stat = "acumen") => checkInvestFamily(s, { kind: "invest_family", form: "educate", heir, stat: stat as "acumen" }, gameData);
     expect(educate(1)).toBe("No living heir #1");
     expect(educate(99)).toBe("No living heir #99");
     expect(educate(2, "charm")).toBe('Unknown stat "charm"');
@@ -75,9 +75,9 @@ describe("charity and patronage", () => {
   it("refuses patronage once Connections are at the maximum, and anything without the cash", () => {
     const s = fresh();
     s.people[0]!.connections = tuning.family.max_stat;
-    expect(checkInvestFamily(s, { kind: "invest_family", form: "patronage" }, tuning)).toMatch(/already 10/);
+    expect(checkInvestFamily(s, { kind: "invest_family", form: "patronage" }, gameData)).toMatch(/already 10/);
     s.house.cash = 100;
-    expect(checkInvestFamily(s, { kind: "invest_family", form: "charity" }, tuning)).toMatch(/^Not enough cash above the reserve/);
+    expect(checkInvestFamily(s, { kind: "invest_family", form: "charity" }, gameData)).toMatch(/^Not enough cash above the reserve/);
   });
 
   it("reputation stops at 100", () => {

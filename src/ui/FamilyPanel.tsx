@@ -40,7 +40,7 @@ export function FamilyPanel({ state }: { state: GameState }) {
   const max = tuning.family.max_stat;
   const head = headOf(state);
   const heirs = heirsOf(state);
-  const next = successor(state, tuning);
+  const next = successor(state, gameData);
   const pages = usePages(heirs, HEIRS_PER_PAGE);
   const dead = state.people.filter((p) => p.death_year !== null);
   const green = head?.inexperienced_until != null && world.turn < head.inexperienced_until;
@@ -58,7 +58,7 @@ export function FamilyPanel({ state }: { state: GameState }) {
               {STATS.map((k) => (
                 <li key={k}>
                   <span className="stat-name">{STAT_NAMES[k]}</span>
-                  <Pips value={headStat(state, k, tuning)} max={max} />
+                  <Pips value={headStat(state, k, gameData)} max={max} />
                   <span className="stat-effect">{STAT_EFFECT[k]}</span>
                 </li>
               ))}
@@ -75,7 +75,7 @@ export function FamilyPanel({ state }: { state: GameState }) {
       ) : (
         <ul className="heirs">
           {pages.items.map((p) => {
-            const trained = isTrained(p, world.year, tuning);
+            const trained = isTrained(p, world.year, gameData);
             return (
               <li key={p.id} className="person heir">
                 <Cameo p={p} year={world.year} />

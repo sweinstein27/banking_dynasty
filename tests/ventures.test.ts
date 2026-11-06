@@ -60,9 +60,9 @@ describe("venture maths", () => {
   });
 
   it("scales failure risk with sentiment, capped at 1", () => {
-    expect(ventureFailureChance(0.15, "calm", tuning, 5)).toBeCloseTo(0.15);
-    expect(ventureFailureChance(0.15, "uneasy", tuning, 5)).toBeCloseTo(0.3);
-    expect(ventureFailureChance(0.3, "panic", tuning, 5)).toBe(1);
+    expect(ventureFailureChance(0.15, "calm", tuning, 5, 1)).toBeCloseTo(0.15);
+    expect(ventureFailureChance(0.15, "uneasy", tuning, 5, 1)).toBeCloseTo(0.3);
+    expect(ventureFailureChance(0.3, "panic", tuning, 5, 1)).toBe(1);
   });
 });
 

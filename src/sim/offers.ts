@@ -1,6 +1,6 @@
 // What each decision can be made with right now, for the terminal and the UI to list.
 import { bondPrice, reputationGate, stateRisk } from "./bonds";
-import { headStat } from "./family";
+import { headEffects, headStat } from "./family";
 import { estimateRange } from "./borrowers";
 import type { GameData } from "./tuning";
 import type { GameState } from "./types";
@@ -55,7 +55,7 @@ export function lendOffers(state: GameState, data: GameData): LendOffer[] {
       trade: b.trade,
       amount: r.amount,
       max_rate: r.max_rate,
-      estimate: estimateRange(b, headStat(state, "prudence", data.tuning), data.tuning),
+      estimate: estimateRange(b, headStat(state, "prudence", data), data.tuning),
       reported: b.reported,
       repaid: b.repaid,
       defaulted: b.defaulted,
@@ -67,7 +67,7 @@ export function bondOffers(state: GameState, data: GameData): BondOffer[] {
   return data.states.map((st) => {
     let blocked: string | null = null;
     if (state.defaulted_states.includes(st.id)) blocked = "Defaulted";
-    else if (state.house.reputation < reputationGate(state, st, data.tuning)) blocked = `Needs reputation ${reputationGate(state, st, data.tuning)}`;
+    else if (state.house.reputation < reputationGate(state, st, data)) blocked = `Needs reputation ${reputationGate(state, st, data)}`;
     return {
       id: st.id,
       name: st.name,
@@ -85,7 +85,7 @@ export function ventureOffers(state: GameState, data: GameData): VentureOffer[] 
     name: v.name,
     term_quarters: v.term_quarters,
     expected_return: v.expected_return,
-    failure_chance: ventureFailureChance(v.failure_risk, state.world.sentiment, data.tuning, headStat(state, "acumen", data.tuning)),
+    failure_chance: ventureFailureChance(v.failure_risk, state.world.sentiment, data.tuning, headStat(state, "acumen", data), headEffects(state, data).venture_failure),
     unlock_year: v.unlock_year,
     blocked: state.world.year < v.unlock_year ? `Not before ${v.unlock_year}` : null,
   }));

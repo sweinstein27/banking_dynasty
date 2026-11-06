@@ -64,7 +64,7 @@ function cautiousPlay(state: GameState, data: GameData, educate: boolean): Decis
   if (educate) wanted.push((s) => {
     // Only the heir who would take over, and only until their stats reach the trained total
     // (age does the rest).
-    const heir = successor(s, data.tuning);
+    const heir = successor(s, data);
     if (!heir || statTotal(heir) >= data.tuning.family.succession.trained_total || shareOfFree(s, 1) < 10000) return null;
     const stat = [...STATS].sort((a, b) => heir[a] - heir[b])[0]!;
     return { kind: "invest_family", form: "educate", heir: heir.id, stat };

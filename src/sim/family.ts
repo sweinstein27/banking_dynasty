@@ -6,7 +6,7 @@ import { addEntry } from "./ledger";
 import { freeCash } from "./reserves";
 import type { Rng } from "./rng";
 import type { GameData, Tuning } from "./tuning";
-import { birthTrait, drawTrait } from "./traits";
+import { birthTrait, drawTrait, traitEffects } from "./traits";
 import type { GameState, InvestFamilyDecision, Person } from "./types";
 
 export type Stat = "acumen" | "prudence" | "connections";
@@ -45,24 +45,39 @@ export function heirsOf(state: GameState): Person[] {
   return state.people.filter((p) => !p.is_head && p.death_year === null).sort((a, b) => a.birth_year - b.birth_year || a.id - b.id);
 }
 
-/**
- * The head's stat as it acts on the business: lower by inexperience_penalty (never below 1) while
- * an untrained head is inexperienced. A house with no head acts at the neutral value.
- */
-export function headStat(state: GameState, stat: Stat, tuning: Tuning): number {
-  const head = headOf(state);
-  if (!head) return tuning.family.neutral_stat;
-  const green = head.inexperienced_until !== null && state.world.turn < head.inexperienced_until;
-  return green ? Math.max(1, head[stat] - tuning.family.succession.inexperience_penalty) : head[stat];
+/** A person's stat with their traits applied, kept within 1 and max_stat. */
+export function effectiveStat(p: Person, stat: Stat, data: GameData): number {
+  return Math.min(data.tuning.family.max_stat, Math.max(1, p[stat] + traitEffects(p, data)[stat]));
 }
 
-/** Sum of a person's three stats. */
+/**
+ * The head's stat as it acts on the business: with traits applied, and lower by
+ * inexperience_penalty (never below 1) while an untrained head is inexperienced. A house with no
+ * head acts at the neutral value.
+ */
+export function headStat(state: GameState, stat: Stat, data: GameData): number {
+  const head = headOf(state);
+  if (!head) return data.tuning.family.neutral_stat;
+  const value = effectiveStat(head, stat, data);
+  const green = head.inexperienced_until !== null && state.world.turn < head.inexperienced_until;
+  return green ? Math.max(1, value - data.tuning.family.succession.inexperience_penalty) : value;
+}
+
+/** The head's traits, combined; neutral when the house has no head. */
+export function headEffects(state: GameState, data: GameData): ReturnType<typeof traitEffects> {
+  return traitEffects(headOf(state) ?? { traits: [] }, data);
+}
+
+/** Sum of a person's three stats as they stand, before traits. */
 export const statTotal = (p: Pick<Person, Stat>) => p.acumen + p.prudence + p.connections;
 
-/** Trained heirs are adults whose stats reach trained_total. */
-export function isTrained(p: Person, year: number, tuning: Tuning): boolean {
-  const s = tuning.family.succession;
-  return ageIn(p, year) >= s.adult_age && statTotal(p) >= s.trained_total;
+/** Sum of a person's three stats with their traits applied. */
+export const effectiveTotal = (p: Person, data: GameData) => STATS.reduce((sum, k) => sum + effectiveStat(p, k, data), 0);
+
+/** Trained heirs are adults whose stats, traits included, reach trained_total. */
+export function isTrained(p: Person, year: number, data: GameData): boolean {
+  const s = data.tuning.family.succession;
+  return ageIn(p, year) >= s.adult_age && effectiveTotal(p, data) >= s.trained_total;
 }
 
 /** The head's yearly chance of death at `age`: 0 before from_age, then base + per_year per year past it, up to 1. */
@@ -71,20 +86,20 @@ export function yearlyDeathChance(age: number, tuning: Tuning): number {
   return age < d.from_age ? 0 : Math.min(1, d.base + d.per_year * (age - d.from_age));
 }
 
-/** The same chance per quarter: 1 - (1 - yearly)^(1/4). */
-export function quarterlyDeathChance(age: number, tuning: Tuning): number {
-  return 1 - Math.pow(1 - yearlyDeathChance(age, tuning), 0.25);
+/** The same chance per quarter, after the person's traits scale the yearly chance: 1 - (1 - yearly)^(1/4). */
+export function quarterlyDeathChance(age: number, tuning: Tuning, traitFactor: number): number {
+  return 1 - Math.pow(1 - Math.min(1, yearlyDeathChance(age, tuning) * traitFactor), 0.25);
 }
 
 /**
- * The heir who would take over now: the best trained (highest stat total, then the eldest), or if
- * none is trained the best of the rest by the same order. Undefined if there are no heirs.
+ * The heir who would take over now: the best trained (highest stat total with traits, then the
+ * eldest), or if none is trained the best of the rest by the same order. Undefined if there are no heirs.
  */
-export function successor(state: GameState, tuning: Tuning): Person | undefined {
+export function successor(state: GameState, data: GameData): Person | undefined {
   const { year } = state.world;
-  const rank = (p: Person) => (isTrained(p, year, tuning) ? 1 : 0);
+  const rank = (p: Person) => (isTrained(p, year, data) ? 1 : 0);
   return [...heirsOf(state)].sort(
-    (a, b) => rank(b) - rank(a) || statTotal(b) - statTotal(a) || a.birth_year - b.birth_year || a.id - b.id,
+    (a, b) => rank(b) - rank(a) || effectiveTotal(b, data) - effectiveTotal(a, data) || a.birth_year - b.birth_year || a.id - b.id,
   )[0];
 }
 
@@ -100,7 +115,7 @@ export function succeed(state: GameState, data: GameData): void {
   if (!dead) return;
   dead.death_year = year;
   dead.is_head = false;
-  let next = successor(state, data.tuning);
+  let next = successor(state, data);
   if (!next) {
     const c = data.family.cousin;
     next = {
@@ -109,7 +124,7 @@ export function succeed(state: GameState, data: GameData): void {
     };
     state.people.push(next);
   }
-  const trained = isTrained(next, year, data.tuning);
+  const trained = isTrained(next, year, data);
   next.is_head = true;
   if (!trained) next.inexperienced_until = turn + t.inexperience_quarters;
   const loss = trained ? t.reputation_trained : t.reputation_untrained;
@@ -126,7 +141,7 @@ export function resolveFamily(state: GameState, rng: Rng, data: GameData): void 
   const { year, quarter } = state.world;
   const head = headOf(state);
   if (head) {
-    const p = quarterlyDeathChance(ageIn(head, year), data.tuning);
+    const p = quarterlyDeathChance(ageIn(head, year), data.tuning, traitEffects(head, data).death_chance);
     if (p > 0 && rng.next() < p) succeed(state, data);
   }
   if (quarter !== 4) return;
@@ -161,13 +176,19 @@ export function connectionsBonus(connections: number, tuning: Tuning): number {
   return f.connections_step * (connections - f.neutral_stat);
 }
 
-/** What a form of family investment costs, in whole gulden. */
-export function investCost(form: InvestFamilyDecision["form"], tuning: Tuning): number {
-  return tuning.family.invest[form].cost;
+/** What a form of family investment costs, in whole gulden: its price, scaled by the head's traits. */
+export function investCost(form: InvestFamilyDecision["form"], state: GameState, data: GameData): number {
+  return Math.round(data.tuning.family.invest[form].cost * headEffects(state, data).family_cost);
+}
+
+/** A reputation gain as the head's traits make it: scaled by reputation_gain, to whole points. */
+export function reputationGain(points: number, state: GameState, data: GameData): number {
+  return Math.round(points * headEffects(state, data).reputation_gain);
 }
 
 /** Returns why an invest_family decision is invalid, or null if it can go ahead. */
-export function checkInvestFamily(state: GameState, d: InvestFamilyDecision, tuning: Tuning): string | null {
+export function checkInvestFamily(state: GameState, d: InvestFamilyDecision, data: GameData): string | null {
+  const tuning = data.tuning;
   const noAction = checkActionLeft(state, tuning);
   if (noAction) return noAction;
   const max = tuning.family.max_stat;
@@ -180,7 +201,7 @@ export function checkInvestFamily(state: GameState, d: InvestFamilyDecision, tun
     const head = headOf(state);
     if (head && head.connections >= max) return `${head.name}'s connections are already ${max}`;
   } else if (d.form !== "charity") return `Unknown form of investment "${(d as { form: string }).form}"`;
-  const cost = investCost(d.form, tuning);
+  const cost = investCost(d.form, state, data);
   if (cost > freeCash(state)) return `Not enough cash above the reserve (cost ${fl(cost)}, free ${fl(freeCash(state))})`;
   return null;
 }
@@ -188,12 +209,12 @@ export function checkInvestFamily(state: GameState, d: InvestFamilyDecision, tun
 /** Invests in the family. Returns a new state; the input is not changed. */
 export function investFamily(state: GameState, d: InvestFamilyDecision, data: GameData): DecisionResult {
   const t = data.tuning;
-  const reason = checkInvestFamily(state, d, t);
+  const reason = checkInvestFamily(state, d, data);
   if (reason) return { ok: false, reason };
   const next = cloneState(state);
   const inv = t.family.invest;
-  const cost = investCost(d.form, t);
-  const raise = (n: number) => (next.house.reputation = Math.min(100, next.house.reputation + n));
+  const cost = investCost(d.form, state, data);
+  const raise = (n: number) => (next.house.reputation = Math.min(100, next.house.reputation + reputationGain(n, state, data)));
   let note: string;
   if (d.form === "educate") {
     const heir = next.people.find((p) => p.id === d.heir)!;
