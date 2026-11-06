@@ -155,7 +155,7 @@
         "label": "Prosecute him in open court",
         "text": "The clerk is tried in open court. The bourse sees a house that guards its strongbox.",
         "effects": [
-          { "kind": "cash", "amount": -500 },
+          { "kind": "cash", "amount": -250 },
           { "kind": "reputation", "delta": 2 }
         ]
       },
@@ -203,7 +203,7 @@
         "label": "Open your books to the bourse",
         "text": "The house's books are opened to the leading merchants. The rumours die, though some wonder why it came to that.",
         "effects": [
-          { "kind": "cash", "amount": -1000 },
+          { "kind": "cash", "amount": -500 },
           { "kind": "reputation", "delta": -1 }
         ]
       },
@@ -281,7 +281,7 @@
         "label": "Send the child to university",
         "text": "The child is sent to study at Heidelberg, and returns sharper for it.",
         "effects": [
-          { "kind": "cash", "amount": -1500 },
+          { "kind": "cash", "amount": -750 },
           { "kind": "heir_talent", "gain": 2 }
         ]
       },
@@ -313,7 +313,7 @@
         "id": "doctors",
         "label": "Fetch doctors from Mainz and Heidelberg",
         "text": "Doctors are fetched from Mainz and Heidelberg at great expense, and the child recovers fully.",
-        "effects": [{ "kind": "cash", "amount": -500 }]
+        "effects": [{ "kind": "cash", "amount": -250 }]
       },
       {
         "id": "local",
@@ -353,10 +353,10 @@
     "options": [
       {
         "id": "give",
-        "label": "Give 3,000 fl.",
+        "label": "Give 1,500 fl.",
         "text": "The house's gift is read out in the Senate, and the city remembers it.",
         "effects": [
-          { "kind": "cash", "amount": -3000 },
+          { "kind": "cash", "amount": -1500 },
           { "kind": "reputation", "delta": 4 }
         ]
       },
@@ -380,9 +380,9 @@
     "options": [
       {
         "id": "pay",
-        "label": "Pay him 800 fl.",
+        "label": "Pay him 400 fl.",
         "text": "He is paid, and the pamphlet is never printed.",
-        "effects": [{ "kind": "cash", "amount": -800 }]
+        "effects": [{ "kind": "cash", "amount": -400 }]
       },
       {
         "id": "refuse",
