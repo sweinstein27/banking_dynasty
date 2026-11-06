@@ -14,6 +14,7 @@ import type { GameState, LedgerEntry } from "../sim/types";
 import { quartersLeft, ventureBook, venturePayout } from "../sim/ventures";
 import { fl, pct, signedFl } from "./format";
 import { PageTurner, usePages } from "./Pager";
+import { WorthChart } from "./WorthChart";
 
 const HOLDINGS_PER_PAGE = 5;
 const ENTRIES_PER_PAGE = 7;
@@ -83,6 +84,7 @@ function Accounts({ state }: { state: GameState }) {
           </dl>
         </div>
       </div>
+      <WorthChart state={state} now={netWorth(state)} />
       <dl className="ledger-foot">
         <dt>Net worth</dt><dd className="net-worth">{fl(netWorth(state))}</dd>
         <dt>Reserve</dt><dd>{fl(house.reserve)}</dd>
