@@ -34,10 +34,11 @@ describe("applyOverrides", () => {
   });
 
   it("sets state and venture fields by id", () => {
-    const d = applyOverrides(gameData, { states: { naples: { coupon: 0.08 } }, ventures: { mill: { expected_return: 0.5 } } });
-    expect(d.states.find((s) => s.id === "naples")!.coupon).toBe(0.08);
+    const coupon = gameData.states.find((s) => s.id === "naples")!.coupon;
+    const d = applyOverrides(gameData, { states: { naples: { coupon: coupon + 0.01 } }, ventures: { mill: { expected_return: 0.5 } } });
+    expect(d.states.find((s) => s.id === "naples")!.coupon).toBe(coupon + 0.01);
     expect(d.ventures.find((v) => v.id === "mill")!.expected_return).toBe(0.5);
-    expect(gameData.states.find((s) => s.id === "naples")!.coupon).toBe(0.06);
+    expect(gameData.states.find((s) => s.id === "naples")!.coupon).toBe(coupon);
   });
 });
 
@@ -87,7 +88,7 @@ describe("targets", () => {
   });
 
   it("all pass for a balanced field, and each fails on its own measure", () => {
-    // 10 runs each. Aggressive: 4 bankrupt in 1826 (turn 45), so 40% overall and 40% in 1825-29.
+    // 10 runs each. Aggressive: 4 bankrupt in 1826 (turn 45), so 40% overall and 40% in 1825-29 (floor 15%).
     const rows: RunRow[] = [];
     const add = (name: string, worths: number[], bankrupt = 0) => worths.forEach((w, i) => rows.push(row(name, w, i < bankrupt ? "bankrupt" : "finished", i < bankrupt ? 45 : 144)));
     add("idle", Array(10).fill(45_000));

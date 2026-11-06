@@ -79,14 +79,14 @@
   "forced_sale": {
     "loan_discount": 0.3,
     "bond_discount": 0.1,
-    "venture_discount": 0.5
+    "venture_discount": 0.3
   },
   "ventures": {
     "min_amount": 5000
   },
   "bonds": {
     "p0": 0.02,
-    "price_sensitivity": 0.1,
+    "price_sensitivity": 0.2,
     "price_floor": 0.2,
     "min_amount": 1000
   },

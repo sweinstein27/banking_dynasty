@@ -1,0 +1,1 @@
+{ "states": { "naples": { "coupon": 0.08 }, "france": { "coupon": 0.06 } }, "tuning": { "forced_sale": { "venture_discount": 0.3 }, "bonds": { "price_sensitivity": 0.1 } } }

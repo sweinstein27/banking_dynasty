@@ -1,0 +1,10 @@
+{
+  "base": {
+    "states": { "france": { "coupon": 0.05 } },
+    "tuning": { "forced_sale": { "venture_discount": 0.3 }, "bonds": { "price_sensitivity": 0.2 } }
+  },
+  "vary": {
+    "states.naples.coupon": [0.09, 0.1],
+    "tuning.sentiment.withdrawal_share.panic": [0.2, 0.25, 0.3]
+  }
+}
