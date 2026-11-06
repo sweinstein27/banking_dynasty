@@ -14,13 +14,18 @@ export function fixedRng(...values: number[]): Rng {
 export const noDefaults: Rng = { next: () => 0.999999 };
 
 /**
- * The real game data with no events and no loan requests drawn, for unit tests of other systems:
- * no event roll can fire and End Turn draws no request rolls, so tests can count rolls exactly.
+ * The real game data with no events, no loan requests drawn and no deposit flows, for unit tests of
+ * other systems: no event roll can fire, End Turn draws no request rolls, and deposits change only
+ * by what the test does, so tests can count rolls and balances exactly.
  */
 export const quiet: GameData = {
   ...gameData,
   events: [],
-  tuning: { ...gameData.tuning, loans: { ...gameData.tuning.loans, requests_per_quarter: 0 } },
+  tuning: {
+    ...gameData.tuning,
+    loans: { ...gameData.tuning.loans, requests_per_quarter: 0 },
+    deposits: { ...gameData.tuning.deposits, catch_up: 0, interest_rate: 0 },
+  },
 };
 
 /** Test borrowers with known quality, standing in for the old tiers. GOOD_2 is a second good borrower. */

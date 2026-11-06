@@ -60,6 +60,11 @@ export interface Tuning {
     /** Quarters before the same random event can fire again, unless the event sets its own. */
     cooldown_quarters: number;
   };
+  /**
+   * Deposits follow reputation: in calm quarters they move catch_up of the way toward
+   * per_reputation fl. per point of reputation. Depositors earn interest_rate a year, credited quarterly.
+   */
+  deposits: { per_reputation: number; catch_up: number; interest_rate: number };
   /** Responses open to the house while the market is uneasy, panicking, or under a panic warning. */
   crisis: {
     /** Emergency loans from the rival house. */

@@ -6,6 +6,7 @@ import { addEntry } from "./ledger";
 import { resolveWithdrawals } from "./liquidity";
 import { drawRequests, recordDefault, recordRepayment } from "./borrowers";
 import { debtBook, serviceDebts } from "./crisis";
+import { resolveDeposits } from "./deposits";
 import { resolveEvents } from "./events";
 import { resolveFamily } from "./family";
 import { quarterNews } from "./news";
@@ -31,7 +32,8 @@ export function loanBook(state: GameState): number {
  * 4. repay loans that reached their term, 5. roll bond defaults and pay coupons,
  * 6. resolve ventures that reach their term, 7. pay interest on debts and repay those due, then
  * depositors withdraw for the current mood (less if paying slowly, nothing if suspended), with
- * forced sales if cash runs short (bankruptcy if even that fails), 8. roll next quarter's mood
+ * forced sales if cash runs short (bankruptcy if even that fails), then interest is credited to
+ * depositors and, in a calm market, reputation draws new deposits, 8. roll next quarter's mood
  * (a roll into panic starts a warning countdown instead; a running countdown overrides the roll),
  * 9. fire events for next quarter (they can override the mood), then the family's quarter (the
  * head may die and an heir succeed; at year end a child may be born), 10. mark bonds to that mood's
@@ -79,6 +81,7 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
   resolveVentures(next, rng, data);
   serviceDebts(next, data.tuning);
   resolveWithdrawals(next, data.tuning);
+  resolveDeposits(next, data.tuning);
   const rolled = nextSentiment(world.sentiment, rng.next(), data.tuning);
   world.sentiment = moodWithWarnings(next, rolled, rng, data.tuning);
   resolveEvents(next, rng, data);
