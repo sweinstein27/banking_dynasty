@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { gameData } from "../src/data";
 import { applyDecisions } from "../src/sim/decisions";
-import { checkEventData, optionCost } from "../src/sim/events";
+import { checkEventData, conditionsMet, optionCost } from "../src/sim/events";
 import { heirTrait } from "../src/sim/family";
 import { accountBalance } from "../src/sim/ledger";
 import { answerLetter, settleLetters, unansweredLetters } from "../src/sim/letters";
@@ -268,5 +268,19 @@ describe("saves", () => {
     delete s.letters;
     const r = parseSave(toSave(s as GameState, 1, 1, []), data);
     expect(r.ok ? "" : r.reason).toBe('Save file state is missing "letters"');
+  });
+});
+
+describe("default_within_quarters", () => {
+  it("holds only when a borrower defaulted within that many quarters", () => {
+    const s = fresh();
+    s.world.turn = 10;
+    const c = { default_within_quarters: 4 };
+    const date = { year: 1818, quarter: 1 as const };
+    expect(conditionsMet(s, c, date)).toBe(false);
+    s.borrowers[0]!.last_default_turn = 7;
+    expect(conditionsMet(s, c, date)).toBe(true);
+    s.borrowers[0]!.last_default_turn = 6;
+    expect(conditionsMet(s, c, date)).toBe(false);
   });
 });

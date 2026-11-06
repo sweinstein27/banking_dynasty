@@ -115,11 +115,15 @@ describe("heir events", () => {
     expect(conditionsMet(s, { has_heirs: true }, { year: 1815, quarter: 2 })).toBe(false);
   });
 
-  it("the talent event names the heir and the stat in the news", () => {
+  it("the talent letter, answered, names the heir and the stat in the news", () => {
     const data: GameData = { ...quiet, events: gameData.events.filter((e) => e.id === "heir-talent") };
-    // Rolls: the mood, the random-event roll, the event pick, then the heir and the stat.
-    const s = endTurn(fresh(), [], fixedRng(CALM, 0, 0, 0, 0, CALM), data);
-    const heir = s.people[1]!;
-    expect(s.news.map((n) => n.title ?? n.text)).toEqual(["Unexpected talent", `${heir.name} gains in acumen: now ${heir.acumen} (was ${heir.acumen - 2}).`]);
+    // Rolls: the mood, the random-event roll and the event pick, which leaves the letter.
+    const s1 = endTurn(fresh(), [], fixedRng(CALM, 0, 0, CALM), data);
+    const r = applyDecisions(s1, [{ kind: "answer_letter", event: "heir-talent", option: "university" }], data);
+    if (!r.ok) throw new Error(r.reason);
+    // Settling the letter rolls the heir and the stat first.
+    const s2 = endTurn(r.state, [], fixedRng(0, 0, CALM), data);
+    const heir = s2.people[1]!;
+    expect(s2.news.filter((n) => n.turn === 2).map((n) => n.title ?? n.text)).toEqual(["Unexpected talent", `${heir.name} gains in acumen: now ${heir.acumen} (was ${heir.acumen - 2}).`]);
   });
 });

@@ -168,6 +168,8 @@ export interface EventConditions {
   holds_bonds_of?: string;
   /** The head has at least one living heir. */
   has_heirs?: boolean;
+  /** A borrower defaulted on the house within this many quarters (the current one included). */
+  default_within_quarters?: number;
 }
 
 export type EventEffect =

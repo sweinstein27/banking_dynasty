@@ -29,6 +29,7 @@ export function conditionsMet(state: GameState, c: EventConditions, date: Quarte
   if (c.max_reputation !== undefined && state.house.reputation > c.max_reputation) return false;
   if (c.has_active_loans !== undefined && state.loans.some((l) => l.status === "active") !== c.has_active_loans) return false;
   if (c.has_heirs !== undefined && (heirsOf(state).length > 0) !== c.has_heirs) return false;
+  if (c.default_within_quarters !== undefined && !state.borrowers.some((b) => b.last_default_turn !== null && state.world.turn - b.last_default_turn < c.default_within_quarters!)) return false;
   if (c.holds_bonds_of && !state.bonds.some((b) => b.status === "active" && b.issuer_state === c.holds_bonds_of)) return false;
   return true;
 }
@@ -175,6 +176,7 @@ export function checkEventData(data: GameData): string[] {
     else {
       if (c.sentiment?.some((s) => !SENTIMENTS.includes(s))) p("unknown sentiment in conditions");
       if (c.holds_bonds_of && !stateIds.has(c.holds_bonds_of)) p(`unknown state "${c.holds_bonds_of}" in conditions`);
+      if (c.default_within_quarters !== undefined && !(Number.isInteger(c.default_within_quarters) && c.default_within_quarters >= 1)) p("default_within_quarters needs a whole number of at least 1");
     }
     // An empty list is allowed: some events are news only.
     if (!Array.isArray(ev.effects)) p("needs an effects list (may be empty)");

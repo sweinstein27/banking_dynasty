@@ -144,23 +144,83 @@
   {
     "id": "clerk-skimming",
     "title": "A clerk caught skimming",
-    "text": "A junior clerk has been taking small sums from the strongbox for months. Word of it gets out.",
+    "text": "A junior clerk has been taking small sums from the strongbox for months. He is caught, and waits in the back office to learn his fate.",
     "historical": false,
     "weight": 2,
     "conditions": {},
-    "effects": [
-      { "kind": "cash", "share": -0.02 },
-      { "kind": "reputation", "delta": -2 }
-    ]
+    "effects": [{ "kind": "cash", "share": -0.02 }],
+    "options": [
+      {
+        "id": "prosecute",
+        "label": "Prosecute him in open court",
+        "text": "The clerk is tried in open court. The bourse sees a house that guards its strongbox.",
+        "effects": [
+          { "kind": "cash", "amount": -500 },
+          { "kind": "reputation", "delta": 2 }
+        ]
+      },
+      {
+        "id": "dismiss",
+        "label": "Dismiss him quietly",
+        "text": "The clerk is dismissed without a word to anyone.",
+        "effects": [],
+        "chance": {
+          "p": 0.333,
+          "effects": [{ "kind": "reputation", "delta": -6 }],
+          "text": "Word gets out all the same, and the bourse wonders what else the house keeps quiet.",
+          "miss_text": "The matter never leaves the counting house."
+        }
+      },
+      {
+        "id": "forgive",
+        "label": "Forgive him",
+        "text": "The clerk is forgiven and kept on. The staff call it kindness; the partners call it weakness.",
+        "effects": [
+          { "kind": "reputation", "delta": -1 },
+          { "kind": "follow_up", "event": "clerk-again", "within_quarters": 4 }
+        ]
+      }
+    ],
+    "default_option": "dismiss"
   },
   {
     "id": "rival-rumours",
     "title": "Rumours from Bankhaus Kessler",
-    "text": "A rival house whispers on the bourse that your house is short of cash. Some depositors listen.",
+    "text": "A rival house whispers on the bourse that your house is short of cash. Depositors are beginning to ask questions.",
     "historical": false,
     "weight": 1,
     "conditions": {},
-    "effects": [{ "kind": "reputation", "delta": -6 }]
+    "effects": [],
+    "options": [
+      {
+        "id": "ignore",
+        "label": "Ignore them",
+        "text": "The rumours are left to run, and some depositors listen.",
+        "effects": [{ "kind": "reputation", "delta": -6 }]
+      },
+      {
+        "id": "open-books",
+        "label": "Open your books to the bourse",
+        "text": "The house's books are opened to the leading merchants. The rumours die, though some wonder why it came to that.",
+        "effects": [
+          { "kind": "cash", "amount": -1000 },
+          { "kind": "reputation", "delta": -1 }
+        ]
+      },
+      {
+        "id": "answer",
+        "label": "Answer in kind",
+        "text": "Your agents put it about that Kessler's own vaults are thin.",
+        "effects": [{ "kind": "reputation", "delta": -2 }],
+        "chance": {
+          "p": 0.333,
+          "effects": [{ "kind": "reputation", "delta": -8 }],
+          "text": "One of them is caught at it, and it is your house that looks small.",
+          "miss_text": "Kessler's house takes its share of the whispers."
+        }
+      }
+    ],
+    "default_option": "ignore"
   },
   {
     "id": "good-name",
@@ -214,16 +274,130 @@
     "historical": false,
     "weight": 1,
     "conditions": { "has_heirs": true },
-    "effects": [{ "kind": "heir_talent", "gain": 2 }]
+    "effects": [],
+    "options": [
+      {
+        "id": "university",
+        "label": "Send the child to university",
+        "text": "The child is sent to study at Heidelberg, and returns sharper for it.",
+        "effects": [
+          { "kind": "cash", "amount": -1500 },
+          { "kind": "heir_talent", "gain": 2 }
+        ]
+      },
+      {
+        "id": "home",
+        "label": "Teach them at home",
+        "text": "The child is taught at home by the house's own clerks.",
+        "effects": [{ "kind": "heir_talent", "gain": 1 }]
+      },
+      {
+        "id": "pass",
+        "label": "Let it pass",
+        "text": "The matter is let pass, and the gift fades with the schoolroom.",
+        "effects": []
+      }
+    ],
+    "default_option": "pass"
   },
   {
     "id": "heir-illness",
     "title": "Fever in the house",
-    "text": "A child of the house falls gravely ill. Doctors are fetched from Mainz and Heidelberg, and the child recovers, but the fees are steep.",
+    "text": "A child of the house falls gravely ill with fever.",
     "historical": false,
     "weight": 1,
     "conditions": { "has_heirs": true },
-    "effects": [{ "kind": "cash", "amount": -500 }]
+    "effects": [],
+    "options": [
+      {
+        "id": "doctors",
+        "label": "Fetch doctors from Mainz and Heidelberg",
+        "text": "Doctors are fetched from Mainz and Heidelberg at great expense, and the child recovers fully.",
+        "effects": [{ "kind": "cash", "amount": -500 }]
+      },
+      {
+        "id": "local",
+        "label": "Trust the local physician",
+        "text": "The local physician is trusted with the case.",
+        "effects": [],
+        "chance": {
+          "p": 0.333,
+          "effects": [{ "kind": "heir_trait", "trait": "sickly" }],
+          "text": "The child lives, but is left sickly.",
+          "miss_text": "The child recovers fully."
+        }
+      }
+    ],
+    "default_option": "local"
+  },
+  {
+    "id": "clerk-again",
+    "title": "The forgiven clerk",
+    "text": "The clerk the house forgave has been at the strongbox again, and this time he has fled with what he took.",
+    "historical": false,
+    "follow_up": true,
+    "conditions": {},
+    "effects": [
+      { "kind": "cash", "share": -0.02 },
+      { "kind": "reputation", "delta": -2 }
+    ]
+  },
+  {
+    "id": "bridge-gift",
+    "title": "The Senate asks for a gift",
+    "text": "The Senate of the Free City asks the leading houses for gifts to repair the old bridge over the Main.",
+    "historical": false,
+    "weight": 1,
+    "conditions": { "min_year": 1816 },
+    "effects": [],
+    "options": [
+      {
+        "id": "give",
+        "label": "Give 3,000 fl.",
+        "text": "The house's gift is read out in the Senate, and the city remembers it.",
+        "effects": [
+          { "kind": "cash", "amount": -3000 },
+          { "kind": "reputation", "delta": 4 }
+        ]
+      },
+      {
+        "id": "decline",
+        "label": "Decline politely",
+        "text": "The house sends its regrets. The Senate notes which houses gave.",
+        "effects": [{ "kind": "reputation", "delta": -1 }]
+      }
+    ],
+    "default_option": "decline"
+  },
+  {
+    "id": "pamphleteer",
+    "title": "A pamphleteer comes calling",
+    "text": "A pamphleteer has heard of the house's recent losses and offers, for a fee, not to print them.",
+    "historical": false,
+    "weight": 2,
+    "conditions": { "default_within_quarters": 4 },
+    "effects": [],
+    "options": [
+      {
+        "id": "pay",
+        "label": "Pay him 800 fl.",
+        "text": "He is paid, and the pamphlet is never printed.",
+        "effects": [{ "kind": "cash", "amount": -800 }]
+      },
+      {
+        "id": "refuse",
+        "label": "Refuse him",
+        "text": "He is shown the door.",
+        "effects": [],
+        "chance": {
+          "p": 0.5,
+          "effects": [{ "kind": "reputation", "delta": -5 }],
+          "text": "He prints, and the bourse reads of your losses over its coffee.",
+          "miss_text": "He goes off to find an easier mark."
+        }
+      }
+    ],
+    "default_option": "refuse"
   },
   {
     "id": "naples-doubts",
