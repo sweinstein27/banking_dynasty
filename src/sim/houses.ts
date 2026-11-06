@@ -1,11 +1,15 @@
 // The other Frankfurt houses. Their books are not modelled: each has a head and an heir, wealth that
 // moves with its temperament and the market, a reputation, and an opinion of the player's house.
 // A house can fail in a panic, and some of its depositors then come to the player.
+import { checkActionLeft, type DecisionResult } from "./actions";
 import { ageIn, quarterlyDeathChance } from "./family";
+import { fl } from "./format";
 import { addEntry } from "./ledger";
 import type { Rng } from "./rng";
 import type { GameData, Tuning } from "./tuning";
-import type { GameState, OtherHouse } from "./types";
+import { freeCash } from "./reserves";
+import { cloneState } from "./state";
+import type { CourtHouseDecision, GameState, OtherHouse } from "./types";
 
 /** The houses at the start of a game, from data/houses.json. Draws nothing. */
 export function createHouses(data: GameData): OtherHouse[] {
@@ -121,4 +125,31 @@ export function checkHouseData(data: GameData): string[] {
   }
   if (!data.houses.heir_names.length) problems.push("heir_names is empty");
   return problems;
+}
+
+/** Returns why a court_house decision is invalid, or null if it can go ahead. */
+export function checkCourtHouse(state: GameState, d: CourtHouseDecision, data: GameData): string | null {
+  const noAction = checkActionLeft(state, data.tuning);
+  if (noAction) return noAction;
+  const h = state.houses.find((x) => x.id === d.house);
+  if (!h) return `Unknown house "${d.house}"`;
+  if (h.failed_turn !== null) return `${h.name} has failed`;
+  if (h.opinion >= data.tuning.houses.opinion.max) return `${h.name} could not think better of your house`;
+  const cost = data.tuning.houses.court.cost;
+  if (cost > freeCash(state)) return `Not enough cash above the reserve (cost ${fl(cost)}, free ${fl(freeCash(state))})`;
+  return null;
+}
+
+/** Courts a house: one action, the cost in cash, its opinion rises. Returns a new state; the input is not changed. */
+export function courtHouse(state: GameState, d: CourtHouseDecision, data: GameData): DecisionResult {
+  const reason = checkCourtHouse(state, d, data);
+  if (reason) return { ok: false, reason };
+  const next = cloneState(state);
+  const { cost, opinion } = data.tuning.houses.court;
+  const h = next.houses.find((x) => x.id === d.house)!;
+  next.house.cash -= cost;
+  addEntry(next, "cash", "courting", -cost, `Courting ${h.name}`);
+  changeOpinion(next, h.id, opinion, data.tuning);
+  next.actions_this_turn += 1;
+  return { ok: true, state: next };
 }

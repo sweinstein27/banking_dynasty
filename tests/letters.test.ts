@@ -296,7 +296,7 @@ describe("response cards in words", () => {
     const [prosecute, dismiss, forgive] = clerk.options!;
     expect(describeOption(prosecute!, data)).toEqual({ cost: 500, effects: ["reputation +2"], odds: null });
     expect(describeOption(dismiss!, data)).toEqual({ cost: 0, effects: [], odds: "one chance in three: reputation −6" });
-    expect(describeOption(forgive!, data).effects).toEqual(["reputation \u22121", "within a year, again"]);
+    expect(describeOption(forgive!, data).effects).toEqual(["reputation \u22121", "within a year: Again"]);
   });
 
   it("every real response has something to say", () => {

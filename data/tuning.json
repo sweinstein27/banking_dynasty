@@ -46,9 +46,9 @@
   },
   "deposits": { "per_reputation": 1000, "catch_up": 0.1, "interest_rate": 0.01 },
   "crisis": {
-    "rival": { "name": "Bankhaus Kessler", "rate": 0.12, "term_quarters": 4, "max_outstanding": 50000, "min_amount": 5000, "reputation_cost": 3 },
+    "lending": { "base_rate": 0.12, "rate_per_opinion": 0.04, "min_opinion": -20, "wealth_share": 0.1, "term_quarters": 4, "max_outstanding": 50000, "min_amount": 5000, "reputation_cost": 3, "repaid_opinion": 5 },
     "pay_slowly": { "share": 0.5, "reputation_cost": 4 },
-    "suspend": { "reputation_cost": 12 },
+    "suspend": { "reputation_cost": 12, "opinion_cost": 10 },
     "call_loan": { "recovery": 0.9, "absence_quarters": 8 }
   },
   "houses": {
@@ -57,7 +57,8 @@
     "noise": 0.015,
     "fail_chance": { "cautious": 0.005, "bold": 0.012 },
     "depositors_share": 0.1,
-    "opinion": { "min": -100, "max": 100, "drift": 0.1, "succession_reset": 0.5 }
+    "opinion": { "min": -100, "max": 100, "drift": 0.1, "succession_reset": 0.5 },
+    "court": { "cost": 1000, "opinion": 15 }
   },
   "actions_per_turn": 3,
   "sentiment_multiplier": {

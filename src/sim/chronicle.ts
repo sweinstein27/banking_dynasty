@@ -91,7 +91,10 @@ export function chronicle(state: GameState, data: GameData): string[] {
   const suspended = state.news.filter((n) => n.kind === "crisis" && n.text.startsWith("You suspended")).length;
   if (suspended) blows.push(`The house suspended withdrawals ${suspended === 1 ? "once" : `${suspended} times`}.`);
   const borrowed = ledger.filter((e) => e.account === "borrowings" && e.category === "borrowing");
-  if (borrowed.length) blows.push(`It borrowed from ${t.crisis.rival.name} ${borrowed.length === 1 ? "once" : `${borrowed.length} times`}.`);
+  if (borrowed.length) {
+    const from = [...new Set(state.debts.map((d) => d.lender))];
+    blows.push(`It borrowed from ${from.length === 1 ? from[0] : "other houses"} ${borrowed.length === 1 ? "once" : `${borrowed.length} times`}.`);
+  }
   const best = ledger
     .filter((e) => e.account === "cash" && e.category === "venture_payout")
     .reduce<LedgerEntry | undefined>((b, e) => (!b || e.amount > b.amount ? e : b), undefined);

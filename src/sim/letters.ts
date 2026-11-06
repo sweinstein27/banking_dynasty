@@ -113,10 +113,16 @@ export function describeEffect(e: EventEffect, data: GameData): string | null {
       const ev = data.events.find((x) => x.id === e.event);
       const what = ev ? ev.effects.map((x) => describeEffect(x, data)).filter(Boolean).join(", ") : "";
       const when = e.within_quarters === 4 ? "within a year" : `within ${e.within_quarters} quarters`;
-      return `${when}, ${ev?.title.toLowerCase() ?? "more trouble"}${what ? `: ${what}` : ""}`;
+      const house = ev?.conditions.house_opinion && data.houses.houses.find((h) => h.id === ev.conditions.house_opinion!.house);
+      const unless = house ? `, if ${house.name} is still trading` : "";
+      return `${when}: ${ev?.title ?? "more trouble"}${what ? ` (${what})` : ""}${unless}`;
     }
     case "loan_default":
       return "a loan picked at random defaults";
+    case "opinion": {
+      const name = data.houses.houses.find((h) => h.id === e.house)?.name ?? e.house;
+      return `${name}'s opinion of you ${signed(e.delta)}`;
+    }
     case "state_risk": {
       const name = data.states.find((s) => s.id === e.state)?.name ?? e.state;
       return `${name} bonds ${e.delta > 0 ? "riskier" : "safer"}`;

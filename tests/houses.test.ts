@@ -1,13 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { gameData } from "../src/data";
+import { lenders, lendingTerms } from "../src/sim/crisis";
+import { applyDecisions } from "../src/sim/decisions";
+import { conditionsMet } from "../src/sim/events";
 import { changeOpinion, checkHouseData, createHouses, houseRanking, opinionWord, resolveHouses, tradingHouses } from "../src/sim/houses";
+import { describeOption } from "../src/sim/letters";
 import { newGame } from "../src/sim/init";
 import { accountBalance } from "../src/sim/ledger";
 import { createRng } from "../src/sim/rng";
 import { parseSave, toSave } from "../src/sim/save";
 import { endTurn } from "../src/sim/turn";
 import type { GameState } from "../src/sim/types";
-import { fixedRng, fresh, quiet } from "./helpers";
+import { fixedRng, fresh, noDefaults, quiet } from "./helpers";
 
 const { tuning } = gameData;
 const t = tuning.houses;
@@ -216,5 +220,119 @@ describe("full runs", () => {
       expect(s.houses.every((h) => h.opinion >= t.opinion.min && h.opinion <= t.opinion.max)).toBe(true);
     }
     expect(failures).toBeLessThan(20 * gameData.houses.houses.length);
+  });
+});
+
+describe("courting a house", () => {
+  const court = (s: GameState, house: string) => applyDecisions(s, [{ kind: "court_house", house }], gameData);
+
+  it("costs cash and one action, writes the ledger, and raises that house's opinion", () => {
+    const s0 = withHouses("albrecht");
+    const r = court(s0, "albrecht");
+    if (!r.ok) throw new Error(r.reason);
+    expect(r.state.house.cash).toBe(s0.house.cash - t.court.cost);
+    expect(r.state.actions_this_turn).toBe(1);
+    expect(r.state.houses[0]!.opinion).toBe(t.court.opinion);
+    expect(r.state.ledger.at(-1)).toMatchObject({ account: "cash", category: "courting", amount: -t.court.cost, note: "Courting Bankhaus Albrecht" });
+  });
+
+  it("refuses a failed or unknown house, a house at the top, and too little free cash", () => {
+    const s = withHouses("albrecht", "winter");
+    s.houses[1]!.failed_turn = 1;
+    const reason = (house: string, st = s) => { const r = court(st, house); return r.ok ? null : r.reason; };
+    expect(reason("winter")).toBe("Gebrüder Winter has failed");
+    expect(reason("nobody")).toBe('Unknown house "nobody"');
+    s.houses[0]!.opinion = t.opinion.max;
+    expect(reason("albrecht")).toBe("Bankhaus Albrecht could not think better of your house");
+    const poor = withHouses("albrecht");
+    poor.house.reserve = poor.house.cash;
+    expect(reason("albrecht", poor)).toMatch(/^Not enough cash above the reserve/);
+  });
+});
+
+describe("borrowing from the houses", () => {
+  const l = tuning.crisis.lending;
+  const panic = () => {
+    const s = fresh();
+    s.houses = createHouses(gameData);
+    s.world.sentiment = "panic";
+    return s;
+  };
+
+  it("a house's rate falls as its opinion rises", () => {
+    const s = panic();
+    const h = s.houses.find((x) => x.id === "stellmann")!;
+    expect(lendingTerms(s, h, tuning).rate).toBeCloseTo(l.base_rate - (l.rate_per_opinion * 20) / 100, 6);
+    h.opinion = 100;
+    expect(lendingTerms(s, h, tuning).rate).toBeCloseTo(l.base_rate - l.rate_per_opinion, 6);
+  });
+
+  it("a house that thinks poorly of you refuses, and none lends past its share of wealth or the overall cap", () => {
+    const s = panic();
+    const kessler = lendingTerms(s, s.houses.find((x) => x.id === "kessler")!, tuning);
+    expect(kessler.refused).toBe(`Bankhaus Kessler thinks too poorly of your house to lend (opinion -30, needs ${l.min_opinion})`);
+    expect(lendingTerms(s, s.houses.find((x) => x.id === "rautenberg")!, tuning).room).toBe(80_000 * l.wealth_share);
+    expect(lendingTerms(s, s.houses.find((x) => x.id === "albrecht")!, tuning).room).toBe(l.max_outstanding);
+  });
+
+  it("lists the cheapest willing lender first and those who refuse last", () => {
+    const ids = lenders(panic(), tuning).map((x) => x.house.id);
+    expect(ids[0]).toBe("stellmann");
+    expect(ids.at(-1)).toBe("kessler");
+  });
+
+  it("repaying on time raises the lender's opinion", () => {
+    const r = applyDecisions(panic(), [{ kind: "borrow", house: "stellmann", amount: 10_000 }], gameData);
+    if (!r.ok) throw new Error(r.reason);
+    let s = r.state;
+    for (let i = 0; i < l.term_quarters; i++) s = endTurn(s, [], noDefaults, quiet);
+    const drift = s.houses.find((x) => x.id === "stellmann")!;
+    expect(s.debts[0]!.status).toBe("repaid");
+    // Drift holds opinion at its baseline of 20, so the repayment shows as +5 over it.
+    expect(drift.opinion).toBe(20 + l.repaid_opinion);
+  });
+
+  it("suspending withdrawals lowers every house's opinion", () => {
+    const r = applyDecisions(panic(), [{ kind: "suspend" }], gameData);
+    if (!r.ok) throw new Error(r.reason);
+    expect(r.state.houses.map((h) => h.opinion)).toEqual(createHouses(gameData).map((h) => h.opinion - tuning.crisis.suspend.opinion_cost));
+  });
+});
+
+describe("houses in events", () => {
+  it("house_opinion holds only for a trading house within its bounds", () => {
+    const s = withHouses("kessler");
+    const date = { year: 1815, quarter: 3 as const };
+    expect(conditionsMet(s, { house_opinion: { house: "kessler", below: -20 } }, date)).toBe(true);
+    expect(conditionsMet(s, { house_opinion: { house: "kessler", at_least: -20 } }, date)).toBe(false);
+    expect(conditionsMet(s, { house_opinion: { house: "kessler" } }, date)).toBe(true);
+    s.houses[0]!.failed_turn = 1;
+    expect(conditionsMet(s, { house_opinion: { house: "kessler" } }, date)).toBe(false);
+    expect(conditionsMet(s, { house_opinion: { house: "albrecht" } }, date)).toBe(false);
+  });
+
+  it("Winter's plea, answered, lends now and is repaid later, unless Winter has failed by then", () => {
+    const data = { ...quiet, events: gameData.events.filter((e) => e.id.startsWith("winter-")) };
+    const play = (failFirst: boolean) => {
+      const s0 = withHouses("winter");
+      s0.letters = [{ event: "winter-trouble", turn: 0, answer: null }];
+      const r = applyDecisions(s0, [{ kind: "answer_letter", event: "winter-trouble", option: "help" }], data);
+      if (!r.ok) throw new Error(r.reason);
+      expect(r.state.house.cash).toBe(s0.house.cash - 5000);
+      expect(r.state.houses[0]!.opinion).toBe(10 + 25);
+      // Rolls: the follow-up's timing (0: next turn), then the house's noise, the mood and the event roll.
+      let s = endTurn(r.state, [], fixedRng(0, MID, CALM, CALM), data);
+      if (failFirst) s.houses[0]!.failed_turn = s.world.turn - 1;
+      return endTurn(s, [], fixedRng(MID, CALM, CALM), data);
+    };
+    expect(play(false).fired_events.map((f) => f.id)).toEqual(["winter-repays"]);
+    expect(play(true).fired_events).toEqual([]);
+  });
+
+  it("response cards say who must still be trading for a repayment", () => {
+    const help = gameData.events.find((e) => e.id === "winter-trouble")!.options![0]!;
+    const [opinion, repay] = describeOption(help, gameData).effects;
+    expect(opinion).toBe("Gebrüder Winter's opinion of you +25");
+    expect(repay).toMatch(/^within a year: Gebrüder Winter repays \(brings in 5,250\sfl\.\), if Gebrüder Winter is still trading$/);
   });
 });

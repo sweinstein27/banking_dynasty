@@ -1,12 +1,13 @@
 // Crisis responses: what the house can do when the market is uneasy, panicking, or under a panic
-// warning. Borrow from the rival house, pay depositors slowly, suspend withdrawals, or call a loan in.
+// warning. Borrow from another house, pay depositors slowly, suspend withdrawals, or call a loan in.
 import { cloneState } from "./state";
 import { checkActionLeft, type DecisionResult } from "./actions";
 import { fl } from "./format";
+import { changeOpinion } from "./houses";
 import { addEntry } from "./ledger";
 import { raiseCash } from "./liquidity";
 import type { GameData, Tuning } from "./tuning";
-import type { CrisisDecision, Debt, GameState } from "./types";
+import type { CrisisDecision, Debt, GameState, OtherHouse } from "./types";
 
 /** True while the market is uneasy or panicking, or a panic warning is running. */
 export function inCrisis(state: GameState): boolean {
@@ -23,9 +24,39 @@ export function debtInterest(d: Pick<Debt, "principal" | "rate">): number {
   return Math.round((d.principal * d.rate) / 4);
 }
 
-/** Most the house can still borrow from the rival house. */
+/** Most the house can still borrow from all houses together. */
 export function borrowingRoom(state: GameState, tuning: Tuning): number {
-  return Math.max(0, tuning.crisis.rival.max_outstanding - debtBook(state));
+  return Math.max(0, tuning.crisis.lending.max_outstanding - debtBook(state));
+}
+
+/** What one house will lend: its rate and room, or why it won't. */
+export interface LendingTerms {
+  house: OtherHouse;
+  rate: number;
+  /** Most it will lend now (0 if it refuses). */
+  room: number;
+  refused: string | null;
+}
+
+/** One house's terms: the rate falls as its opinion rises; it lends up to a share of its wealth, within the overall cap. */
+export function lendingTerms(state: GameState, h: OtherHouse, tuning: Tuning): LendingTerms {
+  const l = tuning.crisis.lending;
+  const rate = Math.round((l.base_rate - (l.rate_per_opinion * h.opinion) / 100) * 1000) / 1000;
+  const owed = state.debts.filter((d) => d.status === "active" && d.house === h.id).reduce((sum, d) => sum + d.principal, 0);
+  const room = Math.max(0, Math.min(borrowingRoom(state, tuning), Math.floor((h.wealth * l.wealth_share) / 100) * 100 - owed));
+  let refused: string | null = null;
+  if (h.failed_turn !== null) refused = `${h.name} has failed`;
+  else if (h.opinion < l.min_opinion) refused = `${h.name} thinks too poorly of your house to lend (opinion ${h.opinion}, needs ${l.min_opinion})`;
+  else if (room < l.min_amount) refused = `${h.name} will lend no more (room ${fl(room)})`;
+  return { house: h, rate, room: refused ? 0 : room, refused };
+}
+
+/** Every house's terms, cheapest willing lender first, then those who refuse. */
+export function lenders(state: GameState, tuning: Tuning): LendingTerms[] {
+  return state.houses
+    .filter((h) => h.failed_turn === null)
+    .map((h) => lendingTerms(state, h, tuning))
+    .sort((a, b) => Number(a.refused !== null) - Number(b.refused !== null) || a.rate - b.rate || a.house.id.localeCompare(b.house.id));
 }
 
 /** Loss a called loan takes: principal minus what the borrower pays back now. */
@@ -42,9 +73,12 @@ export function checkCrisis(state: GameState, d: CrisisDecision, tuning: Tuning)
   switch (d.kind) {
     case "borrow": {
       if (!Number.isInteger(d.amount)) return "Amount must be whole gulden";
-      if (d.amount < c.rival.min_amount) return `Amount must be at least ${fl(c.rival.min_amount)}`;
-      const room = borrowingRoom(state, tuning);
-      if (d.amount > room) return `${c.rival.name} will lend no more than ${fl(c.rival.max_outstanding)} in all (room left ${fl(room)})`;
+      if (d.amount < c.lending.min_amount) return `Amount must be at least ${fl(c.lending.min_amount)}`;
+      const h = state.houses.find((x) => x.id === d.house);
+      if (!h) return `Unknown house "${d.house}"`;
+      const terms = lendingTerms(state, h, tuning);
+      if (terms.refused) return terms.refused;
+      if (d.amount > terms.room) return `${h.name} will lend at most ${fl(terms.room)} (all houses together, no more than ${fl(c.lending.max_outstanding)})`;
       return null;
     }
     case "pay_slowly":
@@ -71,13 +105,15 @@ export function applyCrisis(state: GameState, d: CrisisDecision, data: GameData)
 
   switch (d.kind) {
     case "borrow": {
+      const terms = lendingTerms(next, next.houses.find((x) => x.id === d.house)!, data.tuning);
       const debt: Debt = {
         id: next.debts.length + 1,
-        lender: c.rival.name,
+        lender: terms.house.name,
+        house: terms.house.id,
         principal: d.amount,
-        rate: c.rival.rate,
+        rate: terms.rate,
         start_turn: next.world.turn,
-        term_quarters: c.rival.term_quarters,
+        term_quarters: c.lending.term_quarters,
         status: "active",
       };
       next.debts.push(debt);
@@ -85,7 +121,7 @@ export function applyCrisis(state: GameState, d: CrisisDecision, data: GameData)
       const note = `Debt #${debt.id}: borrowed from ${debt.lender} at ${(debt.rate * 100).toFixed(1)}%`;
       addEntry(next, "cash", "borrowing", d.amount, note);
       addEntry(next, "borrowings", "borrowing", d.amount, note);
-      loseReputation(c.rival.reputation_cost);
+      loseReputation(c.lending.reputation_cost);
       break;
     }
     case "pay_slowly":
@@ -95,6 +131,8 @@ export function applyCrisis(state: GameState, d: CrisisDecision, data: GameData)
     case "suspend":
       next.withdrawal_policy = "suspended";
       loseReputation(c.suspend.reputation_cost);
+      // Closing the doors embarrasses the whole bourse.
+      for (const h of next.houses) changeOpinion(next, h.id, -c.suspend.opinion_cost, data.tuning);
       break;
     case "call_loan": {
       const loan = next.loans.find((l) => l.id === d.loan)!;
@@ -136,6 +174,7 @@ export function serviceDebts(state: GameState, tuning: Tuning): void {
       const note = `Debt #${debt.id}: repaid to ${debt.lender}`;
       addEntry(state, "cash", "debt_repayment", -debt.principal, note);
       addEntry(state, "borrowings", "debt_repayment", -debt.principal, note);
+      changeOpinion(state, debt.house, tuning.crisis.lending.repaid_opinion, tuning);
     }
   }
 }

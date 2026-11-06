@@ -24,7 +24,8 @@ const HINTS: Record<DecisionKind, string> = {
   invest_family: "Tutors, charity, patronage",
   designate_heir: "Choose who takes over",
   answer_letter: "Reply to a letter",
-  borrow: "From Bankhaus Kessler",
+  court_house: "Win another house's favour",
+  borrow: "From another house",
   pay_slowly: "Pay depositors in part",
   suspend: "Close the doors a quarter",
   call_loan: "Recall a loan early",
@@ -120,7 +121,9 @@ export function describe(d: Decision, state: GameState): string {
       return `Reply to "${ev?.title ?? d.event}": ${ev?.options?.find((o) => o.id === d.option)?.label ?? d.option}`;
     }
     case "borrow":
-      return `Borrow ${fl(d.amount)} from ${gameData.tuning.crisis.rival.name}`;
+      return `Borrow ${fl(d.amount)} from ${state.houses.find((h) => h.id === d.house)?.name ?? d.house}`;
+    case "court_house":
+      return `Court ${state.houses.find((h) => h.id === d.house)?.name ?? d.house} (${fl(gameData.tuning.houses.court.cost)})`;
     case "pay_slowly":
       return "Pay depositors slowly this quarter";
     case "suspend":

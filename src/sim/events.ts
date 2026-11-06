@@ -4,6 +4,7 @@ import { addEntry } from "./ledger";
 import type { Rng } from "./rng";
 import { recordDefault } from "./borrowers";
 import { heirsOf, heirTalent, heirTrait, reputationGain } from "./family";
+import { changeOpinion } from "./houses";
 import { startPanicWarning } from "./sentiment";
 import type { EventConditions, EventEffect, EventOption, GameData, GameEvent, Tuning } from "./tuning";
 import type { GameState, Quarter, Sentiment } from "./types";
@@ -30,6 +31,12 @@ export function conditionsMet(state: GameState, c: EventConditions, date: Quarte
   if (c.has_active_loans !== undefined && state.loans.some((l) => l.status === "active") !== c.has_active_loans) return false;
   if (c.has_heirs !== undefined && (heirsOf(state).length > 0) !== c.has_heirs) return false;
   if (c.default_within_quarters !== undefined && !state.borrowers.some((b) => b.last_default_turn !== null && state.world.turn - b.last_default_turn < c.default_within_quarters!)) return false;
+  if (c.house_opinion) {
+    const h = state.houses.find((x) => x.id === c.house_opinion!.house);
+    if (!h || h.failed_turn !== null) return false;
+    if (c.house_opinion.at_least !== undefined && h.opinion < c.house_opinion.at_least) return false;
+    if (c.house_opinion.below !== undefined && h.opinion >= c.house_opinion.below) return false;
+  }
   if (c.holds_bonds_of && !state.bonds.some((b) => b.status === "active" && b.issuer_state === c.holds_bonds_of)) return false;
   return true;
 }
@@ -66,6 +73,9 @@ function applyEffect(state: GameState, e: EventEffect, note: string, rng: Rng, d
       return;
     case "heir_trait":
       heirTrait(state, e.trait, rng, data);
+      return;
+    case "opinion":
+      changeOpinion(state, e.house, e.delta, tuning);
       return;
     case "follow_up":
       // Fires at the end of one of the next `within_quarters` turns (one roll).
@@ -119,12 +129,13 @@ export function resolveEvents(state: GameState, rng: Rng, data: GameData): void 
     if (ev.options?.length && !state.letters.some((l) => l.event === ev.id)) state.letters.push({ event: ev.id, turn: state.world.turn, answer: null });
   };
 
-  // Follow-ups due this turn, in the order they were scheduled. Their conditions are not checked.
+  // Follow-ups due this turn, in the order they were scheduled. One whose conditions fail is dropped
+  // (a house that has failed by then never repays).
   const due = state.scheduled_events.filter((s) => s.turn <= state.world.turn);
   state.scheduled_events = state.scheduled_events.filter((s) => s.turn > state.world.turn);
   for (const s of due) {
     const ev = data.events.find((e) => e.id === s.id);
-    if (ev) fire(ev);
+    if (ev && conditionsMet(state, ev.conditions, date)) fire(ev);
   }
 
   for (const ev of data.events) {
@@ -176,6 +187,7 @@ export function checkEventData(data: GameData): string[] {
     else {
       if (c.sentiment?.some((s) => !SENTIMENTS.includes(s))) p("unknown sentiment in conditions");
       if (c.holds_bonds_of && !stateIds.has(c.holds_bonds_of)) p(`unknown state "${c.holds_bonds_of}" in conditions`);
+      if (c.house_opinion && !data.houses.houses.some((h) => h.id === c.house_opinion!.house)) p(`unknown house "${c.house_opinion.house}" in conditions`);
       if (c.default_within_quarters !== undefined && !(Number.isInteger(c.default_within_quarters) && c.default_within_quarters >= 1)) p("default_within_quarters needs a whole number of at least 1");
     }
     // An empty list is allowed: some events are news only.
@@ -195,7 +207,7 @@ export function checkEventData(data: GameData): string[] {
   return problems;
 }
 
-const EFFECT_KINDS = ["set_sentiment", "reputation", "cash", "loan_default", "state_risk", "trade_risk", "panic_warning", "heir_talent", "heir_trait", "follow_up"];
+const EFFECT_KINDS = ["set_sentiment", "reputation", "cash", "loan_default", "state_risk", "trade_risk", "panic_warning", "heir_talent", "heir_trait", "follow_up", "opinion"];
 const DASH = /[\u2014\u2013]/;
 
 function checkEffects(effects: EventEffect[], p: (msg: string) => void, data: GameData): void {
@@ -209,6 +221,7 @@ function checkEffects(effects: EventEffect[], p: (msg: string) => void, data: Ga
     else if (e.kind === "heir_talent" && !(Number.isInteger(e.gain) && e.gain >= 1)) p("heir_talent needs a whole gain of at least 1");
     else if (e.kind === "heir_trait" && !data.traits.some((t) => t.id === e.trait)) p(`unknown trait "${e.trait}"`);
     else if (e.kind === "follow_up" && !(Number.isInteger(e.within_quarters) && e.within_quarters >= 1)) p("follow_up needs a whole within_quarters of at least 1");
+    else if (e.kind === "opinion" && !data.houses.houses.some((h) => h.id === e.house)) p(`unknown house "${e.house}"`);
     else if (!EFFECT_KINDS.includes(e.kind)) p(`unknown effect "${(e as { kind: string }).kind}"`);
   }
 }

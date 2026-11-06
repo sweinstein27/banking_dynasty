@@ -2,7 +2,7 @@
 // aggressive and bond-heavy" comparison, plus an idle baseline and a venture-heavy probe.
 // Each lists what it wants in priority order; the sim's three actions a turn cut the list short.
 import { bondDefaultChance } from "../sim/bonds";
-import { borrowingRoom } from "../sim/crisis";
+import { lenders } from "../sim/crisis";
 import { STATS, statTotal, successor } from "../sim/family";
 import { bondOffers, lendOffers, ventureOffers } from "../sim/offers";
 import { withdrawalDemand } from "../sim/sentiment";
@@ -81,14 +81,14 @@ function cautiousPlay(state: GameState, data: GameData, educate: boolean): Decis
 /**
  * Aggressive: no reserve, lends most of its free cash to whoever pays the most, buys the riskiest
  * bonds still for sale and backs a venture every year. When a panic leaves it short, it borrows
- * all it can from the rival house. It answers letters with the free response that takes a chance.
+ * all it can from the cheapest house willing to lend. It answers letters with the free response that takes a chance.
  */
 export function aggressive(state: GameState, data: GameData): Decision[] {
   const wanted: Maker[] = letterReplies(state, data, "risky");
   if (state.world.sentiment === "panic" && shortForWithdrawals(state, data)) {
     wanted.push((s) => {
-      const room = borrowingRoom(s, data.tuning);
-      return room >= data.tuning.crisis.rival.min_amount ? { kind: "borrow", amount: room } : null;
+      const best = lenders(s, data.tuning)[0];
+      return best && !best.refused ? { kind: "borrow", house: best.house.id, amount: best.room } : null;
     });
   }
   wanted.push((s) => (s.house.reserve > 0 ? { kind: "set_reserve", amount: 0 } : null));

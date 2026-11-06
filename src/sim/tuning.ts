@@ -68,6 +68,8 @@ export interface Tuning {
     depositors_share: number;
     /** Opinion of the player's house: kept between min and max, drifting each quarter toward the house's baseline by `drift` of the gap; a new head moves it `succession_reset` of the way back. */
     opinion: { min: number; max: number; drift: number; succession_reset: number };
+    /** Court a house: one action, `cost` fl., opinion + `opinion`. */
+    court: { cost: number; opinion: number };
   };
   /** Last quarter of the run. Once it has been played the run is finished. */
   end: {
@@ -87,11 +89,27 @@ export interface Tuning {
   deposits: { per_reputation: number; catch_up: number; interest_rate: number };
   /** Responses open to the house while the market is uneasy, panicking, or under a panic warning. */
   crisis: {
-    /** Emergency loans from the rival house. */
-    rival: { name: string; rate: number; term_quarters: number; max_outstanding: number; min_amount: number; reputation_cost: number };
+    /**
+     * Emergency loans from another house. A house lends if its opinion of the player is at least
+     * min_opinion, at base_rate - rate_per_opinion x opinion / 100, up to wealth_share of its wealth
+     * (less what it has lent already), and never more than max_outstanding from all houses together.
+     * Repaying on time raises the lender's opinion by repaid_opinion.
+     */
+    lending: {
+      base_rate: number;
+      rate_per_opinion: number;
+      min_opinion: number;
+      wealth_share: number;
+      term_quarters: number;
+      max_outstanding: number;
+      min_amount: number;
+      reputation_cost: number;
+      repaid_opinion: number;
+    };
     /** Pay depositors this share of what they ask this quarter. */
     pay_slowly: { share: number; reputation_cost: number };
-    suspend: { reputation_cost: number };
+    /** Suspending also lowers every house's opinion of the player by opinion_cost. */
+    suspend: { reputation_cost: number; opinion_cost: number };
     /** A called loan returns this share of its principal now; the borrower stays away for absence_quarters. */
     call_loan: { recovery: number; absence_quarters: number };
   };
@@ -205,6 +223,8 @@ export interface EventConditions {
   has_heirs?: boolean;
   /** A borrower defaulted on the house within this many quarters (the current one included). */
   default_within_quarters?: number;
+  /** A house still trading whose opinion of the player is at least `at_least` and below `below` (either may be left out). */
+  house_opinion?: { house: string; at_least?: number; below?: number };
 }
 
 export type EventEffect =
@@ -223,7 +243,9 @@ export type EventEffect =
   | { kind: "heir_talent"; gain: number }
   /** One living heir, picked at random among those who could still gain it, gains the trait. */
   | { kind: "heir_trait"; trait: string }
-  /** Fires the follow-up event `event` at the end of a quarter picked at random within `within_quarters`. */
+  /** One house's opinion of the player changes by `delta`. */
+  | { kind: "opinion"; house: string; delta: number }
+  /** Fires the follow-up event `event` at the end of a quarter picked at random within `within_quarters`, if its conditions hold then. */
   | { kind: "follow_up"; event: string; within_quarters: number };
 
 /** A chance outcome of a letter's response: with probability `p`, `effects` also apply. Settled at End Turn. */

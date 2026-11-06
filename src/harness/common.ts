@@ -42,8 +42,9 @@ export const safestFirst = (s: GameState, data: GameData) =>
   [...lendOffers(s, data)].sort((a, b) => b.estimate.low - a.estimate.low || a.borrower_id - b.borrower_id);
 
 /**
- * How a strategy answers letters. "safe" takes the costliest response it can afford (in every
- * letter that is the paid, certain one); "risky" takes the first free response that carries a
+ * How a strategy answers letters. "safe" takes the costliest response it can afford among those
+ * with no chance and no follow-up (the paid, certain one; never a loan or an investment that
+ * repays later); "risky" takes the first free response that carries a
  * chance. When neither applies, the strategy leaves the letter and the sim takes its default.
  */
 export type LetterStyle = "safe" | "risky";
@@ -55,7 +56,7 @@ export function letterReplies(state: GameState, data: GameData, style: LetterSty
     const open = options.filter((o) => !checkAnswerLetter(s, { kind: "answer_letter", event: letter.event, option: o.id }, data));
     const pick =
       style === "safe"
-        ? [...open].sort((a, b) => optionCost(b) - optionCost(a))[0]
+        ? [...open].filter((o) => !o.chance && !o.effects.some((e) => e.kind === "follow_up")).sort((a, b) => optionCost(b) - optionCost(a))[0]
         : open.find((o) => o.chance && optionCost(o) === 0);
     return pick && (style === "risky" || optionCost(pick) > 0) ? { kind: "answer_letter", event: letter.event, option: pick.id } : null;
   });

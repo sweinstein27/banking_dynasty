@@ -4,12 +4,13 @@ import { Dialog, ToggleGroup } from "radix-ui";
 import { useState, type ReactNode } from "react";
 import { gameData } from "../data";
 import { bondCost } from "../sim/bonds";
-import { borrowingRoom, callRecovery, debtInterest } from "../sim/crisis";
+import { callRecovery, debtInterest, lenders } from "../sim/crisis";
+import { opinionWord } from "../sim/houses";
 import { ageIn, headOf, heirsOf, investCost, reputationGain, type Stat, STATS } from "../sim/family";
 import { bondOffers, lendOffers, ventureOffers, type LendOffer } from "../sim/offers";
 import { freeCash } from "../sim/reserves";
 import type { Decision, GameState } from "../sim/types";
-import { fl, parseAmount, pct } from "./format";
+import { fl, keepUnits, parseAmount, pct } from "./format";
 
 export type DecisionKind = Decision["kind"];
 
@@ -22,7 +23,8 @@ export const DECISION_LABELS: Record<DecisionKind, string> = {
   invest_family: "Invest in the family",
   designate_heir: "Name an heir",
   answer_letter: "Answer a letter",
-  borrow: "Borrow from the rival house",
+  court_house: "Court a house",
+  borrow: "Borrow from another house",
   pay_slowly: "Pay depositors slowly",
   suspend: "Suspend withdrawals",
   call_loan: "Call a loan in",
@@ -295,25 +297,36 @@ function ReserveForm(props: FormProps) {
 function BorrowForm(props: FormProps) {
   const { state } = props;
   const { error, submit } = useSubmit(props);
+  const l = gameData.tuning.crisis.lending;
+  const terms = lenders(state, gameData.tuning);
+  const [house, setHouse] = useState<string>(terms.find((t) => !t.refused)?.house.id ?? "");
   const [amount, setAmount] = useState("");
-  const r = gameData.tuning.crisis.rival;
-  const room = borrowingRoom(state, gameData.tuning);
+  const chosen = terms.find((t) => t.house.id === house);
+  const room = chosen?.room ?? 0;
   const quick: [string, number][] = [10000, 25000, room]
-    .filter((n, i, all) => n >= r.min_amount && n <= room && all.indexOf(n) === i)
+    .filter((n, i, all) => n >= l.min_amount && n <= room && all.indexOf(n) === i)
     .map((n) => [n === room ? `All they will lend (${fl(n)})` : fl(n), n]);
   const n = parseAmount(amount);
 
   return (
     <>
       <p>
-        {r.name} will lend up to {fl(r.max_outstanding)} in all, at {pct(r.rate)} a year. Interest is paid each quarter and the whole sum
-        falls due after {r.term_quarters} quarters. If you cannot pay it then, assets are sold, as for depositors. Borrowing from a rival costs{" "}
-        {r.reputation_cost} reputation.
+        A house lends if it thinks well enough of yours, more cheaply the better it thinks of you, and no more than {fl(l.max_outstanding)} from all
+        houses together. Interest is paid each quarter and the whole sum falls due after {l.term_quarters} quarters; if you cannot pay it then,
+        assets are sold, as for depositors. Borrowing costs {l.reputation_cost} reputation; repaying on time pleases the lender.
       </p>
-      <p>Room left to borrow: {fl(room)}</p>
+      <Choices value={house} onChange={setHouse}>
+        {terms.map((t) => (
+          <Choice key={t.house.id} value={t.house.id} disabled={t.refused !== null}>
+            <strong>{t.house.name}</strong>
+            <span>{opinionWord(t.house.opinion)} ({t.house.opinion})</span>
+            <span className={t.refused ? "small error" : "small"}>{t.refused ? keepUnits(t.refused) : keepUnits(`${pct(t.rate)} a year, up to ${fl(t.room)}`)}</span>
+          </Choice>
+        ))}
+      </Choices>
       <AmountField label="Amount (fl.)" text={amount} onText={setAmount} quick={quick} />
-      {Number.isFinite(n) && n > 0 && <p>Interest each quarter: {fl(debtInterest({ principal: n, rate: r.rate }))}</p>}
-      <Footer error={error} canConfirm onConfirm={() => submit({ kind: "borrow", amount: n })} />
+      {chosen && Number.isFinite(n) && n > 0 && <p>Interest each quarter: {fl(debtInterest({ principal: n, rate: chosen.rate }))}</p>}
+      <Footer error={error} canConfirm={house !== ""} onConfirm={() => submit({ kind: "borrow", house, amount: n })} />
     </>
   );
 }

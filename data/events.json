@@ -189,7 +189,9 @@
     "text": "A rival house whispers on the bourse that your house is short of cash. Depositors are beginning to ask questions.",
     "historical": false,
     "weight": 1,
-    "conditions": {},
+    "conditions": {
+      "house_opinion": { "house": "kessler", "below": -20 }
+    },
     "effects": [],
     "options": [
       {
@@ -211,7 +213,10 @@
         "id": "answer",
         "label": "Answer in kind",
         "text": "Your agents put it about that Kessler's own vaults are thin.",
-        "effects": [{ "kind": "reputation", "delta": -2 }],
+        "effects": [
+          { "kind": "reputation", "delta": -2 },
+          { "kind": "opinion", "house": "kessler", "delta": -15 }
+        ],
         "chance": {
           "p": 0.333,
           "effects": [{ "kind": "reputation", "delta": -8 }],
@@ -398,6 +403,93 @@
       }
     ],
     "default_option": "refuse"
+  },
+  {
+    "id": "winter-trouble",
+    "title": "Gebrüder Winter asks for help",
+    "text": "The Winter brothers have lent too boldly, and their depositors are at the door. They ask your house, quietly, for 5,000 fl. until the storm passes.",
+    "historical": false,
+    "weight": 2,
+    "conditions": {
+      "sentiment": ["uneasy", "panic"],
+      "house_opinion": { "house": "winter", "at_least": -20 }
+    },
+    "effects": [],
+    "options": [
+      {
+        "id": "help",
+        "label": "Lend them 5,000 fl.",
+        "text": "The money goes to the Winters that evening, and they do not forget it.",
+        "effects": [
+          { "kind": "cash", "amount": -5000 },
+          { "kind": "opinion", "house": "winter", "delta": 25 },
+          { "kind": "follow_up", "event": "winter-repays", "within_quarters": 4 }
+        ]
+      },
+      {
+        "id": "decline",
+        "label": "Send your regrets",
+        "text": "Your regrets go to the Winters. They will remember that too.",
+        "effects": [{ "kind": "opinion", "house": "winter", "delta": -10 }]
+      }
+    ],
+    "default_option": "decline"
+  },
+  {
+    "id": "winter-repays",
+    "title": "Gebrüder Winter repays",
+    "text": "Gebrüder Winter returns the 5,000 fl. your house lent it, with 250 fl. of interest and its thanks.",
+    "historical": false,
+    "follow_up": true,
+    "conditions": {
+      "house_opinion": { "house": "winter" }
+    },
+    "effects": [{ "kind": "cash", "amount": 5250 }]
+  },
+  {
+    "id": "albrecht-syndicate",
+    "title": "Albrecht invites you into a syndicate",
+    "text": "Bankhaus Albrecht is gathering houses to take up a new state loan together, and offers your house a share of 10,000 fl. on the same terms as its own.",
+    "historical": false,
+    "weight": 2,
+    "conditions": {
+      "sentiment": ["calm"],
+      "house_opinion": { "house": "albrecht", "at_least": 30 }
+    },
+    "effects": [],
+    "options": [
+      {
+        "id": "join",
+        "label": "Take a share of 10,000 fl.",
+        "text": "Your house joins the Albrecht syndicate.",
+        "effects": [
+          { "kind": "cash", "amount": -10000 },
+          { "kind": "opinion", "house": "albrecht", "delta": 5 },
+          { "kind": "follow_up", "event": "albrecht-syndicate-pays", "within_quarters": 4 }
+        ]
+      },
+      {
+        "id": "decline",
+        "label": "Decline with thanks",
+        "text": "Your house declines. Albrecht finds another partner.",
+        "effects": [{ "kind": "opinion", "house": "albrecht", "delta": -5 }]
+      }
+    ],
+    "default_option": "decline"
+  },
+  {
+    "id": "albrecht-syndicate-pays",
+    "title": "The syndicate pays out",
+    "text": "The state loan is placed with investors, and Bankhaus Albrecht pays out your share: 10,600 fl. for your 10,000.",
+    "historical": false,
+    "follow_up": true,
+    "conditions": {
+      "house_opinion": { "house": "albrecht" }
+    },
+    "effects": [
+      { "kind": "cash", "amount": 10600 },
+      { "kind": "reputation", "delta": 1 }
+    ]
   },
   {
     "id": "naples-doubts",

@@ -6,7 +6,7 @@ import { actionsLeft, runOver } from "../src/sim/actions";
 import { bondBook, bondValue, quarterlyCoupon } from "../src/sim/bonds";
 import { bondOffers, lendOffers, ventureOffers } from "../src/sim/offers";
 import { chronicle } from "../src/sim/chronicle";
-import { borrowingRoom, debtBook, inCrisis } from "../src/sim/crisis";
+import { borrowingRoom, debtBook, inCrisis, lenders } from "../src/sim/crisis";
 import { ageIn, effectiveStat, headOf, heirsOf, investCost, reputationGain, STATS } from "../src/sim/family";
 import { traitWords } from "../src/sim/traits";
 import { applyDecision } from "../src/sim/decisions";
@@ -150,12 +150,18 @@ async function askVenture(preview: GameState): Promise<Decision | null> {
 async function askCrisis(preview: GameState): Promise<Decision | null> {
   if (!inCrisis(preview)) return console.log("Crisis measures are only open while the market is uneasy, panicking, or under a panic warning."), null;
   const c = tuning.crisis;
-  console.log(`  b) Borrow from ${c.rival.name} at ${pct(c.rival.rate)}, due in ${c.rival.term_quarters} qtr (room ${fl(borrowingRoom(preview, tuning))}, reputation -${c.rival.reputation_cost})`);
+  console.log(`  b) Borrow from another house, due in ${c.lending.term_quarters} qtr (room ${fl(borrowingRoom(preview, tuning))} in all, reputation -${c.lending.reputation_cost})`);
   console.log(`  s) Pay depositors slowly this quarter (${pct(c.pay_slowly.share)} of what they ask, reputation -${c.pay_slowly.reputation_cost})`);
-  console.log(`  x) Suspend withdrawals this quarter (reputation -${c.suspend.reputation_cost})`);
+  console.log(`  x) Suspend withdrawals this quarter (reputation -${c.suspend.reputation_cost}, every house's opinion -${c.suspend.opinion_cost})`);
   console.log(`  c) Call a loan in (recover ${pct(c.call_loan.recovery)} now, the borrower stays away ${c.call_loan.absence_quarters} qtr)`);
   const pick = (await ask("Measure (b/s/x/c): "))?.trim();
-  if (pick === "b") return { kind: "borrow", amount: Number(await ask("Amount in gulden: ")) };
+  if (pick === "b") {
+    const terms = lenders(preview, tuning);
+    terms.forEach((t, i) => console.log(`    ${i + 1}) ${t.house.name}: ${t.refused ?? `${pct(t.rate)}, up to ${fl(t.room)}`}`));
+    const t = terms[Number(await ask(`House (1-${terms.length}): `)) - 1];
+    if (!t) return console.log("Unknown house."), null;
+    return { kind: "borrow", house: t.house.id, amount: Number(await ask("Amount in gulden: ")) };
+  }
   if (pick === "s") return { kind: "pay_slowly" };
   if (pick === "x") return { kind: "suspend" };
   if (pick === "c") {

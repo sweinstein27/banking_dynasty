@@ -115,7 +115,7 @@ export interface Loan {
 /** Which balance an entry moves. Summing entries per account reproduces that balance. */
 export type LedgerAccount = "cash" | "loans" | "bonds" | "ventures" | "deposits" | "borrowings";
 
-export type LedgerCategory = "deposit_inflow" | "deposit_interest" | "event" | "report" | "family" | "borrowing" | "debt_interest" | "debt_repayment" | "loan_called" | "opening" | "loan_out" | "interest" | "default" | "repayment"
+export type LedgerCategory = "deposit_inflow" | "deposit_interest" | "event" | "courting" | "report" | "family" | "borrowing" | "debt_interest" | "debt_repayment" | "loan_called" | "opening" | "loan_out" | "interest" | "default" | "repayment"
   | "withdrawal"
   | "forced_sale"
   | "bond_purchase"
@@ -261,7 +261,10 @@ export type DebtStatus = "active" | "repaid";
 /** Money borrowed by the house. Interest is paid each quarter; the principal falls due at the end of the term. */
 export interface Debt {
   id: number;
+  /** The lender's name. */
   lender: string;
+  /** The lending house's id. */
+  house: string;
   principal: number;
   /** Annual rate. */
   rate: number;
@@ -355,8 +358,16 @@ export interface InvestVentureDecision {
 /** Crisis response: borrow from the rival house. */
 export interface BorrowDecision {
   kind: "borrow";
+  /** Id of the house that lends. */
+  house: string;
   /** Whole gulden. */
   amount: number;
+}
+
+/** Court another house: dinners, gifts, a box at the opera. One action. */
+export interface CourtHouseDecision {
+  kind: "court_house";
+  house: string;
 }
 
 /** Crisis response: pay depositors only part of what they ask this quarter. */
@@ -396,4 +407,4 @@ export type InvestFamilyDecision =
 
 export type CrisisDecision = BorrowDecision | PaySlowlyDecision | SuspendDecision | CallLoanDecision;
 
-export type Decision = LendDecision | ReportDecision | SetReserveDecision | BuyBondDecision | InvestVentureDecision | InvestFamilyDecision | DesignateHeirDecision | AnswerLetterDecision | CrisisDecision;
+export type Decision = LendDecision | ReportDecision | SetReserveDecision | BuyBondDecision | InvestVentureDecision | InvestFamilyDecision | DesignateHeirDecision | AnswerLetterDecision | CourtHouseDecision | CrisisDecision;
