@@ -6,7 +6,7 @@ import { addEntry } from "./ledger";
 import { freeCash } from "./reserves";
 import type { Rng } from "./rng";
 import type { GameData, Tuning } from "./tuning";
-import { birthTrait, drawTrait, traitEffects } from "./traits";
+import { birthTrait, comingOfAgeTrait, drawTrait, traitEffects } from "./traits";
 import type { GameState, InvestFamilyDecision, Person } from "./types";
 
 export type Stat = "acumen" | "prudence" | "connections";
@@ -134,8 +134,9 @@ export function succeed(state: GameState, data: GameData): void {
 
 /**
  * The family's quarter: one roll for the head's death once they reach death.from_age (succession
- * follows at once), then at year end one roll for a birth if the head is of age and has room for
- * heirs (a birth then draws three stat rolls and two trait rolls). Mutates `state`; callers pass a draft copy.
+ * follows at once). At year end, heirs who turn adult next year come of age and gain a trait (a
+ * roll only when schooling earned no virtue), then one roll for a birth if the head is of age and
+ * has room for heirs (a birth then draws three stat rolls and two trait rolls). Mutates `state`; callers pass a draft copy.
  */
 export function resolveFamily(state: GameState, rng: Rng, data: GameData): void {
   const { year, quarter } = state.world;
@@ -145,6 +146,11 @@ export function resolveFamily(state: GameState, rng: Rng, data: GameData): void 
     if (p > 0 && rng.next() < p) succeed(state, data);
   }
   if (quarter !== 4) return;
+  for (const heir of heirsOf(state)) {
+    if (ageIn(heir, year + 1) !== data.tuning.family.succession.adult_age) continue;
+    const trait = comingOfAgeTrait(heir, rng, data);
+    if (trait) heir.traits.push(trait);
+  }
   const b = data.tuning.family.births;
   const parent = headOf(state);
   if (!parent || heirsOf(state).length >= b.max_heirs) return;

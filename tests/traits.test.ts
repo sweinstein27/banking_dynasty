@@ -7,7 +7,7 @@ import { lendOffers, ventureOffers } from "../src/sim/offers";
 import { endTurn } from "../src/sim/turn";
 import { createRng } from "../src/sim/rng";
 import { parseSave, toSave } from "../src/sim/save";
-import { birthTrait, checkTraitData, drawTrait, openTraits, traitEffects } from "../src/sim/traits";
+import { birthTrait, checkTraitData, comingOfAgeTrait, drawTrait, openTraits, traitEffects } from "../src/sim/traits";
 import type { GameData } from "../src/sim/tuning";
 import { fixedRng, fresh, noDefaults, quiet } from "./helpers";
 
@@ -185,5 +185,52 @@ describe("traits acting on the business (the head's traits only)", () => {
     expect(isTrained(a, 1830, gameData)).toBe(false);
     expect(isTrained(b, 1830, gameData)).toBe(true);
     expect(successor(s, gameData)!.id).toBe(b.id);
+  });
+});
+
+describe("coming of age", () => {
+  const heir = (stats: [number, number, number], traits: string[] = []) => {
+    const s = fresh();
+    const p = s.people[1]!;
+    Object.assign(p, { acumen: stats[0], prudence: stats[1], connections: stats[2], traits });
+    return { s, p };
+  };
+  const need = gameData.tuning.family.traits.virtue_stat;
+
+  it("schooling earns the virtue of the highest stat that reached virtue_stat, drawing no roll", () => {
+    const { p } = heir([need, need + 1, 2]);
+    let calls = 0;
+    expect(comingOfAgeTrait(p, { next: () => (calls++, 0) }, gameData)).toBe("prudent");
+    expect(calls).toBe(0);
+  });
+
+  it("skips a virtue that is closed to the heir and takes the next one earned", () => {
+    const { p } = heir([need, need + 1, 2], ["reckless"]);
+    expect(comingOfAgeTrait(p, fixedRng(0), gameData)).toBe("shrewd");
+  });
+
+  it("without schooling, a random trait, which may be a flaw", () => {
+    const { p } = heir([2, 3, 2], ["hale"]);
+    const t = comingOfAgeTrait(p, fixedRng(0.999), gameData)!;
+    expect(gameData.traits.map((x) => x.id)).toContain(t);
+    expect(["hale", "sickly"]).not.toContain(t);
+  });
+
+  it("happens at the year end before the heir turns adult, with the news", () => {
+    const { s, p } = heir([need, 2, 2], []);
+    const adult = gameData.tuning.family.succession.adult_age;
+    s.world.year = p.birth_year + adult - 1;
+    s.world.quarter = 4;
+    s.world.turn = (s.world.year - 1815) * 4 + 4;
+    const after = endTurn(s, [], fixedRng(0.999999), quiet);
+    expect(after.people[1]!.traits).toEqual(["shrewd"]);
+    expect(after.news.some((n) => n.text.startsWith(`${p.name} comes of age, and the years of schooling show: shrewd.`))).toBe(true);
+  });
+
+  it("does not happen in other quarters or other years", () => {
+    const { s, p } = heir([need, 2, 2], []);
+    s.world.year = p.birth_year + 5;
+    s.world.quarter = 4;
+    expect(endTurn(s, [], fixedRng(0.999999), quiet).people[1]!.traits).toEqual([]);
   });
 });

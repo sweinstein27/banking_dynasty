@@ -35,6 +35,21 @@ export function birthTrait(parentTraits: string[], rng: Rng, data: GameData): st
   return drawTrait([], rng, data);
 }
 
+/**
+ * The trait an heir gains on coming of age: the virtue of their highest stat that has reached
+ * virtue_stat through schooling (if still open to them), otherwise a random trait (one roll).
+ * Stats are taken before traits, so it is education that counts.
+ */
+export function comingOfAgeTrait(p: Person, rng: Rng, data: GameData): string | null {
+  const need = data.tuning.family.traits.virtue_stat;
+  const open = new Set(openTraits(p.traits, data).map((t) => t.id));
+  const earned = STAT_EFFECTS.filter((s) => p[s] >= need)
+    .sort((a, b) => p[b] - p[a] || STAT_EFFECTS.indexOf(a) - STAT_EFFECTS.indexOf(b))
+    .map((s) => data.traits.find((t) => t.virtue_for === s)?.id)
+    .find((id) => id && open.has(id));
+  return earned ?? drawTrait(p.traits, rng, data);
+}
+
 /** The combined effects of a person's traits: stat effects add up, multipliers multiply. */
 export function traitEffects(p: Pick<Person, "traits">, data: GameData): Required<TraitEffects> {
   const out: Required<TraitEffects> = { acumen: 0, prudence: 0, connections: 0, death_chance: 1, venture_failure: 1, withdrawals: 1, family_cost: 1, reputation_gain: 1 };

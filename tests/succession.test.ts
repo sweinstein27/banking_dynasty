@@ -161,7 +161,8 @@ describe("births", () => {
     s0.world.quarter = 4;
     // Rolls: the mood, the random-event roll, the birth roll and three stat rolls.
     const s1 = endTurn(s0, [], fixedRng(CALM, CALM, 0, 0.5, 0.5, 0.5, CALM), quiet);
-    expect(s1.news.some((n) => n.kind === "family" && n.text === `A child, ${gameData.family.child_names[0]} Adler, is born to the house.`)).toBe(true);
+    const born = s1.news.find((n) => n.kind === "family" && n.text.startsWith(`A child, ${gameData.family.child_names[0]} Adler, is born to the house.`));
+    expect(born?.text).toMatch(/The nurse already calls the child [a-z-]+\.$/);
   });
 });
 

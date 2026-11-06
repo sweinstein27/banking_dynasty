@@ -101,9 +101,22 @@ export function quarterNews(before: GameState, after: GameState, data: GameData)
       if (p[stat] > was[stat]) add("family", `${p.name} gains in ${stat}: now ${p[stat]} (was ${was[stat]}).`);
     }
   }
+  for (const p of after.people) {
+    const was = before.people.find((x) => x.id === p.id);
+    if (!was || p.death_year !== null) continue;
+    for (const id of p.traits.filter((t) => !was.traits.includes(t))) {
+      const trait = data.traits.find((t) => t.id === id);
+      if (!trait) continue;
+      const schooled = trait.virtue_for !== undefined && p[trait.virtue_for] >= data.tuning.family.traits.virtue_stat;
+      add("family", schooled
+        ? `${p.name} comes of age, and the years of schooling show: ${trait.name.toLowerCase()}. ${trait.description}`
+        : `${p.name} comes of age and proves ${trait.name.toLowerCase()}. ${trait.description}`);
+    }
+  }
   for (const p of after.people.slice(before.people.length)) {
     if (after.successions.some((sc) => sc.to === p.id && !before.successions.includes(sc))) continue;
-    add("family", `A child, ${p.name}, is born to the house.`);
+    const trait = data.traits.find((t) => t.id === p.traits[0]);
+    add("family", `A child, ${p.name}, is born to the house.${trait ? ` The nurse already calls the child ${trait.name.toLowerCase()}.` : ""}`);
   }
 
   if (after.panic_warning) {
