@@ -13,16 +13,23 @@ const { tuning } = gameData;
 const f = tuning.family;
 
 describe("createFamily", () => {
-  it("starts with the head from data/family.json and each child, in order", () => {
+  it("starts with the head, each child in order, then the head's wife, their mother", () => {
     const people = createFamily(gameData, createRng(1));
-    const { head, children } = gameData.family;
-    expect(people[0]).toEqual({ id: 1, house_id: 1, name: head.name, birth_year: head.birth_year, death_year: null, is_head: true, acumen: head.acumen, prudence: head.prudence, connections: head.connections, traits: head.traits, inexperienced_until: null });
-    expect(people.slice(1).map((p) => [p.id, p.name, p.birth_year, p.is_head])).toEqual(children.map((c, i) => [i + 2, c.name, c.birth_year, false]));
+    const { head, head_spouse: wife, children } = gameData.family;
+    const wifeId = children.length + 2;
+    expect(people[0]).toEqual({
+      id: 1, house_id: 1, name: head.name, gender: head.gender, role: "line", spouse: wifeId, parents: [], origin: null, born: null,
+      birth_year: head.birth_year, death_year: null, is_head: true, acumen: head.acumen, prudence: head.prudence, connections: head.connections, traits: head.traits, inexperienced_until: null,
+    });
+    expect(people.slice(1, -1).map((p) => [p.id, p.name, p.gender, p.birth_year, p.is_head, p.role, p.parents])).toEqual(
+      children.map((c, i) => [i + 2, c.name, c.gender, c.birth_year, false, "line", [1, wifeId]]),
+    );
+    expect(people.at(-1)).toMatchObject({ id: wifeId, name: wife.name, gender: "f", role: "spouse", spouse: 1, born: wife.born, origin: "merchant", traits: wife.traits });
   });
 
   it("draws children's stats within child_stats, the same for the same seed", () => {
     for (let seed = 1; seed < 20; seed++) {
-      for (const p of createFamily(gameData, createRng(seed)).slice(1)) {
+      for (const p of createFamily(gameData, createRng(seed)).filter((x) => x.parents.length)) {
         for (const v of [p.acumen, p.prudence, p.connections]) {
           expect(Number.isInteger(v)).toBe(true);
           expect(v).toBeGreaterThanOrEqual(f.child_stats.min);
@@ -34,7 +41,7 @@ describe("createFamily", () => {
   });
 
   it("is part of every new game", () => {
-    expect(newGame(gameData, createRng(3)).people).toHaveLength(1 + gameData.family.children.length);
+    expect(newGame(gameData, createRng(3)).people).toHaveLength(2 + gameData.family.children.length);
   });
 });
 
@@ -49,6 +56,9 @@ describe("family helpers", () => {
     expect(heirsOf(s).map((p) => p.birth_year)).toEqual([1803, 1806, 1810]);
     s.people[2]!.death_year = 1815;
     expect(heirsOf(s).map((p) => p.id)).toEqual([2, 4]);
+    // Spouses and those who married out are never heirs.
+    s.people[3]!.role = "left";
+    expect(heirsOf(s).map((p) => p.id)).toEqual([2]);
   });
 
   it("headStat falls back to the neutral value when there is no living head", () => {

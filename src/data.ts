@@ -7,7 +7,7 @@ import traits from "../data/traits.json";
 import states from "../data/states.json";
 import tuning from "../data/tuning.json";
 import ventures from "../data/ventures.json";
-import type { BorrowerType, GameData, GameEvent, HousesData, TraitType, Tuning } from "./sim/tuning";
+import type { BorrowerType, FamilyData, GameData, GameEvent, HousesData, TraitType, Tuning } from "./sim/tuning";
 
 export const gameData: GameData = {
   tuning: tuning as Tuning,
@@ -15,7 +15,7 @@ export const gameData: GameData = {
   states,
   ventures,
   events: events as GameEvent[],
-  family,
+  family: family as FamilyData,
   traits: traits as TraitType[],
   houses: houses as HousesData,
 };

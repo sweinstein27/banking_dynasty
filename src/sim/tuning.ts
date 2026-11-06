@@ -46,7 +46,14 @@ export interface Tuning {
       cousin_stat: number;
     };
     /** At each year end, a head of these ages with fewer than max_heirs heirs has this chance of a child. */
-    births: { min_head_age: number; max_head_age: number; max_heirs: number; chance: number };
+    /**
+     * At each year end, every married couple in the line (head or heir, with a living spouse) whose
+     * wife is min_mother_age to max_mother_age has this chance of a child, while the living heirs
+     * number fewer than max_heirs.
+     */
+    births: { min_mother_age: number; max_mother_age: number; max_heirs: number; chance: number };
+    /** Stats of a spouse who marries in, each drawn from this range. */
+    spouse_stats: { min: number; max: number };
     /** The three forms of investing in the family, each one action. */
     invest: {
       /** One heir's chosen stat rises by gain, up to max_stat. */
@@ -295,14 +302,20 @@ export interface GameEvent {
 }
 
 /** data/family.json: the house's starting family. Names are invented. */
+export type Gender = "m" | "f";
+
 export interface FamilyData {
-  head: { name: string; birth_year: number; acumen: number; prudence: number; connections: number; traits: string[] };
-  children: { name: string; birth_year: number }[];
+  head: { name: string; gender: Gender; birth_year: number; acumen: number; prudence: number; connections: number; traits: string[] };
+  /** The head's wife at the start, the children's mother. `born` is her maiden name. */
+  head_spouse: { name: string; born: string; gender: Gender; birth_year: number; acumen: number; prudence: number; connections: number; traits: string[] };
+  children: { name: string; gender: Gender; birth_year: number }[];
   surname: string;
   /** Takes over if the head dies with no heir left. */
-  cousin: { name: string; age: number; traits: string[] };
-  /** First names for children born during the game, used in turn. */
-  child_names: string[];
+  cousin: { name: string; gender: Gender; age: number; traits: string[] };
+  /** First names for children born during the game, by gender, used in turn. */
+  child_names: Record<Gender, string[]>;
+  /** First names for spouses from outside the houses' own families. */
+  spouse_names: Record<Gender, string[]>;
 }
 
 /**

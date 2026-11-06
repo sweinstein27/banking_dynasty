@@ -1,8 +1,9 @@
 import { gameData } from "../src/data";
+import { person } from "../src/sim/family";
 import { newGame } from "../src/sim/init";
 import { createRng, type Rng } from "../src/sim/rng";
 import type { GameData } from "../src/sim/tuning";
-import type { Borrower, GameState } from "../src/sim/types";
+import type { Borrower, GameState, Person } from "../src/sim/types";
 
 /** An Rng that returns the given values in order, then repeats the last one. */
 export function fixedRng(...values: number[]): Rng {
@@ -64,3 +65,13 @@ export function reopenRequests(s: GameState): void {
 /** Seed for the panic golden run, picked with `npm run find-panic-seed`; see docs/decisions.md. */
 export const PANIC_SEED = 1802;
 
+
+/** Marries the person `memberId` to a new spouse of the other gender, born in `birthYear`. Returns the spouse. */
+export function addSpouse(s: GameState, memberId: number, birthYear: number): Person {
+  const member = s.people.find((p) => p.id === memberId)!;
+  const spouse = { ...person(s.people.length + 1, "Test Spouse", member.gender === "m" ? "f" : "m", birthYear, "spouse"), origin: "merchant" } as Person;
+  s.people.push(spouse);
+  member.spouse = spouse.id;
+  spouse.spouse = member.id;
+  return spouse;
+}

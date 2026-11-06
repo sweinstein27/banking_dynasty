@@ -8,36 +8,83 @@
     "traits": [
       "prudent",
       "aloof"
-    ]
+    ],
+    "gender": "m"
   },
   "children": [
     {
       "name": "Friedrich Adler",
-      "birth_year": 1803
+      "birth_year": 1803,
+      "gender": "m"
     },
     {
       "name": "Amalie Adler",
-      "birth_year": 1806
+      "birth_year": 1806,
+      "gender": "f"
     },
     {
       "name": "Carl Adler",
-      "birth_year": 1810
+      "birth_year": 1810,
+      "gender": "m"
     }
   ],
   "surname": "Adler",
   "cousin": {
     "name": "Wilhelm Adler",
     "age": 30,
-    "traits": []
+    "traits": [],
+    "gender": "m"
   },
-  "child_names": [
-    "Luise",
-    "Heinrich",
-    "Sophie",
-    "Ludwig",
-    "Charlotte",
-    "Georg",
-    "Henriette",
-    "Moritz"
-  ]
+  "child_names": {
+    "m": [
+      "Heinrich",
+      "Ludwig",
+      "Georg",
+      "Moritz",
+      "Wilhelm",
+      "Anton"
+    ],
+    "f": [
+      "Luise",
+      "Sophie",
+      "Charlotte",
+      "Henriette",
+      "Auguste",
+      "Mathilde"
+    ]
+  },
+  "head_spouse": {
+    "name": "Margarethe Adler",
+    "born": "Brenner",
+    "gender": "f",
+    "birth_year": 1772,
+    "acumen": 4,
+    "prudence": 4,
+    "connections": 4,
+    "traits": [
+      "frugal"
+    ]
+  },
+  "spouse_names": {
+    "m": [
+      "Karl",
+      "Ernst",
+      "Philipp",
+      "Gustav",
+      "Leopold",
+      "Hermann",
+      "Albert",
+      "Otto"
+    ],
+    "f": [
+      "Elisabeth",
+      "Caroline",
+      "Friederike",
+      "Emilie",
+      "Therese",
+      "Johanna",
+      "Bertha",
+      "Julie"
+    ]
+  }
 }

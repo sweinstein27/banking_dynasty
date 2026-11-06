@@ -31,10 +31,26 @@ export type HouseStatus = "solvent" | "bankrupt";
 export type LoanStatus = "active" | "repaid" | "defaulted" | "sold" | "called";
 
 /** A member of the family. Field names follow the spec's person table. Stats run from 1 to 10. */
+/**
+ * "line": born to the house (or the cousin), so an heir while living and not head. "spouse": married
+ * in; never an heir and never head. "left": married out into another house; no longer an heir.
+ */
+export type FamilyRole = "line" | "spouse" | "left";
+
 export interface Person {
   id: number;
   house_id: number;
   name: string;
+  gender: "m" | "f";
+  role: FamilyRole;
+  /** Husband or wife (a person id), living or dead; null if never married. */
+  spouse: number | null;
+  /** Mother and father (person ids), if they are in the family records. */
+  parents: number[];
+  /** Where a spouse came from: another house's id, "merchant" for a family outside the bourse, or null. Also the house an heir married into. */
+  origin: string | null;
+  /** Maiden name or family name before marriage, for the records. Null if unchanged. */
+  born: string | null;
   birth_year: number;
   death_year: number | null;
   is_head: boolean;

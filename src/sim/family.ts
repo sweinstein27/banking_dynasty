@@ -14,20 +14,52 @@ export const STATS: Stat[] = ["acumen", "prudence", "connections"];
 
 /**
  * The starting family from data/family.json: the head with fixed stats and traits, then each child
- * with stats drawn from child_stats and one random trait. Four rolls per child, in data order.
+ * with stats drawn from child_stats and one random trait (four rolls per child, in data order),
+ * then the head's wife, fixed, who is the children's mother.
  */
 export function createFamily(data: GameData, rng: Rng): Person[] {
   const { min, max } = data.tuning.family.child_stats;
   const draw = () => min + Math.floor(rng.next() * (max - min + 1));
-  const { head, children } = data.family;
-  return [
-    { id: 1, house_id: 1, name: head.name, birth_year: head.birth_year, death_year: null, is_head: true, acumen: head.acumen, prudence: head.prudence, connections: head.connections, traits: [...head.traits], inexperienced_until: null },
-    ...children.map((c, i): Person => {
-      const stats = { acumen: draw(), prudence: draw(), connections: draw() };
-      const trait = drawTrait([], rng, data);
-      return { id: i + 2, house_id: 1, name: c.name, birth_year: c.birth_year, death_year: null, is_head: false, ...stats, traits: trait ? [trait] : [], inexperienced_until: null };
-    }),
-  ];
+  const { head, head_spouse: wife, children } = data.family;
+  const wifeId = children.length + 2;
+  const founder: Person = {
+    ...person(1, head.name, head.gender, head.birth_year, "line"),
+    is_head: true, acumen: head.acumen, prudence: head.prudence, connections: head.connections, traits: [...head.traits], spouse: wifeId,
+  };
+  const kids = children.map((c, i): Person => {
+    const stats = { acumen: draw(), prudence: draw(), connections: draw() };
+    const trait = drawTrait([], rng, data);
+    return { ...person(i + 2, c.name, c.gender, c.birth_year, "line"), ...stats, traits: trait ? [trait] : [], parents: [1, wifeId] };
+  });
+  const mother: Person = {
+    ...person(wifeId, wife.name, wife.gender, wife.birth_year, "spouse"),
+    acumen: wife.acumen, prudence: wife.prudence, connections: wife.connections, traits: [...wife.traits], spouse: 1, origin: "merchant", born: wife.born,
+  };
+  return [founder, ...kids, mother];
+}
+
+/** A new person with neutral defaults: stats of 1, no traits, unmarried, no parents on record. */
+export function person(id: number, name: string, gender: Person["gender"], birth_year: number, role: Person["role"]): Person {
+  return {
+    id, house_id: 1, name, gender, role, spouse: null, parents: [], origin: null, born: null,
+    birth_year, death_year: null, is_head: false, acumen: 1, prudence: 1, connections: 1, traits: [], inexperienced_until: null,
+  };
+}
+
+/** A person's husband or wife, if living. */
+export function livingSpouse(state: GameState, p: Person): Person | undefined {
+  const s = p.spouse === null ? undefined : state.people.find((x) => x.id === p.spouse);
+  return s && s.death_year === null ? s : undefined;
+}
+
+/** Living members of the line (head or heir) with a living spouse, paired, in family order. */
+export function couples(state: GameState): { member: Person; spouse: Person }[] {
+  return state.people
+    .filter((p) => p.role === "line" && p.death_year === null)
+    .flatMap((member) => {
+      const spouse = livingSpouse(state, member);
+      return spouse ? [{ member, spouse }] : [];
+    });
 }
 
 /** Age in whole years during `year` (birthdays fall at the start of the year). */
@@ -40,9 +72,9 @@ export function headOf(state: GameState): Person | undefined {
   return state.people.find((p) => p.is_head && p.death_year === null);
 }
 
-/** Living family members who are not the head, oldest first. */
+/** Living members of the line who are not the head, oldest first. Spouses and those who married out are not heirs. */
 export function heirsOf(state: GameState): Person[] {
-  return state.people.filter((p) => !p.is_head && p.death_year === null).sort((a, b) => a.birth_year - b.birth_year || a.id - b.id);
+  return state.people.filter((p) => p.role === "line" && !p.is_head && p.death_year === null).sort((a, b) => a.birth_year - b.birth_year || a.id - b.id);
 }
 
 /** A person's stat with their traits applied, kept within 1 and max_stat. */
@@ -125,8 +157,8 @@ export function succeed(state: GameState, data: GameData): void {
   if (!next) {
     const c = data.family.cousin;
     next = {
-      id: state.people.length + 1, house_id: 1, name: c.name, birth_year: year - c.age, death_year: null, is_head: false,
-      acumen: t.cousin_stat, prudence: t.cousin_stat, connections: t.cousin_stat, traits: [...c.traits], inexperienced_until: null,
+      ...person(state.people.length + 1, c.name, c.gender, year - c.age, "line"),
+      acumen: t.cousin_stat, prudence: t.cousin_stat, connections: t.cousin_stat, traits: [...c.traits],
     };
     state.people.push(next);
   }
@@ -141,9 +173,11 @@ export function succeed(state: GameState, data: GameData): void {
 
 /**
  * The family's quarter: one roll for the head's death once they reach death.from_age (succession
- * follows at once). At year end, heirs who turn adult next year come of age and gain a trait (a
- * roll only when schooling earned no virtue), then one roll for a birth if the head is of age and
- * has room for heirs (a birth then draws three stat rolls and two trait rolls). Mutates `state`; callers pass a draft copy.
+ * follows at once), then one for each living spouse of the line who has reached it. At year end,
+ * heirs who turn adult next year come of age and gain a trait (a roll only when schooling earned no
+ * virtue), then each married couple in the line whose wife is of age rolls for a child while there
+ * is room for heirs (a birth then draws a gender roll, three stat rolls and two trait rolls).
+ * Mutates `state`; callers pass a draft copy.
  */
 export function resolveFamily(state: GameState, rng: Rng, data: GameData): void {
   const { year, quarter } = state.world;
@@ -152,6 +186,10 @@ export function resolveFamily(state: GameState, rng: Rng, data: GameData): void 
     const p = quarterlyDeathChance(ageIn(head, year), data.tuning, traitEffects(head, data).death_chance);
     if (p > 0 && rng.next() < p) succeed(state, data);
   }
+  for (const sp of state.people.filter((x) => x.role === "spouse" && x.death_year === null)) {
+    const p = quarterlyDeathChance(ageIn(sp, year), data.tuning, traitEffects(sp, data).death_chance);
+    if (p > 0 && rng.next() < p) sp.death_year = year;
+  }
   if (quarter !== 4) return;
   for (const heir of heirsOf(state)) {
     if (ageIn(heir, year + 1) !== data.tuning.family.succession.adult_age) continue;
@@ -159,21 +197,29 @@ export function resolveFamily(state: GameState, rng: Rng, data: GameData): void 
     if (trait) heir.traits.push(trait);
   }
   const b = data.tuning.family.births;
-  const parent = headOf(state);
-  if (!parent || heirsOf(state).length >= b.max_heirs) return;
-  const age = ageIn(parent, year);
-  if (age < b.min_head_age || age > b.max_head_age) return;
-  if (rng.next() >= b.chance) return;
+  for (const { member, spouse } of couples(state)) {
+    if (heirsOf(state).length >= b.max_heirs) return;
+    const wife = member.gender === "f" ? member : spouse;
+    const age = ageIn(wife, year);
+    if (age < b.min_mother_age || age > b.max_mother_age) continue;
+    if (rng.next() >= b.chance) continue;
+    birth(state, member, spouse, rng, data);
+  }
+}
+
+/** A child born to a couple of the line, next year, carrying the house's surname. */
+function birth(state: GameState, member: Person, spouse: Person, rng: Rng, data: GameData): void {
+  const gender: Person["gender"] = rng.next() < 0.5 ? "m" : "f";
   // The first name on the list that no one in the family has yet.
   const surname = data.family.surname;
-  const first = data.family.child_names.find((n) => !state.people.some((p) => p.name === `${n} ${surname}`)) ?? "Child";
+  const first = data.family.child_names[gender].find((n) => !state.people.some((p) => p.name === `${n} ${surname}`)) ?? (gender === "m" ? "Sohn" : "Tochter");
   const { min, max } = data.tuning.family.child_stats;
   const draw = () => min + Math.floor(rng.next() * (max - min + 1));
   const stats = { acumen: draw(), prudence: draw(), connections: draw() };
-  const trait = birthTrait(parent.traits, rng, data);
+  const trait = birthTrait([...member.traits, ...spouse.traits], rng, data);
   state.people.push({
-    id: state.people.length + 1, house_id: 1, name: `${first} ${surname}`, birth_year: year + 1, death_year: null, is_head: false,
-    ...stats, traits: trait ? [trait] : [], inexperienced_until: null,
+    ...person(state.people.length + 1, `${first} ${surname}`, gender, state.world.year + 1, "line"),
+    ...stats, traits: trait ? [trait] : [], parents: [member.id, spouse.id],
   });
 }
 

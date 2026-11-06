@@ -29,7 +29,8 @@
       "inexperience_quarters": 8,
       "cousin_stat": 2
     },
-    "births": { "min_head_age": 25, "max_head_age": 45, "max_heirs": 3, "chance": 0.15 },
+    "births": { "min_mother_age": 18, "max_mother_age": 42, "max_heirs": 6, "chance": 0.15 },
+    "spouse_stats": { "min": 2, "max": 5 },
     "invest": {
       "educate": { "cost": 500, "gain": 1 },
       "charity": { "cost": 2000, "reputation": 3 },

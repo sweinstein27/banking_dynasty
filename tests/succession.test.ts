@@ -1,23 +1,23 @@
 import { describe, expect, it } from "vitest";
 import { gameData } from "../src/data";
-import { headOf, headStat, heirsOf, isTrained, quarterlyDeathChance, resolveFamily, succeed, successor, yearlyDeathChance } from "../src/sim/family";
+import { headOf, headStat, heirsOf, isTrained, person, quarterlyDeathChance, resolveFamily, succeed, successor, yearlyDeathChance } from "../src/sim/family";
 import { runOver } from "../src/sim/actions";
 import { newGame } from "../src/sim/init";
 import { createRng } from "../src/sim/rng";
 import { endTurn } from "../src/sim/turn";
 import type { GameState } from "../src/sim/types";
-import { fixedRng, fresh, quiet } from "./helpers";
+import { addSpouse, fixedRng, fresh, quiet } from "./helpers";
 
 const { tuning } = gameData;
 const f = tuning.family;
 const sc = f.succession;
 const CALM = 0.999999;
 
-/** A house in `year`, with the given heirs' stats (all three set to `stat`) and ages. */
+/** A house in `year`, with the given heirs' stats (all three set to `stat`) and ages. The head is unmarried. */
 function house(year: number, heirs: { age: number; stat: number }[]): GameState {
   const s = fresh();
   s.world.year = year;
-  s.people = [s.people[0]!, ...heirs.map((h, i) => ({ ...s.people[1]!, id: i + 2, name: `Heir ${i + 2}`, birth_year: year - h.age, acumen: h.stat, prudence: h.stat, connections: h.stat }))];
+  s.people = [{ ...s.people[0]!, spouse: null }, ...heirs.map((h, i) => ({ ...s.people[1]!, id: i + 2, name: `Heir ${i + 2}`, birth_year: year - h.age, acumen: h.stat, prudence: h.stat, connections: h.stat }))];
   return s;
 }
 
@@ -130,52 +130,109 @@ describe("a head dying mid-year, in End Turn", () => {
   });
 });
 
+/** A house in 1830 Q4 with one young heir and a head of 35, married to a wife of `wifeAge`. */
+function married(wifeAge = 30) {
+  const s = house(1830, [{ age: 5, stat: 2 }]);
+  s.people[0]!.birth_year = 1795;
+  s.world.quarter = 4;
+  const wife = addSpouse(s, 1, 1830 - wifeAge);
+  return { s, wife };
+}
+
 describe("births", () => {
-  it("at year end, a head of age with room for heirs may have a child, born the next year", () => {
-    const s = house(1830, [{ age: 5, stat: 2 }]);
-    s.people[0]!.birth_year = 1795; // the head is 35
-    s.world.quarter = 4;
-    resolveFamily(s, fixedRng(0, 0.5, 0.5, 0.5), quiet);
-    const baby = s.people.at(-1)!;
-    expect(baby).toMatchObject({ name: `${gameData.family.child_names[0]} ${gameData.family.surname}`, birth_year: 1831, is_head: false, death_year: null });
+  const { m: boys, f: girls } = gameData.family.child_names;
+
+  it("at year end, a married couple of the line may have a child, born the next year", () => {
+    const { s, wife } = married();
+    // Rolls: the birth (0: a child), the gender (0.5: a girl), three stats.
+    resolveFamily(s, fixedRng(0, 0.5, 0.5, 0.5, 0.5), quiet);
+    expect(s.people.at(-1)).toMatchObject({ name: `${girls[0]} ${gameData.family.surname}`, gender: "f", role: "line", parents: [1, wife.id], birth_year: 1831, is_head: false, death_year: null });
+    expect(heirsOf(s).map((p) => p.name)).toContain(`${girls[0]} Adler`);
   });
 
-  it("no birth outside year end, for a head too old or young, or with max_heirs already", () => {
-    const tryBirth = (headAge: number, quarter: 1 | 4, heirs: number) => {
+  it("no child without a living spouse: an unmarried head, or a widower", () => {
+    const single = house(1830, [{ age: 5, stat: 2 }]);
+    single.people[0]!.birth_year = 1795;
+    single.world.quarter = 4;
+    let draws = 0;
+    resolveFamily(single, { next: () => (draws++, 0) }, quiet);
+    expect(draws).toBe(0);
+    const { s, wife } = married();
+    wife.death_year = 1829;
+    const before = s.people.length;
+    resolveFamily(s, fixedRng(0), quiet);
+    expect(s.people.length).toBe(before);
+  });
+
+  it("no birth outside year end, for a wife too old or too young, or with max_heirs already", () => {
+    const tryBirth = (wifeAge: number, quarter: 1 | 4, heirs = 1) => {
       const s = house(1830, Array.from({ length: heirs }, () => ({ age: 5, stat: 2 })));
-      s.people[0]!.birth_year = 1830 - headAge;
+      s.people[0]!.birth_year = 1795;
+      addSpouse(s, 1, 1830 - wifeAge);
       s.world.quarter = quarter;
       const before = s.people.length;
-      resolveFamily(s, fixedRng(0.999999, 0), quiet);
+      resolveFamily(s, fixedRng(0), quiet);
       return s.people.length - before;
     };
-    expect(tryBirth(35, 1, 1)).toBe(0);
-    expect(tryBirth(f.births.max_head_age + 1, 4, 1)).toBe(0);
-    expect(tryBirth(f.births.min_head_age - 1, 4, 1)).toBe(0);
-    expect(tryBirth(35, 4, f.births.max_heirs)).toBe(0);
+    expect(tryBirth(30, 4)).toBe(1);
+    expect(tryBirth(30, 1)).toBe(0);
+    expect(tryBirth(f.births.max_mother_age + 1, 4)).toBe(0);
+    expect(tryBirth(f.births.min_mother_age - 1, 4)).toBe(0);
+    expect(tryBirth(30, 4, f.births.max_heirs)).toBe(0);
+  });
+
+  it("an heir's marriage brings grandchildren, who are heirs too", () => {
+    const s = house(1830, [{ age: 25, stat: 4 }]);
+    s.world.quarter = 4;
+    const heir = s.people[1]!;
+    heir.gender = "m";
+    const wife = addSpouse(s, heir.id, 1808);
+    // Rolls: no death roll (head 65 has one: survives), then the heir's couple: birth, gender (boy), stats.
+    resolveFamily(s, fixedRng(CALM, 0, 0, 0.5, 0.5, 0.5), quiet);
+    const child = s.people.at(-1)!;
+    expect(child).toMatchObject({ name: `${boys[0]} Adler`, parents: [heir.id, wife.id], role: "line" });
+    expect(heirsOf(s).map((p) => p.id)).toEqual([heir.id, child.id]);
+  });
+
+  it("a grandchild can inherit, and with no one left of the line the cousin takes over", () => {
+    const s = house(1830, [{ age: 25, stat: 4 }]);
+    const heir = s.people[1]!;
+    s.people.push({ ...person(3, "Grandchild Adler", "f", 1825, "line"), parents: [heir.id] });
+    heir.death_year = 1829;
+    succeed(s, quiet);
+    expect(headOf(s)!.name).toBe("Grandchild Adler");
+    const t = house(1830, []);
+    t.people.push({ ...person(2, "Spouse", "f", 1790, "spouse"), spouse: 1 });
+    succeed(t, quiet);
+    expect(headOf(t)!.name).toBe(gameData.family.cousin.name);
+  });
+
+  it("spouses of the line can die, by the same rule as heads", () => {
+    const { s, wife } = married(70);
+    s.world.quarter = 1;
+    // Rolls: the spouse's death roll (0: dies).
+    resolveFamily(s, fixedRng(0), quiet);
+    expect(wife.death_year).toBe(1830);
+    expect(headOf(s)!.id).toBe(1);
   });
 
   it("is in the news", () => {
-    const s0 = house(1830, [{ age: 5, stat: 2 }]);
-    s0.people[0]!.birth_year = 1795;
-    s0.world.quarter = 4;
-    // Rolls: the mood, the random-event roll, the birth roll and three stat rolls.
-    const s1 = endTurn(s0, [], fixedRng(CALM, CALM, 0, 0.5, 0.5, 0.5, CALM), quiet);
-    const born = s1.news.find((n) => n.kind === "family" && n.text.startsWith(`A child, ${gameData.family.child_names[0]} Adler, is born to the house.`));
+    const { s: s0 } = married();
+    // Rolls: the mood, the random-event roll, the birth roll, the gender (a girl) and three stat rolls.
+    const s1 = endTurn(s0, [], fixedRng(CALM, CALM, 0, 0.5, 0.5, 0.5, 0.5, CALM), quiet);
+    const born = s1.news.find((n) => n.kind === "family" && n.text.startsWith(`A child, ${girls[0]} Adler, is born to the house.`));
     expect(born?.text).toMatch(/The nurse already calls the child [a-z-]+\.$/);
   });
 });
 
 describe("birth names", () => {
   it("never repeat a name already in the family", () => {
-    const s = house(1830, []);
-    s.people[0]!.birth_year = 1795;
-    s.world.quarter = 4;
-    // The head is 35, so there is no death roll: the first roll is the birth roll (0: a birth).
+    const { s } = married();
+    // Each birth: the birth roll (0), the gender (0: a boy), stats and traits all 0.
     for (let i = 0; i < 3; i++) resolveFamily(s, fixedRng(0), quiet);
     const names = s.people.map((p) => p.name);
     expect(new Set(names).size).toBe(names.length);
-    expect(names.slice(1)).toEqual(gameData.family.child_names.slice(0, 3).map((n) => `${n} Adler`));
+    expect(names.slice(-3)).toEqual(gameData.family.child_names.m.slice(0, 3).map((n) => `${n} Adler`));
   });
 });
 

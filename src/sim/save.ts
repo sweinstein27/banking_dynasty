@@ -8,7 +8,7 @@ import { loanBook } from "./turn";
 import type { Decision, GameState, LedgerAccount } from "./types";
 import { ventureBook } from "./ventures";
 
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 12;
 
 export interface SaveFile {
   version: number;
@@ -58,6 +58,8 @@ export function parseSave(text: string, data: GameData): ParseResult {
   if (typeof s.trade_risk !== "number") return { ok: false, reason: 'Save file state is missing "trade_risk"' };
   if (!("panic_warning" in s)) return { ok: false, reason: 'Save file state is missing "panic_warning"' };
   if ((s.people as unknown[]).some((p) => !isObject(p) || !Array.isArray(p.traits))) return { ok: false, reason: "Save file has a person without traits" };
+  if ((s.people as Record<string, unknown>[]).some((p) => !["line", "spouse", "left"].includes(p.role as string) || !["m", "f"].includes(p.gender as string) || !Array.isArray(p.parents)))
+    return { ok: false, reason: "Save file has a person without a role, gender or parents" };
   if (!("designated_heir" in (s.house as object))) return { ok: false, reason: 'Save file house is missing "designated_heir"' };
   if (typeof s.withdrawal_policy !== "string") return { ok: false, reason: 'Save file state is missing "withdrawal_policy"' };
   for (const key of ["next_ledger_id", "actions_this_turn"] as const) {

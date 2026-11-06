@@ -9,7 +9,7 @@ import { createRng } from "../src/sim/rng";
 import { parseSave, toSave } from "../src/sim/save";
 import { birthTrait, checkTraitData, comingOfAgeTrait, drawTrait, openTraits, traitEffects } from "../src/sim/traits";
 import type { GameData } from "../src/sim/tuning";
-import { fixedRng, fresh, noDefaults, quiet } from "./helpers";
+import { addSpouse, fixedRng, fresh, noDefaults, quiet } from "./helpers";
 
 const withTraits = (traits: GameData["traits"]): GameData => ({ ...gameData, traits });
 
@@ -88,10 +88,11 @@ describe("the family's traits", () => {
     s.people = [s.people[0]!];
     s.people[0]!.traits = ["prudent", "aloof"];
     s.people[0]!.birth_year = 1785; // 30 in 1815
+    addSpouse(s, 1, 1790);
     s.world.quarter = 4;
-    // Birth roll, three stat rolls, then the inherit roll (passes) and the pick.
-    resolveFamily(s, fixedRng(0, 0.5, 0.5, 0.5, 0, 0), quiet);
-    expect(s.people[1]!.traits).toEqual(["prudent"]);
+    // Birth roll, gender, three stat rolls, then the inherit roll (passes) and the pick.
+    resolveFamily(s, fixedRng(0, 0.5, 0.5, 0.5, 0.5, 0, 0), quiet);
+    expect(s.people.at(-1)!.traits).toEqual(["prudent"]);
   });
 
   it("saves keep traits and refuse a person without them", () => {
