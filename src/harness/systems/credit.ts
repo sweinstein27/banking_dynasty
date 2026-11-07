@@ -40,20 +40,23 @@ export function readBooks(talk: Band | null, file: BookFile | null, data: GameDa
 /** readBooks for a loan request. */
 export const readOffer = (o: LendOffer, data: GameData) => readBooks(o.talk, o.file, data);
 
-/** The requests a strategy would look into first: best rate times amount, among those without a fresh file. */
-function worthAFile(s: GameState, data: GameData): LendOffer | undefined {
+/**
+ * The request most worth a file: the best rate times amount among those without a fresh file,
+ * big enough to pay for one (a bill never is), that the bourse does not already call stretched or doubtful.
+ */
+function worthAFile(s: GameState, data: GameData, reportFrom: number): LendOffer | undefined {
   return lendOffers(s, data)
-    .filter((o) => o.file_stale && o.talk !== "doubtful")
+    .filter((o) => o.file_stale && (o.talk === "sound" || o.talk === "steady") && o.kind !== "bill" && o.amount >= reportFrom)
     .sort((a, b) => b.max_rate * b.amount - a.max_rate * a.amount || a.borrower_id - b.borrower_id)[0];
 }
 
-/** A report, or for a large request or a mortgage a full inquiry, on the request most worth a file. */
+/** A full inquiry on a mortgage, else a report, on the request most worth a file. */
 const investigate =
-  (data: GameData, inquiryFrom: number): Maker =>
+  (data: GameData, reportFrom: number): Maker =>
   (s) => {
-    const o = worthAFile(s, data);
+    const o = worthAFile(s, data, reportFrom);
     if (!o) return null;
-    return o.kind === "mortgage" || o.amount >= inquiryFrom ? { kind: "inquire", borrower: o.borrower_id } : { kind: "report", borrower: o.borrower_id };
+    return o.kind === "mortgage" ? { kind: "inquire", borrower: o.borrower_id } : { kind: "report", borrower: o.borrower_id };
   };
 
 /** In a worried market, a report on the borrower behind the largest active loan whose file is stale. */
@@ -87,9 +90,7 @@ export function creditMakers(name: string, _state: GameState, data: GameData): S
   switch (name) {
     case "cautious":
     case "cautious_no_family":
-      return { early: [checkLargestLoan(data), sellWeak(data, 0.55), investigate(data, 10000)], late: [] };
-    case "bond_heavy":
-      return { early: [investigate(data, Infinity)], late: [] };
+      return { early: [checkLargestLoan(data), sellWeak(data, 0.55), investigate(data, 8000)], late: [] };
     default:
       return { early: [], late: [] };
   }
