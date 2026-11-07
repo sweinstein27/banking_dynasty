@@ -1,11 +1,12 @@
 // Strategies for the balancing harness: simple, readable players for the spec's "cautious,
 // aggressive and bond-heavy" comparison, plus an idle baseline and a venture-heavy probe.
-// Each lists what it wants in priority order; the sim's three actions a turn cut the list short.
+// Each lists what it wants in priority order; the house's capacity (src/sim/capacity.ts) cuts the list short.
 import { bondDefaultChance } from "../sim/bonds";
 import { lenders } from "../sim/crisis";
 import { STATS, statTotal, successor } from "../sim/family";
 import { bondOffers, lendOffers, ventureOffers } from "../sim/offers";
 import { withdrawalDemand } from "../sim/sentiment";
+import { warningKnown } from "../sim/systems/counting";
 import type { GameData } from "../sim/tuning";
 import type { Decision, GameState } from "../sim/types";
 import { accepted as acceptedCore, letterReplies, lendShare, marriageMakers, safestFirst, shareOfFree, type Maker, type Strategy } from "./common";
@@ -35,8 +36,8 @@ function shortForWithdrawals(s: GameState, data: GameData): boolean {
   return s.house.cash < withdrawalDemand(s.house.deposits, s.world.sentiment, data.tuning, s.house.reputation);
 }
 
-/** Does nothing: the baseline every other strategy must beat. */
-export const idle: Strategy = () => [];
+/** Does nothing: the baseline every other strategy must beat. Its only decisions are the systems' (A2: dismissing its staff). */
+export const idle: Strategy = (state, data) => accepted("idle", state, data, []);
 
 /**
  * Cautious: keeps 40% of deposits in reserve (60% from the first warning sign), checks borrowers
@@ -57,7 +58,8 @@ export function cautiousNoFamily(state: GameState, data: GameData): Decision[] {
 }
 
 function cautiousPlay(state: GameState, data: GameData, educate: boolean): Decision[] {
-  const worried = state.panic_warning !== null || state.world.sentiment !== "calm";
+  // What the house knows (A2): without a courier stable a warning reaches it a quarter late.
+  const worried = warningKnown(state, data) || state.world.sentiment !== "calm";
   const wanted: Maker[] = letterReplies(state, data, "safe");
   if (state.world.sentiment === "panic" && shortForWithdrawals(state, data)) wanted.push(() => ({ kind: "pay_slowly" }));
   wanted.push(reserveAt(worried ? 0.6 : 0.4));

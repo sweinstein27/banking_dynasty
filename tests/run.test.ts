@@ -5,7 +5,7 @@ import { applyDecision } from "../src/sim/decisions";
 import { newGame } from "../src/sim/init";
 import { endTurn } from "../src/sim/turn";
 import type { GameState, Quarter } from "../src/sim/types";
-import { fresh, noDefaults } from "./helpers";
+import { fresh, noDefaults, quiet } from "./helpers";
 
 const { tuning } = gameData;
 
@@ -41,7 +41,8 @@ describe("runOver", () => {
     let s = fresh();
     let turns = 0;
     while (!runOver(s, tuning)) {
-      s = endTurn(s, [], noDefaults, gameData);
+      // A2: the quiet counting house, so an idle house's wages do not bankrupt it.
+      s = endTurn(s, [], noDefaults, { ...gameData, counting: quiet.counting });
       turns++;
     }
     expect(turns).toBe(144);

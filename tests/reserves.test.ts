@@ -7,7 +7,7 @@ import { checkLend } from "../src/sim/loans";
 import { checkSetReserve, freeCash, payWithdrawal, setReserve } from "../src/sim/reserves";
 import { endTurn, netWorth } from "../src/sim/turn";
 import type { Decision, GameState, LendDecision, SetReserveDecision } from "../src/sim/types";
-import { fresh, GOOD, GOOD_2, noDefaults, quiet } from "./helpers";
+import { FAIR, fresh, GOOD, GOOD_2, noDefaults, POOR, quiet, reopenRequests } from "./helpers";
 
 const tuning = gameData.tuning;
 const reserve = (amount: number): SetReserveDecision => ({ kind: "set_reserve", amount });
@@ -45,12 +45,12 @@ describe("setReserve", () => {
     expect(fresh().house.reserve).toBe(tuning.start.reserve);
   });
 
-  it("sets the floor, uses an action, and moves no money", () => {
+  it("sets the floor, uses no capacity (A2), and moves no money", () => {
     const s0 = fresh();
     const s1 = applyOk(s0, reserve(40000));
     expect(s1.house.reserve).toBe(40000);
     expect(s1.house.cash).toBe(s0.house.cash);
-    expect(s1.actions_this_turn).toBe(1);
+    expect(s1.actions_this_turn).toBe(0);
     expect(s1.ledger).toEqual(s0.ledger);
   });
 
@@ -112,15 +112,19 @@ describe("reserve and lending", () => {
   });
 });
 
-describe("actions are shared across decision types", () => {
-  it("refuses a 4th action, whatever its kind", () => {
+describe("capacity (A2): deals draw on the clerks, then the head's time", () => {
+  it("refuses a deal when the clerks and the head are busy, but still sets the reserve", () => {
     let s = fresh();
     s = applyOk(s, reserve(10000));
     s = applyOk(s, lendGood(1000));
     s = applyOk(s, { ...lendGood(1000), borrower: GOOD_2 });
-    expect(s.actions_this_turn).toBe(tuning.actions_per_turn);
-    expect(checkSetReserve(s, reserve(20000), tuning)).toMatch(/No actions left/);
-    expect(checkLend(s, { ...lendGood(1000), borrower: GOOD_2 }, tuning)).toMatch(/No actions left/);
+    s = applyOk(s, { ...lendGood(1000), borrower: FAIR });
+    s = applyOk(s, { ...lendGood(1000), borrower: POOR });
+    // Two clerks and two of the head's time.
+    expect(s.actions_this_turn).toBe(4);
+    expect(checkSetReserve(s, reserve(20000), tuning)).toBeNull();
+    reopenRequests(s);
+    expect(checkLend(s, lendGood(1000), tuning)).toMatch(/No clerk is free/);
   });
 
   it("resets at the end of the turn", () => {

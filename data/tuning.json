@@ -69,7 +69,7 @@
     "opinion": { "min": -100, "max": 100, "drift": 0.1, "succession_reset": 0.5 },
     "court": { "cost": 1000, "opinion": 15 }
   },
-  "actions_per_turn": 3,
+  "capacity": { "head": 2, "partner": 2, "per_clerk": 1, "per_correspondent": 2, "per_analyst": 2 },
   "sentiment_multiplier": {
     "calm": 1,
     "uneasy": 2,

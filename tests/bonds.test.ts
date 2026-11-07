@@ -146,7 +146,9 @@ describe("buyBond", () => {
     s = applyOk(s, buy("bavaria"));
     s = applyOk(s, { kind: "set_reserve", amount: 1000 });
     s = applyOk(s, buy("austria"));
-    expect(checkBuyBond(s, buy("france"), gameData)).toMatch(/No actions left/);
+    // A2: two clerks wrote those up; with the head's time spent too, a third is refused.
+    s.counting.used.head = gameData.tuning.capacity.head;
+    expect(checkBuyBond(s, buy("france"), gameData)).toMatch(/No clerk is free/);
   });
 
   it("returns a reason instead of throwing", () => {

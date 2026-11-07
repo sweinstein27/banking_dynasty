@@ -28,6 +28,14 @@ export const quiet: GameData = {
     loans: { ...gameData.tuning.loans, requests_per_quarter: 0 },
     deposits: { ...gameData.tuning.deposits, catch_up: 0, interest_rate: 0 },
   },
+  // The counting house (A2) keeps its staff and capacity but pays nothing and rolls nothing.
+  counting: {
+    ...gameData.counting,
+    roles: Object.fromEntries(Object.entries(gameData.counting.roles).map(([k, r]) => [k, { ...r, wage: 0 }])) as typeof gameData.counting.roles,
+    rooms: gameData.counting.rooms.map((r) => ({ ...r, upkeep: 0 })),
+    candidates_per_role: 0,
+    advice: { ...gameData.counting.advice, enabled: false },
+  },
 };
 
 /** Test borrowers with known quality, standing in for the old tiers. GOOD_2 is a second good borrower. */

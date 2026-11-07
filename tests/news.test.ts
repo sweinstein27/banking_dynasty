@@ -5,6 +5,9 @@ import { newGame } from "../src/sim/init";
 import { endTurn } from "../src/sim/turn";
 import type { Decision, GameState, NewsKind } from "../src/sim/types";
 import { fixedRng, fresh, GOOD, noDefaults, PANIC_SEED, POOR, quiet } from "./helpers";
+
+/** A2: the real data with the quiet counting house, so PANIC_SEED plays the run it was picked for. */
+const quietHouse = { ...gameData, counting: quiet.counting };
 import { aggressiveDecisions, play } from "../src/harness/golden";
 
 function decide(s: GameState, ...ds: Decision[]): GameState {
@@ -67,7 +70,7 @@ describe("quarter news", () => {
   });
 
   it("never ends a sentence with a doubled full stop", () => {
-    const a = play(aggressiveDecisions, PANIC_SEED, 20, gameData).state;
+    const a = play(aggressiveDecisions, PANIC_SEED, 20, quietHouse).state;
     expect(a.news.filter((n) => n.text.includes(".."))).toEqual([]);
   });
 
@@ -87,8 +90,8 @@ describe("quarter news", () => {
   });
 
   it("keeps every quarter's news, and is the same on a replay", () => {
-    const a = play(aggressiveDecisions, PANIC_SEED, 20, gameData).state;
-    const b = play(aggressiveDecisions, PANIC_SEED, 20, gameData).state;
+    const a = play(aggressiveDecisions, PANIC_SEED, 20, quietHouse).state;
+    const b = play(aggressiveDecisions, PANIC_SEED, 20, quietHouse).state;
     expect(a.news).toEqual(b.news);
     const seen = new Set<NewsKind>(kinds(a));
     for (const k of ["withdrawal", "forced_sale", "bond_default", "mood"] as const) expect(seen).toContain(k);

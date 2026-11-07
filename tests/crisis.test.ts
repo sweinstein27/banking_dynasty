@@ -50,11 +50,11 @@ describe("when crisis measures are open", () => {
     }
   });
 
-  it("each uses one of the turn's actions", () => {
+  it("borrowing uses the head's time; suspending uses none (A2)", () => {
     let s = inMood("panic");
     s = decide(s, { kind: "borrow", house: "albrecht", amount: 10000 }, { kind: "suspend" }, { kind: "borrow", house: "albrecht", amount: 10000 });
-    expect(s.actions_this_turn).toBe(tuning.actions_per_turn);
-    expect(checkCrisis(s, { kind: "borrow", house: "albrecht", amount: 10000 }, tuning)).toMatch(/No actions left/);
+    expect(s.actions_this_turn).toBe(tuning.capacity.head);
+    expect(checkCrisis(s, { kind: "borrow", house: "albrecht", amount: 10000 }, tuning)).toMatch(/The head has no time left/);
   });
 });
 

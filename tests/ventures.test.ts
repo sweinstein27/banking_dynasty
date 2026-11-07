@@ -112,7 +112,9 @@ describe("investVenture", () => {
     s = applyOk(s, invest("mill"));
     s = applyOk(s, { kind: "buy_bond", state: "bavaria", face_value: 5000 });
     s = applyOk(s, { kind: "lend", amount: 5000, rate: 0.06, borrower: GOOD });
-    expect(checkInvestVenture(s, invest("shipping"), gameData)).toMatch(/No actions left/);
+    // A2: two clerks and one of the head's time so far; spend the other.
+    s.counting.used.head = gameData.tuning.capacity.head;
+    expect(checkInvestVenture(s, invest("shipping"), gameData)).toMatch(/No clerk is free/);
   });
 
   it("returns a reason instead of throwing", () => {

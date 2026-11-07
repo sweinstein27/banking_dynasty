@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { gameData } from "../src/data";
-import { FAIR, fresh, GOOD, GOOD_2, POOR } from "./helpers";
+import { FAIR, fresh, GOOD, GOOD_2, POOR, reopenRequests } from "./helpers";
 import { newGame } from "../src/sim/init";
 import { accountBalance } from "../src/sim/ledger";
 import { checkLend, defaultChance, lend, quarterlyInterest } from "../src/sim/loans";
@@ -105,7 +105,10 @@ describe("lend", () => {
     let s = fresh();
     // One loan per borrower per quarter, so each action lends to a different test borrower.
     for (const borrower of [POOR, FAIR, GOOD]) s = lendOk(s, { ...good, borrower, amount: 1000 });
-    expect(checkLend(s, { ...good, borrower: GOOD_2, amount: 1000 }, tuning)).toMatch(/No actions left/);
+    // A2: two clerks and two of the head's time make four deals.
+    s = lendOk(s, { ...good, borrower: GOOD_2, amount: 1000 });
+    reopenRequests(s);
+    expect(checkLend(s, { ...good, borrower: GOOD, amount: 1000 }, tuning)).toMatch(/No clerk is free/);
   });
 
   it("returns a reason instead of throwing", () => {

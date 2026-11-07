@@ -1,5 +1,6 @@
 import { ageIn, STATS } from "./family";
 import { fl } from "./format";
+import { warningKnown } from "./systems/counting";
 import type { GameData } from "./tuning";
 import type { GameState, LedgerEntry, NewsItem, NewsKind } from "./types";
 
@@ -174,7 +175,8 @@ export function quarterNews(before: GameState, after: GameState, data: GameData)
     add("family", `A child, ${p.name}, is born to the house.${trait ? ` The nurse already calls the child ${trait.name.toLowerCase()}.` : ""}`);
   }
 
-  if (after.panic_warning) {
+  // Without a courier stable (the counting house) a warning reaches the house a quarter late.
+  if (after.panic_warning && warningKnown(after, data)) {
     const signs = data.tuning.sentiment.warning_signs;
     const sign = signs.length ? `${signs[turn % signs.length]} ` : "";
     const n = after.panic_warning.turns_left;

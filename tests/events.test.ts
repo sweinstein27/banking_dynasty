@@ -266,7 +266,8 @@ describe("data/events.json in a full run", () => {
   it("fires every historical event once, in its quarter, and the books still reconcile", () => {
     let s = fresh();
     const rng = { next: (() => { let x = 7; return () => ((x = (x * 16807) % 2147483647) / 2147483647); })() };
-    while (s.world.year <= tuning.end.year) s = endTurn(s, [], rng, gameData);
+    // A2: the quiet counting house, so an idle house's wages do not bankrupt it.
+    while (s.world.year <= tuning.end.year) s = endTurn(s, [], rng, { ...gameData, counting: quiet.counting });
     for (const ev of gameData.events.filter((e) => e.historical)) {
       const fired = s.fired_events.filter((f) => f.id === ev.id);
       expect(fired, ev.id).toHaveLength(1);
