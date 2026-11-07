@@ -1,28 +1,38 @@
-import { useState } from "react";
+// The grand-strategy shell: a top bar of readouts, a side menu of panels, the open panel on the
+// left and the Desk on the right. One panel is open at a time; the Gazette is home, and a new
+// quarter opens on its new issue.
+import { useEffect, useState } from "react";
 import { gameData } from "../data";
 import { runOver } from "../sim/actions";
-import { unansweredLetters } from "../sim/letters";
+import { Alerts } from "./Alerts";
+import { BoursePanel } from "./BoursePanel";
+import { CountingPanel } from "./CountingPanel";
+import { LettersPanel } from "./LettersPanel";
 import { Desk } from "./Desk";
 import { FamilyPanel } from "./FamilyPanel";
 import { downloadText, pickTextFile } from "./files";
-import { seasonLabel, previousQuarter } from "./format";
 import { Gazette } from "./Gazette";
-import { GameOver, RunOverCard } from "./GameOver";
+import { GameMenu } from "./GameMenu";
+import { GameOver } from "./GameOver";
 import { HousesView } from "./HousesView";
 import { LedgerBook } from "./LedgerBook";
 import { NewGame } from "./NewGame";
+import { PanelFrame, type PanelId } from "./Panel";
+import { SideMenu } from "./SideMenu";
+import { TopBar } from "./TopBar";
 import { useGame } from "./useGame";
-
-/** Market mood as a barometer reading. */
-const BAROMETER = { calm: "Fair", uneasy: "Changeable", panic: "Stormy" } as const;
 
 export function App() {
   const api = useGame();
   const [onStartScreen, setOnStartScreen] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [showBooks, setShowBooks] = useState(false);
-  const [view, setView] = useState<"desk" | "houses">("desk");
+  const [panel, setPanel] = useState<PanelId>("gazette");
+  const [menuOpen, setMenuOpen] = useState(false);
   const { game } = api;
+  const turn = game?.base.world.turn;
+
+  // Each new quarter (or a newly loaded game) opens on the Gazette's new issue.
+  useEffect(() => setPanel("gazette"), [turn, game?.seed]);
 
   const load = async () => {
     const text = await pickTextFile();
@@ -31,7 +41,7 @@ export function App() {
     setLoadError(reason);
     if (!reason) {
       setOnStartScreen(false);
-      setShowBooks(false);
+      setMenuOpen(false);
     }
   };
 
@@ -48,7 +58,6 @@ export function App() {
           api.newGame(seed);
           setLoadError(null);
           setOnStartScreen(false);
-          setShowBooks(false);
         }}
         onLoad={load}
         onResume={game ? () => setOnStartScreen(false) : null}
@@ -59,61 +68,39 @@ export function App() {
 
   const { base, preview } = game;
   const over = runOver(base, gameData.tuning);
-  const mood = base.world.sentiment;
-  const unanswered = unansweredLetters(preview).length;
+  const decide = over ? undefined : api.queue;
 
   return (
     <div className="screen">
-      <header className="masthead">
-        <div className="house">
-          <h1>{base.house.name}</h1>
-          <span className="small">{base.house.city}, seed {game.seed}</span>
-        </div>
-        <div className="date">
-          <span className="season">{over ? `After ${seasonLabel(previousQuarter(base.world))}` : seasonLabel(base.world)}</span>
-          {!over && <span className="small">Quarter {base.world.turn} of 144</span>}
-        </div>
-        <div className={`barometer mood-${mood}`} aria-label={`Market: ${BAROMETER[mood]}`}>
-          <div className="dial" aria-hidden="true">
-            <span className="needle" />
+      <TopBar game={game} over={over} onEndTurn={api.endTurn} onOpen={setPanel} />
+      <div className="main">
+        <SideMenu open={panel} onOpen={setPanel} state={preview} onMenu={() => setMenuOpen(true)} />
+        <PanelFrame id={panel} onClose={panel === "gazette" ? undefined : () => setPanel("gazette")}>
+          {panel === "gazette" && <Gazette key={base.world.turn} state={base} />}
+          {panel === "ledger" && <LedgerBook base={base} preview={preview} />}
+          {panel === "houses" && <HousesView state={preview} onCourt={over ? undefined : (house) => api.queue({ kind: "court_house", house })} />}
+          {panel === "family" && <FamilyPanel state={preview} onDecide={decide} />}
+          {panel === "bourse" && <BoursePanel state={preview} onDecide={decide} />}
+          {panel === "counting" && <CountingPanel state={preview} onDecide={decide} />}
+          {panel === "letters" && <LettersPanel state={preview} onDecide={decide} />}
+        </PanelFrame>
+        {over ? (
+          <GameOver state={base} reason={over} seed={game.seed} onNewGame={() => setOnStartScreen(true)} onSave={save} />
+        ) : (
+          <div className="right-column">
+            <Desk api={api} game={game} />
+            <Alerts game={game} onOpen={setPanel} />
           </div>
-          <div className="barometer-text">
-            <span className="small">The market</span>
-            <span className="reading">{BAROMETER[mood]}</span>
-            {base.panic_warning && !over && <span className="warning-chip">Panic in {base.panic_warning.turns_left} qtr</span>}
-          </div>
-        </div>
-        <div className="masthead-buttons">
-          {!(over && !showBooks) && (
-            <div className="views" role="group" aria-label="View">
-              <button className={view === "desk" ? "view on" : "view"} aria-pressed={view === "desk"} onClick={() => setView("desk")}>The Desk</button>
-              <button className={view === "houses" ? "view on" : "view"} aria-pressed={view === "houses"} onClick={() => setView("houses")}>The Houses</button>
-            </div>
-          )}
-          <button className="secondary" onClick={save}>Save</button>
-          <button className="secondary" onClick={() => setOnStartScreen(true)}>New or load</button>
-          <button className="seal" onClick={api.endTurn} disabled={over !== null || unanswered > 0}>
-            {unanswered > 0 && !over
-              ? `Answer ${unanswered} letter${unanswered === 1 ? "" : "s"} first`
-              : `End the quarter${game.queued.length ? ` (${game.queued.length})` : ""}`}
-          </button>
-        </div>
-      </header>
-
-      {over && !showBooks ? (
-        <main className="ending">
-          <GameOver state={base} reason={over} seed={game.seed} onNewGame={() => setOnStartScreen(true)} onSave={save} onShowBooks={() => setShowBooks(true)} />
-        </main>
-      ) : view === "houses" ? (
-        <HousesView state={preview} onCourt={over ? undefined : (house) => api.queue({ kind: "court_house", house })} />
-      ) : (
-        <main className="desk-grid">
-          <Gazette key={base.world.turn} state={base} />
-          <LedgerBook base={base} preview={preview} />
-          {over ? <RunOverCard onChronicle={() => setShowBooks(false)} /> : <Desk api={api} game={game} />}
-          <FamilyPanel state={preview} onDecide={over ? undefined : api.queue} />
-        </main>
-      )}
+        )}
+      </div>
+      <GameMenu
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onSave={save}
+        onLoad={load}
+        onNew={() => { setMenuOpen(false); setOnStartScreen(true); }}
+        error={loadError}
+      />
     </div>
   );
 }

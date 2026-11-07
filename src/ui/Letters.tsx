@@ -30,7 +30,7 @@ export function LetterStack({ state, onSubmit }: { state: GameState; onSubmit: (
 }
 
 /** The first unanswered letter, with its responses. Answering moves on to the next; the last closes the dialog. */
-function LetterDialog({ state, open, onClose, onSubmit }: {
+export function LetterDialog({ state, open, onClose, onSubmit }: {
   state: GameState;
   open: boolean;
   onClose: () => void;

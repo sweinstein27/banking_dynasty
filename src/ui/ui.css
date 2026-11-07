@@ -1,5 +1,6 @@
 /*
- * A partner's desk in a Frankfurt counting house, seen from above: parchment sheets on walnut.
+ * A grand-strategy frame: dark lacquer chrome with gilt rules and corner flourishes, holding
+ * parchment documents (the Gazette, ledger pages, letters, sheets, the chronicle).
  * One screen, no scrolling: the base size follows the window's height, so everything (set in rem)
  * shrinks on a 1280x800 screen and grows on larger ones. Lists turn pages instead of scrolling.
  * Trackpad rules: large click targets (never under 44 px, whatever the screen), no hover-only
@@ -21,7 +22,22 @@
   --bottle: #2f5d3a;
   --brass: #b08d3c;
   --amber: #8a5a00;
-  --gap: 0.5rem;
+  --frame-1: #120d09;
+  --frame-2: #1d1610;
+  --frame-3: #2c2117;
+  --gilt: #b8943f;
+  --gilt-light: #e6cd8a;
+  --gilt-dim: #6b5524;
+  --chrome-ink: #eadfc4;
+  --chrome-muted: #a8977a;
+  --good-l: #7fbf98;
+  --warn-l: #e3ae54;
+  --bad-l: #e07a68;
+  --corner-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg transform='' fill='none' stroke='%23b8943f' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M2 22V6a4 4 0 0 1 4-4h16'/%3E%3Cpath d='M5 16V8a3 3 0 0 1 3-3h8'/%3E%3Ccircle cx='8' cy='8' r='1.3' fill='%23b8943f'/%3E%3Cpath d='M2 12c3 0 4-1 4-4M12 2c0 3-1 4-4 4'/%3E%3C/g%3E%3C/svg%3E");
+  --corner-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg transform='translate(24 0) scale(-1 1)' fill='none' stroke='%23b8943f' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M2 22V6a4 4 0 0 1 4-4h16'/%3E%3Cpath d='M5 16V8a3 3 0 0 1 3-3h8'/%3E%3Ccircle cx='8' cy='8' r='1.3' fill='%23b8943f'/%3E%3Cpath d='M2 12c3 0 4-1 4-4M12 2c0 3-1 4-4 4'/%3E%3C/g%3E%3C/svg%3E");
+  --corner-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg transform='translate(0 24) scale(1 -1)' fill='none' stroke='%23b8943f' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M2 22V6a4 4 0 0 1 4-4h16'/%3E%3Cpath d='M5 16V8a3 3 0 0 1 3-3h8'/%3E%3Ccircle cx='8' cy='8' r='1.3' fill='%23b8943f'/%3E%3Cpath d='M2 12c3 0 4-1 4-4M12 2c0 3-1 4-4 4'/%3E%3C/g%3E%3C/svg%3E");
+  --corner-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg transform='translate(24 24) scale(-1 -1)' fill='none' stroke='%23b8943f' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M2 22V6a4 4 0 0 1 4-4h16'/%3E%3Cpath d='M5 16V8a3 3 0 0 1 3-3h8'/%3E%3Ccircle cx='8' cy='8' r='1.3' fill='%23b8943f'/%3E%3Cpath d='M2 12c3 0 4-1 4-4M12 2c0 3-1 4-4 4'/%3E%3C/g%3E%3C/svg%3E");
+  --gap: 0.45rem;
   --display: "IM Fell English", Georgia, serif;
   --text: "EB Garamond", Georgia, serif;
   font-family: var(--text);
@@ -34,9 +50,9 @@
 html, body, #root { height: 100%; margin: 0; overflow: hidden; }
 body {
   background:
-    repeating-linear-gradient(92deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 9px),
-    repeating-linear-gradient(88deg, rgba(0, 0, 0, 0.08) 0 1px, transparent 1px 23px),
-    radial-gradient(ellipse at 50% 40%, var(--wood) 0%, var(--wood-dark) 100%);
+    repeating-linear-gradient(45deg, rgba(184, 148, 63, 0.035) 0 1px, transparent 1px 14px),
+    repeating-linear-gradient(-45deg, rgba(184, 148, 63, 0.035) 0 1px, transparent 1px 14px),
+    radial-gradient(ellipse at 50% 30%, #241a12 0%, #0b0806 100%);
 }
 h1, h2, h3 { margin: 0; line-height: 1.1; font-family: var(--display); font-weight: 400; }
 h2 { font-size: 1.35rem; }
@@ -83,7 +99,7 @@ input {
 .good { color: var(--bottle); }
 .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 
-/* ---------- The screen ---------- */
+/* ---------- The shell: a dark, gilt grand-strategy frame ---------- */
 
 .screen {
   height: 100vh;
@@ -93,50 +109,201 @@ input {
   padding: var(--gap);
 }
 
-/* Every sheet of paper on the desk. */
-.panel, .masthead, .dialog, .start .card {
+/* Paper: every document (the Gazette, ledger pages, sheets, letters, the chronicle). */
+.doc, .dialog, .card-pop {
   background:
     radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.45), transparent 60%),
     radial-gradient(ellipse at 50% 120%, rgba(120, 90, 40, 0.18), transparent 60%),
     var(--paper);
   border: 1px solid var(--rule);
+  border-radius: 2px;
+  color: var(--ink);
+}
+.doc {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.55rem 0.85rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+.doc h3 { color: var(--ink); }
+
+/* Chrome: dark lacquer with a gilt double rule and corner flourishes. */
+.frame, .topbar {
+  position: relative;
+  background:
+    var(--corner-tl) top 3px left 3px / 1.4rem no-repeat,
+    var(--corner-tr) top 3px right 3px / 1.4rem no-repeat,
+    var(--corner-bl) bottom 3px left 3px / 1.4rem no-repeat,
+    var(--corner-br) bottom 3px right 3px / 1.4rem no-repeat,
+    linear-gradient(180deg, var(--frame-3), var(--frame-2) 40%, var(--frame-1));
+  border: 1px solid var(--gilt);
+  box-shadow: inset 0 0 0 3px var(--frame-1), inset 0 0 0 4px var(--gilt-dim), 0 4px 12px rgba(0, 0, 0, 0.6);
   border-radius: 3px;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.15);
+  color: var(--chrome-ink);
+}
+.frame { min-height: 0; display: flex; flex-direction: column; padding: 0.45rem 0.6rem 0.6rem; gap: 0.4rem; }
+.frame-head { display: flex; align-items: center; gap: 0.5rem; padding: 0 0.6rem 0.25rem; border-bottom: 1px solid var(--gilt-dim); }
+.frame-head h2 { flex: 1; font-size: 1.3rem; color: var(--gilt-light); letter-spacing: 0.03em; }
+.frame-head > .icon { width: 1.5rem; height: 1.5rem; color: var(--gilt); flex: none; }
+.frame-head.small-head h2 { font-size: 1.05rem; }
+.frame-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.frame .muted { color: var(--chrome-muted); }
+
+button.close, .close {
+  min-width: 44px; min-height: 44px; padding: 0; display: grid; place-items: center;
+  background: transparent; border: 1px solid var(--gilt-dim); color: var(--gilt-light); box-shadow: none;
+  font-size: 1.3rem; line-height: 1;
+}
+button.close .icon { width: 1.1rem; height: 1.1rem; }
+.card-pop .close { color: var(--ink); border-color: var(--rule); }
+
+.icon { width: 1.2em; height: 1.2em; display: inline-block; vertical-align: middle; flex: none; }
+
+/* The top bar */
+.topbar { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.6rem; }
+.crest { display: flex; align-items: center; gap: 0.5rem; padding: 0 0.3rem; min-width: 0; flex: none; }
+.crest-seal {
+  width: 2.6rem; height: 2.6rem; border-radius: 50%; display: grid; place-items: center; flex: none;
+  font-family: var(--display); font-size: 1.5rem; color: var(--frame-1);
+  background: radial-gradient(circle at 35% 30%, var(--gilt-light), var(--gilt) 55%, #6e5414);
+  box-shadow: 0 0 0 2px var(--frame-1), 0 0 0 3px var(--gilt-dim);
+}
+.crest-text { display: flex; flex-direction: column; line-height: 1.1; }
+.crest-name { font-family: var(--display); font-size: 1.25rem; color: var(--gilt-light); white-space: nowrap; }
+.crest-sub { font-size: 0.72rem; color: var(--chrome-muted); white-space: nowrap; }
+.readouts { flex: 1; min-width: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, auto); justify-content: space-evenly; gap: 0.25rem; }
+button.readout {
+  display: flex; align-items: center; gap: 0.35rem; text-align: left;
+  min-height: max(44px, 2.9rem); padding: 0.15rem 0.45rem;
+  background: rgba(0, 0, 0, 0.25); color: var(--chrome-ink);
+  border: 1px solid transparent; border-bottom: 1px solid var(--gilt-dim); border-radius: 2px; box-shadow: none;
+}
+button.readout:hover, button.readout[data-state="open"] { border-color: var(--gilt); background: rgba(184, 148, 63, 0.12); }
+.readout-icon { width: 1.55rem; height: 1.55rem; color: var(--gilt); }
+.readout-text { display: flex; flex-direction: column; line-height: 1.1; min-width: 0; }
+.readout-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--chrome-muted); white-space: nowrap; }
+.readout-value { font-size: 1.02rem; white-space: nowrap; font-variant-numeric: tabular-nums lining-nums; display: flex; align-items: center; gap: 0.2rem; }
+.trend { width: 0.95rem; height: 0.95rem; stroke-width: 2.4; }
+.trend-up { color: var(--good-l); }
+.trend-down { color: var(--bad-l); }
+.trend-level { color: var(--chrome-muted); }
+.tone-good { color: var(--good-l); }
+.tone-warn { color: var(--warn-l); }
+.tone-bad { color: var(--bad-l); }
+.doc .tone-good, .card-pop .tone-good { color: var(--bottle); }
+.doc .tone-warn, .card-pop .tone-warn { color: var(--amber); }
+.doc .tone-bad, .card-pop .tone-bad { color: var(--oxblood); }
+
+/* Main area: side menu, the open panel, the Desk. */
+.main { min-height: 0; display: grid; grid-template-columns: auto minmax(0, 46fr) minmax(0, 54fr); gap: var(--gap); }
+.right-column { min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: var(--gap); }
+
+.rail {
+  display: flex; flex-direction: column; gap: 0.3rem; padding: 0.3rem;
+  background: linear-gradient(90deg, var(--frame-1), var(--frame-2));
+  border: 1px solid var(--gilt-dim); border-radius: 3px; min-height: 0;
+}
+button.rail-button {
+  position: relative; width: 4.7rem; min-height: max(56px, 3.5rem); padding: 0.2rem;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.1rem;
+  background: transparent; color: var(--chrome-ink); border: 1px solid transparent; border-radius: 3px; box-shadow: none;
+  font-size: 0.74rem;
+}
+button.rail-button .icon { width: 1.65rem; height: 1.65rem; color: var(--gilt); }
+button.rail-button:hover { border-color: var(--gilt-dim); }
+button.rail-button.on { background: linear-gradient(var(--frame-3), var(--frame-2)); border-color: var(--gilt); color: var(--gilt-light); box-shadow: inset 3px 0 0 var(--gilt); }
+button.rail-button.game { margin-top: auto; }
+.badge {
+  position: absolute; top: 0.15rem; right: 0.35rem; min-width: 1.2rem; height: 1.2rem; padding: 0 0.25rem; border-radius: 999px;
+  display: grid; place-items: center; font-size: 0.75rem; font-weight: 700; color: var(--paper-light);
+  background: radial-gradient(circle at 35% 30%, #c45050, #7a1414 70%);
 }
 
-.masthead {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto auto;
-  align-items: center;
-  gap: 1.2rem;
-  padding: 0.3rem 0.9rem;
-  border-bottom: 3px double var(--ink);
-}
-.masthead h1 { font-size: 1.8rem; letter-spacing: 0.02em; }
-.masthead .house, .masthead .date { display: flex; flex-direction: column; }
-.masthead .season { font-family: var(--display); font-size: 1.35rem; text-align: center; }
-.masthead .date .small { text-align: center; color: var(--muted); }
-.masthead-buttons { display: flex; gap: 0.5rem; align-items: center; }
+/* Ribbon tabs and pages inside a document. */
+.doc-tabs { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+.doc-page { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.3rem; padding-top: 0.4rem; }
+.doc-page[hidden] { display: none; }
+.page-actions { margin-top: auto; justify-content: flex-end; }
+.page-turner + .page-actions { margin-top: 0.3rem; }
 
-/* The barometer: a dial whose needle swings from Fair to Stormy. */
-.barometer { display: flex; align-items: center; gap: 0.5rem; }
-.barometer-text { display: flex; flex-direction: column; }
-.barometer .reading { font-family: var(--display); font-size: 1.2rem; }
-.dial {
-  position: relative; width: 2.8rem; height: 2.8rem; border-radius: 50%;
-  background: radial-gradient(circle, var(--paper-light) 55%, var(--brass) 57%, #7a5f22 70%);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+/* Rows on the bourse, the post and the houses. */
+.rows { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+.row-card { padding: 0.3rem 0.55rem; background: rgba(255, 255, 255, 0.4); border: 1px solid var(--rule); border-left: 3px solid var(--brass); }
+.row-card p { margin: 0.05rem 0; }
+.row-card.blocked { opacity: 0.75; border-left-color: var(--muted); }
+.row-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+.chip { font-size: 0.72rem; font-family: var(--display); padding: 0 0.4rem; border-radius: 2px; color: var(--paper-light); background: var(--muted); white-space: nowrap; }
+.chip-asking { background: var(--bottle); }
+.chip-borrowing { background: #2c4a6b; }
+.chip-away { background: var(--oxblood); }
+.placeholder { margin-top: auto; border: 1px dashed var(--rule); padding: 0.4rem 0.7rem; color: var(--muted); }
+.placeholder h3 { color: var(--muted); }
+.coins.big .coin { width: 2rem; height: 2rem; }
+
+/* The Desk: parchment cards on a green leather blotter. */
+.desk { gap: 0.45rem; }
+.desk .desk-head h2 { color: var(--gilt-light); font-size: 1.3rem; }
+.desk .coins-label { color: var(--chrome-muted); }
+.desk .ribbons { border-bottom-color: var(--gilt-dim); }
+.desk .letters > .muted { color: var(--chrome-muted); }
+.desk .desk-tabs { background: linear-gradient(160deg, #26402f, #1b2d21); border: 1px solid #0f1a13; border-radius: 2px; padding: 0.4rem 0.5rem 0.5rem; }
+.desk .letters { margin-top: auto; }
+.desk .letter { color: var(--ink); }
+.desk button.turn { flex: none; }
+
+/* Alerts */
+.alerts { gap: 0.3rem; }
+.alert-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem; }
+button.alert {
+  width: 100%; min-height: max(44px, 2.6rem); text-align: left; font-size: 0.9rem; line-height: 1.15;
+  background: rgba(0, 0, 0, 0.3); color: var(--chrome-ink); border: 1px solid var(--gilt-dim); border-left: 4px solid var(--chrome-muted); box-shadow: none;
 }
-.needle {
-  position: absolute; left: 50%; bottom: 50%; width: 2px; height: 42%; background: var(--ink);
-  transform-origin: bottom center; transform: translateX(-50%) rotate(-50deg); transition: transform 0.6s ease;
+button.alert.tone-bad { border-left-color: var(--bad-l); color: var(--chrome-ink); }
+button.alert.tone-warn { border-left-color: var(--warn-l); color: var(--chrome-ink); }
+button.alert.tone-info { border-left-color: var(--good-l); color: var(--chrome-ink); }
+.alerts-empty { font-style: italic; margin: 0.2rem 0.6rem; }
+.frame .page-turner span { color: var(--chrome-muted); }
+
+/* Click-open cards: breakdowns and explanations. Never opened by hover. */
+.card-pop {
+  z-index: 30; width: min(25rem, calc(100vw - 24px)); padding: 0.55rem 0.8rem 0.65rem;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--gilt);
+  max-height: var(--radix-popover-content-available-height); overflow: hidden;
+  font-size: 0.92rem;
 }
-.mood-uneasy .needle { transform: translateX(-50%) rotate(0deg); }
-.mood-panic .needle { transform: translateX(-50%) rotate(50deg); background: var(--oxblood); }
-.mood-calm .reading { color: var(--bottle); }
-.mood-uneasy .reading { color: var(--amber); }
-.mood-panic .reading { color: var(--oxblood); }
-.warning-chip { background: var(--oxblood); color: var(--paper-light); border-radius: 3px; padding: 0 0.4rem; font-weight: 700; font-size: 0.85rem; }
+.card-pop.breakdown { width: min(27rem, calc(100vw - 24px)); }
+.card-arrow { fill: var(--gilt); }
+.card-head { display: flex; align-items: center; gap: 0.4rem; border-bottom: 1px solid var(--rule); padding-bottom: 0.2rem; margin-bottom: 0.25rem; }
+.card-head h3 { flex: 1; margin: 0; font-size: 1.15rem; }
+.card-head .back { min-height: 44px; padding: 0.1rem 0.6rem; font-size: 0.85rem; }
+.card-summary, .card-text { margin: 0.2rem 0 0.3rem; line-height: 1.35; }
+.card-trail { color: var(--muted); font-style: italic; margin: 0.3rem 0 0; }
+.bd-section h4 { margin: 0.35rem 0 0.1rem; font-family: var(--display); font-weight: 400; font-size: 0.98rem; color: var(--muted); }
+.bd-lines { display: grid; grid-template-columns: minmax(0, 1fr) auto; margin: 0; column-gap: 0.8rem; }
+.bd-lines dt, .bd-lines dd { padding: 0.05rem 0; border-bottom: 1px solid var(--ledger-line); line-height: 1.3; }
+.bd-lines dd { margin: 0; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.bd-lines .total { border-top: 1px solid var(--ink); border-bottom: 3px double var(--ink); font-weight: 700; }
+.card-foot { display: flex; justify-content: flex-end; margin-top: 0.4rem; }
+.card-foot button { min-height: 44px; }
+
+/* An underlined term: prose height, with an invisible click area at least 44 px tall. */
+button.term {
+  display: inline; position: relative; min-height: 0; padding: 0; margin: 0; border: none; border-radius: 0;
+  background: none; box-shadow: none; font: inherit; color: inherit; text-align: inherit;
+  text-decoration: underline dotted; text-decoration-thickness: 1px; text-underline-offset: 0.18em; cursor: pointer;
+}
+button.term::after { content: ""; position: absolute; left: -2px; right: -2px; top: 50%; height: 44px; transform: translateY(-50%); }
+button.term:hover { text-decoration-style: solid; color: var(--oxblood); }
+.frame button.term:hover { color: var(--gilt-light); }
+
+/* The game menu */
+.game-menu { width: min(28rem, calc(100vw - 32px)); }
+.menu-buttons { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.6rem; }
+
 
 /* End the quarter: a wax seal. */
 .seal {
@@ -158,35 +325,6 @@ input {
   box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.25), inset 0 0 0 5px rgba(255, 255, 255, 0.12);
 }
 
-.desk-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr) minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1fr) auto;
-  grid-template-areas:
-    "gazette ledger family"
-    "gazette desk family";
-  gap: var(--gap);
-  min-height: 0;
-}
-.gazette { grid-area: gazette; }
-.ledger { grid-area: ledger; }
-.desk { grid-area: desk; }
-.family { grid-area: family; }
-
-.panel {
-  padding: 0.6rem 0.85rem;
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-/* Page turning, in place of scrolling. */
-.page-turner { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: auto; padding-top: 0.3rem; }
-.page-turner span { font-size: 0.85rem; color: var(--muted); font-style: italic; }
-button.turn { min-height: max(44px, 2.4rem); padding: 0.2rem 0.7rem; font-size: 0.9rem; }
-.page-turner.issues { margin-top: 0; border-top: 1px solid var(--rule); }
 
 /* ---------- The Gazette: newsprint ---------- */
 
@@ -315,18 +453,10 @@ button.turn { min-height: max(44px, 2.4rem); padding: 0.2rem 0.7rem; font-size: 
 .response .odds { font-style: italic; color: var(--amber); }
 .news-letter { font-style: italic; }
 
-/* ---------- The houses of Frankfurt: a second view ---------- */
+/* ---------- The houses of Frankfurt ---------- */
 
-.views { display: flex; border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; }
-.views .view { border: none; border-radius: 0; box-shadow: none; font-family: var(--display); }
-.views .view.on { background: linear-gradient(#3d6b47, var(--bottle)); color: var(--paper-light); }
-.houses-view {
-  min-height: 0;
-  display: grid; gap: var(--gap);
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
-}
-.houses-view h2 { border-bottom: 1px solid var(--rule); padding-bottom: 0.15rem; }
+.house-grid { flex: 1; min-height: 0; display: grid; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 0.4rem; }
+.house-card { display: flex; flex-direction: column; gap: 0.15rem; min-height: 0; overflow: hidden; }
 .ranking { margin: 0; padding-left: 1.6rem; display: flex; flex-direction: column; gap: 0.15rem; }
 .ranking li { display: flex; justify-content: space-between; gap: 0.5rem; border-bottom: 1px solid var(--ledger-line); }
 .ranking li.you { font-weight: 700; color: var(--bottle); }
@@ -390,13 +520,12 @@ button.cameo { padding: 0; min-height: 0; border: none; cursor: pointer; }
 
 /* ---------- The end, and the start ---------- */
 
-.ending { min-height: 0; display: flex; justify-content: center; }
-.game-over { width: min(60rem, 100%); }
+.game-over { min-height: 0; }
 .game-over h2 { font-size: 2rem; text-align: center; }
 .game-over-bankrupt h2 { color: var(--oxblood); }
 .final-worth { font-family: var(--display); font-size: 1.6rem; text-align: center; }
 /* The chronicle as a book spread: two columns of text. */
-.chronicle { flex: 1; min-height: 0; line-height: 1.5; font-size: 1.15rem; column-count: 2; column-gap: 2.4rem; column-rule: 1px solid var(--rule); text-align: justify; hyphens: auto; }
+.chronicle { flex: 1; min-height: 0; line-height: 1.45; font-size: 1rem; column-count: 2; column-gap: 2.4rem; column-rule: 1px solid var(--rule); text-align: justify; hyphens: auto; }
 .chronicle p { break-inside: avoid; margin: 0 0 0.6rem; }
 .chronicle p:first-child::first-letter { font-family: var(--display); font-size: 2.6rem; float: left; line-height: 0.9; padding-right: 0.3rem; }
 

@@ -1,8 +1,8 @@
-// The houses of Frankfurt: a second view, reached from the masthead. The bourse's standing (every
+// The houses of Frankfurt: a panel opened from the side menu. The bourse's standing (every
 // house and yours, by wealth) and one card per house: its head and heir, wealth, reputation, its
 // opinion of your house and what that opinion means for borrowing. A card's sheet explains more,
 // and Court spends one of the quarter's actions to win the house's favour.
-import { Dialog } from "radix-ui";
+import { Dialog, Tabs } from "radix-ui";
 import { useState } from "react";
 import { gameData } from "../data";
 import { capacityLeft } from "../sim/capacity";
@@ -14,6 +14,10 @@ import { allies } from "../sim/marriages";
 import { netWorth } from "../sim/turn";
 import type { GameState, OtherHouse } from "../sim/types";
 import { fl, keepUnits, pct, seasonLabel } from "./format";
+import { PageTurner, usePages } from "./Pager";
+import { Term } from "./Term";
+
+const HOUSES_PER_PAGE = 2;
 
 const about = (n: number) => `about ${fl(Math.round(n / 1000) * 1000)}`;
 const TEMPERAMENT = {
@@ -48,57 +52,66 @@ export function HousesView({ state, onCourt }: { state: GameState; onCourt?: (ho
   const left = capacityLeft(state, gameData.tuning);
   const court = gameData.tuning.houses.court;
   const tied = allies(state);
+  const pages = usePages(state.houses, HOUSES_PER_PAGE);
 
   return (
-    <main className="houses-view">
-      <section className="panel standing" aria-label="The standing of the houses">
-        <h2>The Bourse</h2>
-        <p className="small muted">The houses of Frankfurt by wealth; yours by net worth.</p>
-        <ol className="ranking">
-          {ranking.map((r) => (
-            <li key={r.name} className={r.player ? "you" : ""}>
-              <span>{r.name}{r.player ? " (yours)" : ""}</span>
-              <span className="num">{keepUnits(r.player ? fl(r.worth) : about(r.worth))}</span>
-            </li>
-          ))}
-        </ol>
-        {failed.length > 0 && (
-          <p className="small muted">Failed: {failed.map((h) => `${h.name} (${seasonLabel(dateOfTurn(h.failed_turn!, gameData.tuning))})`).join("; ")}</p>
-        )}
-        <p className="small">
-          Courting a house costs {keepUnits(fl(court.cost))} and one action ({left} left this quarter), and raises its opinion by {court.opinion}.
-          Opinion drifts back toward each house's own leaning.
-        </p>
-      </section>
-
-      {state.houses.map((h) => (
-        <section key={h.id} className={`panel house-card ${h.failed_turn !== null ? "failed" : ""}`} aria-label={h.name}>
-          <h2>{h.name}</h2>
-          {tied.has(h.id) && <p className="ribbon-tag allied">Allied by marriage: {marriageNames(state, h.id)}</p>}
-          {h.failed_turn !== null ? (
-            <p className="stamp">Closed its doors, {seasonLabel(dateOfTurn(h.failed_turn, gameData.tuning))}</p>
-          ) : (
-            <>
-              <p className="small muted">{h.temperament === "bold" ? "Bold" : "Cautious"} house, headed by {h.head.name}, {ageIn(h.head, state.world.year)}</p>
-              <dl className="house-facts">
-                <dt>Wealth</dt>
-                <dd>{keepUnits(about(h.wealth))}</dd>
-                <dt>Reputation</dt>
-                <dd>{h.reputation} of 100</dd>
-              </dl>
-              <OpinionBar value={h.opinion} />
-              <p className="small">{keepUnits(lendingLine(state, h))}</p>
-            </>
+    <div className="doc houses">
+      <Tabs.Root defaultValue="houses" className="doc-tabs">
+        <Tabs.List className="ribbons" aria-label="The houses">
+          <Tabs.Trigger value="houses" className="ribbon">The houses</Tabs.Trigger>
+          <Tabs.Trigger value="standing" className="ribbon">Standing</Tabs.Trigger>
+        </Tabs.List>
+        <Tabs.Content value="standing" className="doc-page">
+          <p className="small muted">The houses of Frankfurt by wealth; yours by <Term id="net_worth">net worth</Term>.</p>
+          <ol className="ranking">
+            {ranking.map((r) => (
+              <li key={r.name} className={r.player ? "you" : ""}>
+                <span>{r.name}{r.player ? " (yours)" : ""}</span>
+                <span className="num">{keepUnits(r.player ? fl(r.worth) : about(r.worth))}</span>
+              </li>
+            ))}
+          </ol>
+          {failed.length > 0 && (
+            <p className="small muted">Failed: {failed.map((h) => `${h.name} (${seasonLabel(dateOfTurn(h.failed_turn!, gameData.tuning))})`).join("; ")}</p>
           )}
-          <div className="row card-buttons">
-            <button className="secondary" onClick={() => setOpen(h)}>About the house</button>
-            {h.failed_turn === null && onCourt && <CourtButton state={state} house={h} onCourt={onCourt} />}
+        </Tabs.Content>
+        <Tabs.Content value="houses" className="doc-page">
+          <p className="small">
+            Courting a house costs {keepUnits(fl(court.cost))} and one action ({left} left this quarter), and raises its <Term id="opinion">opinion</Term> by {court.opinion}.
+          </p>
+          <div className="house-grid">
+            {pages.items.map((h) => (
+              <section key={h.id} className={`row-card house-card ${h.failed_turn !== null ? "failed" : ""}`} aria-label={h.name}>
+                <p className="row-head"><strong>{h.name}</strong></p>
+                {tied.has(h.id) && <p className="ribbon-tag allied">Allied by marriage: {marriageNames(state, h.id)}</p>}
+                {h.failed_turn !== null ? (
+                  <p className="stamp">Closed its doors, {seasonLabel(dateOfTurn(h.failed_turn, gameData.tuning))}</p>
+                ) : (
+                  <>
+                    <p className="small muted">{h.temperament === "bold" ? "Bold" : "Cautious"} house, headed by {h.head.name}, {ageIn(h.head, state.world.year)}</p>
+                    <dl className="house-facts">
+                      <dt>Wealth</dt>
+                      <dd>{keepUnits(about(h.wealth))}</dd>
+                      <dt>Reputation</dt>
+                      <dd>{h.reputation} of 100</dd>
+                    </dl>
+                    <OpinionBar value={h.opinion} />
+                    <p className="small">{keepUnits(lendingLine(state, h))}</p>
+                  </>
+                )}
+                <div className="row card-buttons">
+                  <button className="secondary" onClick={() => setOpen(h)}>About</button>
+                  {h.failed_turn === null && onCourt && <CourtButton state={state} house={h} onCourt={onCourt} />}
+                </div>
+              </section>
+            ))}
           </div>
-        </section>
-      ))}
+          <PageTurner pages={pages} label="Page" />
+        </Tabs.Content>
+      </Tabs.Root>
 
       <HouseSheet house={open} state={state} onClose={() => setOpen(null)} />
-    </main>
+    </div>
   );
 }
 

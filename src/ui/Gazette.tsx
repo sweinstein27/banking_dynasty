@@ -18,7 +18,7 @@ export function Gazette({ state }: { state: GameState }) {
   const issueTurn = Math.max(1, latest - back);
 
   return (
-    <section className="panel gazette" aria-label="The Gazette">
+    <div className="doc gazette">
       <header className="gazette-head">
         <h2>The Bourse Gazette</h2>
         <p className="dateline">{latest === 0 ? "Frankfurt, first issue" : `Frankfurt, ${seasonLabel(dateOfTurn(issueTurn, gameData.tuning))}`}</p>
@@ -46,7 +46,7 @@ export function Gazette({ state }: { state: GameState }) {
           <button className="turn" onClick={() => setBack(Math.max(0, back - 1))} disabled={back === 0}>Later issue</button>
         </div>
       )}
-    </section>
+    </div>
   );
 }
 

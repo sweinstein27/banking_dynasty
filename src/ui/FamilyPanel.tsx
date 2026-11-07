@@ -162,7 +162,7 @@ export function FamilyPanel({ state, onDecide }: { state: GameState; onDecide?: 
   const [marrying, setMarrying] = useState<Person | null>(null);
 
   return (
-    <section className="panel family" aria-label="The Family">
+    <div className="doc family">
       <h2>The House of {gameData.family.surname}</h2>
 
       {head && (
@@ -226,6 +226,6 @@ export function FamilyPanel({ state, onDecide }: { state: GameState; onDecide?: 
           Remembered: {dead.map((p) => `${p.name} (${p.birth_year} to ${p.death_year})`).join("; ")}
         </p>
       )}
-    </section>
+    </div>
   );
 }

@@ -53,7 +53,7 @@ export function Desk({ api, game }: { api: GameApi; game: Game }) {
     ));
 
   return (
-    <section className="panel desk" aria-label="The Desk">
+    <section className="frame desk" aria-label="The Desk">
       <header className="desk-head">
         <h2>The Desk</h2>
         <LetterStack state={game.preview} onSubmit={api.queue} />

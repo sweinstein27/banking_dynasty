@@ -36,7 +36,7 @@ const columns = col.columns([
 
 export function LedgerBook({ base, preview }: { base: GameState; preview: GameState }) {
   return (
-    <section className="panel ledger" aria-label="The Ledger">
+    <div className="doc ledger">
       <Tabs.Root defaultValue="accounts" className="ledger-tabs">
         <Tabs.List className="ribbons" aria-label="Ledger pages">
           <Tabs.Trigger value="accounts" className="ribbon">Accounts</Tabs.Trigger>
@@ -53,7 +53,7 @@ export function LedgerBook({ base, preview }: { base: GameState; preview: GameSt
           <Entries base={base} preview={preview} />
         </Tabs.Content>
       </Tabs.Root>
-    </section>
+    </div>
   );
 }
 
