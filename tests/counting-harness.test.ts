@@ -28,18 +28,19 @@ describe("harness strategies and the counting house", () => {
     expect(play("idle", 1, 4).counting.staff).toEqual([]);
   });
 
-  it("cautious hires three clerks and two correspondents, and builds a courier stable first", () => {
+  it("cautious keeps two clerks and a correspondent, and builds nothing", () => {
     const s = play("cautious", 1, 40);
     if (s.house.status === "bankrupt") return;
-    expect(count(s, "clerk")).toBe(3);
-    expect(count(s, "correspondent")).toBe(2);
-    // The strongroom follows only when free cash above the reserve allows it.
-    expect(s.counting.facilities[0]!.id).toBe("courier_stable");
+    expect(count(s, "clerk")).toBe(2);
+    expect(count(s, "correspondent")).toBe(1);
+    expect(s.counting.facilities).toEqual([]);
   });
 
-  it("aggressive, bond-heavy and venture-heavy hire their clerks within the first quarter", () => {
-    for (const [name, clerks] of [["aggressive", 3], ["bond_heavy", 3], ["venture_heavy", 2]] as const) {
-      expect(count(play(name, 2, 2), "clerk"), name).toBe(clerks);
+  it("aggressive, bond-heavy and venture-heavy hire their clerks and let the correspondent go in the first quarter", () => {
+    for (const [name, clerks] of [["aggressive", 3], ["bond_heavy", 2], ["venture_heavy", 2]] as const) {
+      const s = play(name, 2, 2);
+      expect(count(s, "clerk"), name).toBe(clerks);
+      expect(count(s, "correspondent"), name).toBe(0);
     }
   });
 });

@@ -8,25 +8,25 @@
     ]
   },
   "roles": {
-    "clerk": { "name": "Clerk", "description": "Writes up loans, bond purchases and venture shares: one deal a quarter.", "wage": 100, "desk": true, "max": null },
-    "correspondent": { "name": "Correspondent", "description": "Writes to merchants and agents abroad: two reports on borrowers a quarter, and each one after the first makes reports cheaper.", "wage": 200, "desk": true, "max": null },
-    "analyst": { "name": "Analyst", "description": "Reads a borrower's books and writes an opinion: two a quarter, right more often with skill.", "wage": 250, "desk": true, "max": null },
-    "teller": { "name": "Teller", "description": "Serves depositors at the counter: in calm times deposits grow faster.", "wage": 80, "desk": true, "max": 5 },
-    "partner": { "name": "Partner", "description": "A junior partner shares the head's work: more of the head's time, cheaper courting and marriages, warmer houses.", "wage": 600, "desk": false, "max": 1 }
+    "clerk": { "name": "Clerk", "description": "Writes up loans, bond purchases and venture shares: one deal a quarter.", "wage": 25, "desk": true, "max": null },
+    "correspondent": { "name": "Correspondent", "description": "Writes to merchants and agents abroad: two reports on borrowers a quarter, and each one after the first makes reports cheaper.", "wage": 50, "desk": true, "max": null },
+    "analyst": { "name": "Analyst", "description": "Reads a borrower's books and writes an opinion: two a quarter, right more often with skill.", "wage": 60, "desk": true, "max": null },
+    "teller": { "name": "Teller", "description": "Serves depositors at the counter: in calm times deposits grow faster.", "wage": 20, "desk": true, "max": 5 },
+    "partner": { "name": "Partner", "description": "A junior partner shares the head's work: more of the head's time, cheaper courting and marriages, warmer houses.", "wage": 150, "desk": false, "max": 1 }
   },
   "skill": { "min": 2, "max": 6, "cap": 10, "quarters_per_point": 8 },
   "candidates_per_role": 3,
   "rooms": [
-    { "size": "small", "name": "Small counting room", "desks": 6, "build": 0, "upkeep": 50 },
-    { "size": "medium", "name": "Counting room", "desks": 12, "build": 6000, "upkeep": 150 },
-    { "size": "large", "name": "Grand counting room", "desks": 24, "build": 18000, "upkeep": 400 }
+    { "size": "small", "name": "Small counting room", "desks": 6, "build": 0, "upkeep": 10 },
+    { "size": "medium", "name": "Counting room", "desks": 12, "build": 2000, "upkeep": 30 },
+    { "size": "large", "name": "Grand counting room", "desks": 24, "build": 6000, "upkeep": 80 }
   ],
   "facilities": {
-    "strongroom": { "name": "Strongroom", "description": "Iron doors and a vault: depositors trust it, and ask for less of their money in a panic.", "build": 8000, "upkeep": 100 },
-    "archive": { "name": "Archive", "description": "Shelves of old ledgers: payment records go back further.", "build": 3000, "upkeep": 40 },
-    "courier_stable": { "name": "Courier stable", "description": "Riders on the post roads: warnings of a panic reach the house at once, not a quarter late.", "build": 4000, "upkeep": 120 },
-    "reception_rooms": { "name": "Reception rooms", "description": "Rooms fit to receive the bourse: courting wins more favour, and houses agree to marriages more readily.", "build": 6000, "upkeep": 150 },
-    "warehouse": { "name": "Warehouse", "description": "A warehouse on the Main: space to store goods.", "build": 5000, "upkeep": 80 }
+    "strongroom": { "name": "Strongroom", "description": "Iron doors and a vault: depositors trust it, and ask for less of their money in a panic.", "build": 3000, "upkeep": 25 },
+    "archive": { "name": "Archive", "description": "Shelves of old ledgers: payment records go back further.", "build": 1000, "upkeep": 10 },
+    "courier_stable": { "name": "Courier stable", "description": "Riders on the post roads: warnings of a panic reach the house at once, not a quarter late.", "build": 1500, "upkeep": 30 },
+    "reception_rooms": { "name": "Reception rooms", "description": "Rooms fit to receive the bourse: courting wins more favour, and houses agree to marriages more readily.", "build": 2000, "upkeep": 30 },
+    "warehouse": { "name": "Warehouse", "description": "A warehouse on the Main: space to store goods.", "build": 2000, "upkeep": 20 }
   },
   "effects": {
     "strongroom_panic_withdrawals": 0.75,

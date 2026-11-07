@@ -22,6 +22,9 @@ import { fixedRng, fresh, GOOD, noDefaults, quiet } from "./helpers";
 const data = { ...quiet, counting: { ...gameData.counting, advice: { ...gameData.counting.advice, enabled: false } } };
 const { tuning } = data;
 const roles = data.counting.roles;
+/** The starting house's wages (two clerks, a correspondent) and the small room's upkeep. */
+const WAGES = 2 * roles.clerk.wage + roles.correspondent.wage;
+const ROOM = data.counting.rooms[0]!.upkeep;
 
 /** A fresh test house with the real counting house (candidates drawn from seed 5). */
 function house(): GameState {
@@ -57,11 +60,10 @@ describe("the starting counting house", () => {
     for (const role of Object.keys(roles)) expect(s.counting.candidates[role as keyof typeof roles]).toHaveLength(data.counting.candidates_per_role);
   });
 
-  it("costs 400 fl. in wages and 50 fl. in upkeep a quarter", () => {
+  it("costs two clerks' and a correspondent's wages and the small room's upkeep a quarter", () => {
     const s = house();
-    expect(wageBill(s, data)).toBe(2 * roles.clerk.wage + roles.correspondent.wage);
-    expect(wageBill(s, data)).toBe(400);
-    expect(upkeepBill(s, data)).toBe(50);
+    expect(wageBill(s, data)).toBe(WAGES);
+    expect(upkeepBill(s, data)).toBe(ROOM);
   });
 
   it("draws the same candidates from the same seed", () => {
@@ -154,14 +156,14 @@ describe("hiring and dismissing", () => {
     expect(s1.actions_this_turn).toBe(0);
     const s2 = endTurn(s1, [], noDefaults, data);
     expect(poolSize(s2, "deals", tuning)).toBe(3);
-    expect(wageBill(s2, data)).toBe(400 + roles.clerk.wage);
+    expect(wageBill(s2, data)).toBe(WAGES + roles.clerk.wage);
   });
 
   it("charges no wage for a hire in the quarter they are hired", () => {
     const s0 = house();
     const s1 = endTurn(s0, [hire("clerk")], noDefaults, data);
     const wages = s1.ledger.filter((e) => e.category === "wages").reduce((sum, e) => sum + e.amount, 0);
-    expect(wages).toBe(-400);
+    expect(wages).toBe(-WAGES);
   });
 
   it("refuses an unknown candidate, a full room and a second partner", () => {
@@ -228,9 +230,9 @@ describe("building", () => {
     const cost = data.counting.facilities.strongroom.build;
     expect(s1.house.cash).toBe(s0.house.cash - cost);
     expect(s1.ledger.at(-1)).toMatchObject({ account: "cash", category: "building", amount: -cost, note: "Building a strongroom" });
-    expect(upkeepBill(s1, data)).toBe(50);
+    expect(upkeepBill(s1, data)).toBe(ROOM);
     const s2 = endTurn(s1, [], noDefaults, data);
-    expect(upkeepBill(s2, data)).toBe(50 + data.counting.facilities.strongroom.upkeep);
+    expect(upkeepBill(s2, data)).toBe(ROOM + data.counting.facilities.strongroom.upkeep);
     expect(accountBalance(s2, "cash")).toBe(s2.house.cash);
   });
 
@@ -260,12 +262,12 @@ describe("wages and upkeep at End Turn", () => {
     const s1 = endTurn(s0, [], noDefaults, data);
     const lines = s1.ledger.filter((e) => e.category === "wages" || e.category === "upkeep").map((e) => [e.note, e.amount]);
     expect(lines).toEqual([
-      ["Wages: 2 clerks", -200],
-      ["Wages: 1 correspondent", -200],
-      ["Upkeep: small counting room", -50],
+      ["Wages: 2 clerks", -2 * roles.clerk.wage],
+      ["Wages: 1 correspondent", -roles.correspondent.wage],
+      ["Upkeep: small counting room", -ROOM],
       ["Upkeep: warehouse", -data.counting.facilities.warehouse.upkeep],
     ]);
-    expect(s1.house.cash).toBe(s0.house.cash - 450 - data.counting.facilities.warehouse.upkeep);
+    expect(s1.house.cash).toBe(s0.house.cash - WAGES - ROOM - data.counting.facilities.warehouse.upkeep);
   });
 
   it("pays wages out of the reserve if it must", () => {
@@ -273,7 +275,7 @@ describe("wages and upkeep at End Turn", () => {
     s.house.reserve = s.house.cash;
     resolveCounting(s, fixedRng(0.5), data);
     expect(s.house.status).toBe("solvent");
-    expect(s.house.cash).toBe(100_000 - 450);
+    expect(s.house.cash).toBe(100_000 - WAGES - ROOM);
   });
 
   it("with no cash and wages due, sells assets at a discount to pay them", () => {
@@ -283,13 +285,13 @@ describe("wages and upkeep at End Turn", () => {
     expect(s.house.status).toBe("solvent");
     expect(s.ledger.some((e) => e.category === "forced_sale" && e.note.includes("to pay wages and upkeep"))).toBe(true);
     expect(s.house.cash).toBeGreaterThanOrEqual(0);
-    expect(s.ledger.filter((e) => e.category === "wages" || e.category === "upkeep").reduce((sum, e) => sum + e.amount, 0)).toBe(-450);
+    expect(s.ledger.filter((e) => e.category === "wages" || e.category === "upkeep").reduce((sum, e) => sum + e.amount, 0)).toBe(-WAGES - ROOM);
   });
 
   it("bankrupts a house that cannot pay even its upkeep", () => {
     const s = house();
     s.counting.staff = [];
-    s.house.cash = 49;
+    s.house.cash = ROOM - 1;
     resolveCounting(s, fixedRng(0.5), data);
     expect(s.house.status).toBe("bankrupt");
   });
