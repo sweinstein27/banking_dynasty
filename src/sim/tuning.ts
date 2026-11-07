@@ -1,5 +1,9 @@
 import type { CountingData } from "./systems/counting";
 import type { CreditData } from "./systems/credit";
+import type { FinanceData } from "./systems/finance";
+import type { PeopleData } from "./systems/people";
+import type { EuropeData } from "./systems/europe";
+import type { ProgressData } from "./systems/progress";
 import type { MarketsData } from "./systems/markets";
 import type { LoanKind, Quarter, Sentiment } from "./types";
 
@@ -236,6 +240,10 @@ export interface GameData {
   credit: CreditData;
   counting: CountingData;
   markets: MarketsData;
+  finance: FinanceData;
+  people: PeopleData;
+  europe: EuropeData;
+  progress: ProgressData;
 }
 
 export type Temperament = "cautious" | "bold";

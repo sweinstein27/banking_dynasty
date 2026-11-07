@@ -2,6 +2,10 @@
 import type { CountingCategory, CountingDecision, CountingState } from "./systems/counting";
 import type { Band, BookFile, Books, CreditCategory, CreditDecision, CreditState } from "./systems/credit";
 import type { MarketsAccount, MarketsCategory, MarketsDecision, MarketsState } from "./systems/markets";
+import type { FinanceCategory, FinanceDecision, FinanceState, FinanceAccount } from "./systems/finance";
+import type { PeopleCategory, PeopleDecision, PeopleState } from "./systems/people";
+import type { EuropeCategory, EuropeDecision, EuropeState, EuropeAccount } from "./systems/europe";
+import type { ProgressCategory, ProgressDecision, ProgressState } from "./systems/progress";
 
 export type Sentiment = "calm" | "uneasy" | "panic";
 export type Quarter = 1 | 2 | 3 | 4;
@@ -141,10 +145,10 @@ export interface Loan {
 }
 
 /** Which balance an entry moves. Summing entries per account reproduces that balance. */
-export type LedgerAccount = "cash" | "loans" | "bonds" | "ventures" | "deposits" | "borrowings" | MarketsAccount;
+export type LedgerAccount = "cash" | "loans" | "bonds" | "ventures" | "deposits" | "borrowings" | MarketsAccount | FinanceAccount | EuropeAccount;
 
 /** Ledger categories: the core ones, then each system's own. */
-export type LedgerCategory = CoreCategory | CreditCategory | CountingCategory | MarketsCategory;
+export type LedgerCategory = CoreCategory | CreditCategory | CountingCategory | MarketsCategory | FinanceCategory | PeopleCategory | EuropeCategory | ProgressCategory;
 
 export type CoreCategory = "deposit_inflow" | "deposit_interest" | "event" | "courting" | "dowry" | "report" | "family" | "borrowing" | "debt_interest" | "debt_repayment" | "loan_called" | "opening" | "loan_out" | "interest" | "default" | "repayment"
   | "withdrawal"
@@ -373,6 +377,11 @@ export interface GameState {
   credit: CreditState;
   counting: CountingState;
   markets: MarketsState;
+  finance: FinanceState;
+  /** B2: personalities, loyalty and feuds (the family itself is `people`). */
+  agendas: PeopleState;
+  europe: EuropeState;
+  progress: ProgressState;
   /** Marriages arranged, oldest first. A house with any marriage tie is an ally. */
   marriages: Marriage[];
   /** The other Frankfurt houses, failed ones included. */
@@ -503,4 +512,4 @@ export type CrisisDecision = BorrowDecision | PaySlowlyDecision | SuspendDecisio
 export type CoreDecision = LendDecision | ReportDecision | SetReserveDecision | BuyBondDecision | InvestVentureDecision | InvestFamilyDecision | DesignateHeirDecision | AnswerLetterDecision | CourtHouseDecision | ArrangeMarriageDecision | CrisisDecision;
 
 /** Every decision: the core ones, then each system's own (src/sim/systems/). */
-export type Decision = CoreDecision | CreditDecision | CountingDecision | MarketsDecision;
+export type Decision = CoreDecision | CreditDecision | CountingDecision | MarketsDecision | FinanceDecision | PeopleDecision | EuropeDecision | ProgressDecision;

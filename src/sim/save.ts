@@ -9,7 +9,7 @@ import type { Decision, GameState, LedgerAccount } from "./types";
 import { ventureBook } from "./ventures";
 import { commoditiesBook, sharesBook } from "./systems/markets";
 
-export const SAVE_VERSION = 14;
+export const SAVE_VERSION = 15;
 
 export interface SaveFile {
   version: number;
@@ -55,7 +55,7 @@ export function parseSave(text: string, data: GameData): ParseResult {
   for (const key of ["loans", "bonds", "defaulted_states", "ventures", "ledger", "news", "fired_events", "borrowers", "requests", "debts", "people", "successions", "year_ends", "letters", "letter_outcomes", "scheduled_events", "houses", "marriages"] as const) {
     if (!Array.isArray(s[key])) return { ok: false, reason: `Save file state is missing "${key}"` };
   }
-  for (const key of ["credit", "counting", "markets"] as const) {
+  for (const key of ["credit", "counting", "markets", "finance", "agendas", "europe", "progress"] as const) {
     if (!isObject(s[key])) return { ok: false, reason: `Save file state is missing "${key}"` };
   }
   const mk = s.markets as Record<string, unknown>;

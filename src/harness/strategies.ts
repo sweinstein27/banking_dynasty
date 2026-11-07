@@ -11,12 +11,16 @@ import type { GameData } from "../sim/tuning";
 import type { Decision, GameState } from "../sim/types";
 import { accepted as acceptedCore, letterReplies, lendShare, marriageMakers, safestFirst, shareOfFree, type Maker, type Strategy } from "./common";
 import { countingMakers } from "./systems/counting";
+import { europeMakers } from "./systems/europe";
+import { financeMakers } from "./systems/finance";
+import { peopleMakers } from "./systems/people";
+import { progressMakers } from "./systems/progress";
 import { creditMakers, readOffer } from "./systems/credit";
 import { investorWants, marketsMakers, shareOfUncommitted } from "./systems/markets";
 
 /** Every system's early makers, the strategy's own wants, then every system's late makers. */
 function accepted(name: string, state: GameState, data: GameData, wanted: Maker[]): Decision[] {
-  const systems = [creditMakers, countingMakers, marketsMakers].map((f) => f(name, state, data));
+  const systems = [creditMakers, countingMakers, marketsMakers, financeMakers, peopleMakers, europeMakers, progressMakers].map((f) => f(name, state, data));
   return acceptedCore(state, data, [...systems.flatMap((m) => m.early), ...wanted, ...systems.flatMap((m) => m.late)]);
 }
 

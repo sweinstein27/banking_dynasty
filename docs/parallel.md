@@ -14,6 +14,20 @@ From 2026-11-06 the roadmap in docs/spec.md is built by several sessions at once
 
 Each system adds its own decisions, ledger categories, ledger accounts (markets), state and data through the types in its `src/sim/systems/*.ts` file, which `src/sim/types.ts` and `src/sim/tuning.ts` already include. Its End Turn step (`resolveCredit`, `resolveCounting`, `resolveMarkets`) is already called from `src/sim/turn.ts`; its starting state from `src/sim/init.ts`; its harness behaviour from `src/harness/systems/*.ts`. Every decision checks and uses capacity only through `checkCapacity` and `useCapacity` in `src/sim/capacity.ts`.
 
+## Who owns what (wave 2)
+
+Wave 1 is merged into `main` and tuned (2026-11-07). Wave 2 adds four new systems through the same seams (`src/sim/systems/finance.ts`, `people.ts`, `europe.ts`, `progress.ts`, each with a data file, an End Turn hook, decision routing and harness makers already wired) and builds wave 1's screens.
+
+| Session | Milestone | Owns (may change freely) | May touch lightly |
+| --- | --- | --- | --- |
+| Screens | Wave 1's screens in the A4 shell | Everything in `src/ui/` and `index.html` | Nothing in `src/sim/`; read sim functions, never change them. If a screen needs a sim helper that doesn't exist, write it in `src/ui/model/` |
+| High finance | A5 | `src/sim/systems/finance.ts`, `data/finance.json`, `src/harness/systems/finance.ts`, new `tests/finance*.test.ts` | `src/sim/houses.ts` (houses borrowing from you, their failures feeding auctions); the borrower default path in `src/sim/borrowers.ts`/`loans.ts` (auctions of collateral); `data/events.json` for its own letters |
+| People | B2 | `src/sim/systems/people.ts` (state slot `agendas`), `data/people.json`, `src/harness/systems/people.ts`, new `tests/people*.test.ts` | `src/sim/family.ts` (succession claims, feuds, education paths) and `src/sim/traits.ts`; `data/events.json` for its own letters; `src/sim/news.ts` for its own news |
+| Europe | C1 | `src/sim/systems/europe.ts`, `data/europe.json`, `src/harness/systems/europe.ts`, new `tests/europe*.test.ts` | `src/sim/news.ts` (news that travels by courier: expose `newsDelay` and let others call it); `data/states.json`; `src/sim/systems/counting.ts` only for branch staff |
+| Progress | C4 | `src/sim/systems/progress.ts`, `data/progress.json`, `src/harness/systems/progress.ts`, new `tests/progress*.test.ts` | Unlock dates in `data/ventures.json` and `data/markets.json`; `data/events.json` for its own events. News speed from the telegraph: call Europe's `newsDelay` through a hook in your own module, defaulting to no change until Europe merges |
+
+The map of Europe, and screens for wave 2's systems, come in wave 3 on the shell.
+
 ## Rules for every session
 
 1. **Plan first.** Post the milestone's detailed plan and wait for Scott's approval in your own session.

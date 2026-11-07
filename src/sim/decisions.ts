@@ -12,6 +12,10 @@ import { investVenture } from "./ventures";
 import type { GameData } from "./tuning";
 import { applyCountingDecision, describeCountingDecision, isCountingDecision } from "./systems/counting";
 import { applyCreditDecision, describeCreditDecision, isCreditDecision } from "./systems/credit";
+import { applyFinanceDecision, describeFinanceDecision, isFinanceDecision } from "./systems/finance";
+import { applyPeopleDecision, describePeopleDecision, isPeopleDecision } from "./systems/people";
+import { applyEuropeDecision, describeEuropeDecision, isEuropeDecision } from "./systems/europe";
+import { applyProgressDecision, describeProgressDecision, isProgressDecision } from "./systems/progress";
 import { applyMarketsDecision, describeMarketsDecision, isMarketsDecision } from "./systems/markets";
 import type { CoreDecision, Decision, GameState } from "./types";
 
@@ -20,6 +24,10 @@ export function applyDecision(state: GameState, d: Decision, data: GameData): De
   if (isCreditDecision(d)) return applyCreditDecision(state, d, data);
   if (isCountingDecision(d)) return applyCountingDecision(state, d, data);
   if (isMarketsDecision(d)) return applyMarketsDecision(state, d, data);
+  if (isFinanceDecision(d)) return applyFinanceDecision(state, d, data);
+  if (isPeopleDecision(d)) return applyPeopleDecision(state, d, data);
+  if (isEuropeDecision(d)) return applyEuropeDecision(state, d, data);
+  if (isProgressDecision(d)) return applyProgressDecision(state, d, data);
   return applyCoreDecision(state, d, data);
 }
 
@@ -28,6 +36,10 @@ export function describeSystemDecision(d: Decision, state: GameState, data: Game
   if (isCreditDecision(d)) return describeCreditDecision(d, state, data);
   if (isCountingDecision(d)) return describeCountingDecision(d, state, data);
   if (isMarketsDecision(d)) return describeMarketsDecision(d, state, data);
+  if (isFinanceDecision(d)) return describeFinanceDecision(d, state, data);
+  if (isPeopleDecision(d)) return describePeopleDecision(d, state, data);
+  if (isEuropeDecision(d)) return describeEuropeDecision(d, state, data);
+  if (isProgressDecision(d)) return describeProgressDecision(d, state, data);
   return null;
 }
 

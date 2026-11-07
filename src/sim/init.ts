@@ -4,6 +4,11 @@ import { createHouses } from "./houses";
 import { createCounting } from "./systems/counting";
 import { createCredit } from "./systems/credit";
 import { createMarkets } from "./systems/markets";
+import { createFinance } from "./systems/finance";
+import { createPeople } from "./systems/people";
+import { createEurope } from "./systems/europe";
+import { createProgress } from "./systems/progress";
+
 import { addEntry } from "./ledger";
 import type { Rng } from "./rng";
 import type { GameData } from "./tuning";
@@ -50,6 +55,10 @@ export function newGame(data: GameData, rng: Rng): GameState {
     credit: {} as GameState["credit"],
     counting: {} as GameState["counting"],
     markets: {} as GameState["markets"],
+    finance: {} as GameState["finance"],
+    agendas: {} as GameState["agendas"],
+    europe: {} as GameState["europe"],
+    progress: {} as GameState["progress"],
     marriages: [],
     houses: createHouses(data),
     letters: [],
@@ -66,6 +75,10 @@ export function newGame(data: GameData, rng: Rng): GameState {
   state.credit = createCredit(data, rng);
   state.counting = createCounting(data, rng);
   state.markets = createMarkets(data, rng);
+  state.finance = createFinance(data, rng);
+  state.agendas = createPeople(data, rng);
+  state.europe = createEurope(data, rng);
+  state.progress = createProgress(data, rng);
   addEntry(state, "cash", "opening", s.cash, "Opening cash");
   addEntry(state, "deposits", "opening", s.deposits, "Opening deposits owed");
   state.requests = drawRequests(state, data, rng);

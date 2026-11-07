@@ -19,12 +19,16 @@ import type { GameData } from "./tuning";
 import type { Decision, GameState, Quarter } from "./types";
 import { resolveCounting, withdrawalFactor } from "./systems/counting";
 import { resolveCredit } from "./systems/credit";
+import { europeBook, resolveEurope } from "./systems/europe";
+import { financeBook, resolveFinance } from "./systems/finance";
 import { markMarkets, marketsBook, resolveMarkets } from "./systems/markets";
+import { resolvePeople } from "./systems/people";
+import { resolveProgress } from "./systems/progress";
 import { resolveVentures, ventureBook } from "./ventures";
 
 /** NetWorth = Cash + Loans + Bonds + Ventures + market holdings - Deposits - Borrowings. Ventures count at cost until they resolve. */
 export function netWorth(state: GameState): number {
-  return state.house.cash + loanBook(state) + bondBook(state) + ventureBook(state) + marketsBook(state) - state.house.deposits - debtBook(state);
+  return state.house.cash + loanBook(state) + bondBook(state) + ventureBook(state) + marketsBook(state) + financeBook(state) + europeBook(state) - state.house.deposits - debtBook(state);
 }
 
 export function loanBook(state: GameState): number {
@@ -68,6 +72,8 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
   resolveBonds(next, rng, data);
   resolveVentures(next, rng, data);
   resolveMarkets(next, rng, data);
+  resolveFinance(next, rng, data);
+  resolveEurope(next, rng, data);
   serviceDebts(next, data.tuning);
   resolveCounting(next, rng, data);
   resolveWithdrawals(next, data.tuning, headEffects(next, data).withdrawals * withdrawalFactor(next, data));
@@ -76,7 +82,9 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
   const rolled = nextSentiment(world.sentiment, rng.next(), data.tuning);
   world.sentiment = moodWithWarnings(next, rolled, rng, data.tuning);
   resolveEvents(next, rng, data);
+  resolveProgress(next, rng, data);
   resolveFamily(next, rng, data);
+  resolvePeople(next, rng, data);
   markBonds(next, data);
   markMarkets(next, data);
   next.requests = drawRequests(next, data, rng);
