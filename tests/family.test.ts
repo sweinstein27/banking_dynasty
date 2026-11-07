@@ -7,7 +7,8 @@ import { talkAccuracy } from "../src/sim/borrowers";
 import { bondOffers, lendOffers, ventureOffers } from "../src/sim/offers";
 import { createRng } from "../src/sim/rng";
 import { endTurn } from "../src/sim/turn";
-import { ventureFailureChance } from "../src/sim/ventures";
+import { applyDecision } from "../src/sim/decisions";
+import { stepVentures, ventureFailureChance } from "../src/sim/ventures";
 import { fixedRng, fresh, quiet } from "./helpers";
 
 const { tuning } = gameData;
@@ -95,15 +96,17 @@ describe("Acumen: venture failure", () => {
     s.people[0]!.acumen = 10;
     const mill = ventureOffers(s, gameData).find((o) => o.id === "mill")!;
     expect(mill.failure_chance).toBeCloseTo(0.15 * 0.75);
-    // A roll of 0.13 lies between the able head's chance (0.1125) and the neutral one (0.15).
+    // While it is built, the risk is spread over its quarters: 1 - 0.85^(1/8) a quarter, about 0.0201
+    // for a neutral head and 0.0151 for an able one. A roll of 0.018 lies between (A3).
     const resolve = (acumen: number) => {
       const s0 = fresh();
       s0.people[0]!.acumen = acumen;
-      const s1 = endTurn(s0, [{ kind: "invest_venture", venture: "mill", amount: 10000 }], fixedRng(0.999999), quiet);
-      s1.world.turn += 6; // the mill resolves at the end of its eighth quarter
-      return endTurn(s1, [], fixedRng(0.13, 0.999999), quiet).ventures[0]!.status;
+      const r = applyDecision(s0, { kind: "invest_venture", venture: "mill", amount: 10000 }, gameData);
+      if (!r.ok) throw new Error(r.reason);
+      stepVentures(r.state, fixedRng(0.018, 0.999999), gameData);
+      return r.state.ventures[0]!.status;
     };
-    expect(resolve(10)).toBe("paid_out");
+    expect(resolve(10)).toBe("active");
     expect(resolve(f.neutral_stat)).toBe("failed");
   });
 });

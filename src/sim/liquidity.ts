@@ -1,5 +1,6 @@
 import { bondValue } from "./bonds";
 import { addEntry } from "./ledger";
+import { raiseFromMarkets } from "./markets/holdings";
 import { payWithdrawal } from "./reserves";
 import { applyWithdrawals } from "./sentiment";
 import type { Tuning } from "./tuning";
@@ -29,15 +30,20 @@ export function bondSaleRatio(bond: Pick<Bond, "price">, tuning: Tuning): number
   return bond.price * (1 - tuning.forced_sale.bond_discount);
 }
 
+/** Discount on an unlisted venture stake in a forced sale: never less than a private sale's (A3). */
+export function ventureForcedDiscount(tuning: Tuning): number {
+  return Math.max(tuning.forced_sale.venture_discount, tuning.ventures.unlisted_discount);
+}
+
 /** What a slice of a venture's stake fetches in a forced sale, in whole gulden. */
 export function ventureSalePrice(amount: number, tuning: Tuning): number {
-  return Math.round(amount * (1 - tuning.forced_sale.venture_discount));
+  return Math.round(amount * (1 - ventureForcedDiscount(tuning)));
 }
 
 /**
  * Sells assets at a discount until `needed` cash is raised or nothing is left to sell.
- * Order: bonds (most liquid, oldest first), then loans (oldest first), then ventures (oldest
- * first, steepest discount). Only the slice needed is sold: the rest stays on the books and keeps
+ * Order: bonds (most liquid, oldest first), then shares and goods (A3), then loans (oldest
+ * first), then unlisted ventures (oldest first, steepest discount). Only the slice needed is sold: the rest stays on the books and keeps
  * earning. A holding sold down to nothing gets status `sold`. Returns the cash raised.
  * Mutates `state`; callers pass a draft copy.
  */
@@ -59,6 +65,7 @@ export function raiseCash(state: GameState, needed: number, tuning: Tuning, purp
     addEntry(state, "cash", "forced_sale", proceeds, note);
     addEntry(state, "bonds", "forced_sale", -(bookBefore - bondValue(bond)), note);
   }
+  if (raised < needed) raised += raiseFromMarkets(state, needed - raised, tuning, purpose);
   for (const loan of state.loans) {
     if (raised >= needed) break;
     if (loan.status !== "active") continue;
@@ -76,10 +83,13 @@ export function raiseCash(state: GameState, needed: number, tuning: Tuning, purp
   for (const v of state.ventures) {
     if (raised >= needed) break;
     if (v.status !== "active") continue;
-    const slice = amountToSell(needed - raised, v.invested, 1 - tuning.forced_sale.venture_discount);
+    const slice = amountToSell(needed - raised, v.invested, 1 - ventureForcedDiscount(tuning));
     const price = ventureSalePrice(slice, tuning);
     v.invested -= slice;
-    if (v.invested === 0) v.status = "sold";
+    if (v.invested === 0) {
+      v.status = "sold";
+      v.calls_stopped = true;
+    }
     state.house.cash += price;
     raised += price;
     const what = v.status === "sold" ? "sold" : `${slice} of the stake sold, ${v.invested} kept`;

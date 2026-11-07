@@ -100,10 +100,17 @@
   "forced_sale": {
     "loan_discount": 0.3,
     "bond_discount": 0.1,
-    "venture_discount": 0.3
+    "venture_discount": 0.3,
+    "share_discount": 0.05,
+    "commodity_discount": 0.15
   },
   "ventures": {
-    "min_amount": 5000
+    "min_amount": 5000,
+    "unlisted_discount": 0.4,
+    "salvage": 0.1,
+    "forfeit_penalty": 0.25,
+    "payout": 0.8,
+    "float": { "min_yield": 0.04, "par": 250, "discount": 0.9 }
   },
   "bonds": {
     "p0": 0.02,

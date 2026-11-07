@@ -13,13 +13,13 @@ import ventures from "../data/ventures.json";
 import type { CountingData } from "./sim/systems/counting";
 import type { CreditData } from "./sim/systems/credit";
 import type { MarketsData } from "./sim/systems/markets";
-import type { BorrowerType, FamilyData, GameData, GameEvent, HousesData, TraitType, Tuning } from "./sim/tuning";
+import type { BorrowerType, FamilyData, GameData, GameEvent, HousesData, TraitType, Tuning, VentureType } from "./sim/tuning";
 
 export const gameData: GameData = {
   tuning: tuning as Tuning,
   borrowers: borrowers as BorrowerType[],
   states,
-  ventures,
+  ventures: ventures as VentureType[],
   events: events as GameEvent[],
   family: family as FamilyData,
   traits: traits as TraitType[],

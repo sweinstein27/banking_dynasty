@@ -169,10 +169,24 @@ export interface Tuning {
     bond_discount: number;
     /** Taken off the amount invested. */
     venture_discount: number;
+    /** Taken off a share's last price (markets, A3). */
+    share_discount: number;
+    /** Taken off a commodity's last price (markets, A3). */
+    commodity_discount: number;
   };
   ventures: {
-    /** Smallest amount that can be invested. */
+    /** Smallest amount that can be committed. */
     min_amount: number;
+    /** Taken off the paid-in stake when an unlisted venture is sold, by choice or forced. */
+    unlisted_discount: number;
+    /** Share of the paid-in stake recovered when a venture fails. */
+    salvage: number;
+    /** Share of the paid-in stake lost when a call goes unpaid; no further calls are made. */
+    forfeit_penalty: number;
+    /** Share of a running venture's yearly earnings paid out at year end, before it lists. */
+    payout: number;
+    /** Floating on the bourse: after running prove_quarters (a type's own), if the last four quarters earned at least min_yield on the stake. */
+    float: { min_yield: number; par: number; discount: number };
   };
   bonds: {
     /** Base default chance per quarter: p_default = p0 * m_sentiment * risk. */
@@ -402,15 +416,37 @@ export interface BorrowerType {
   quality: [number, number];
 }
 
+/** How long a venture runs: short ones pay out once; medium ones and great works run, pay dividends and can list. */
+export type VentureTier = "short" | "medium" | "great";
+
 export interface VentureType {
   id: string;
   name: string;
-  /** Capital is locked for this many quarters, counting the quarter of investment. */
+  tier: VentureTier;
+  /** Quarters of the build as planned: calls * call_every. Overruns add to it. */
   term_quarters: number;
-  /** Profit on success as a share of the amount invested, paid at maturity. */
+  /** Capital is called in this many instalments (the first at commitment), one every call_every quarters. */
+  calls: number;
+  call_every: number;
+  /**
+   * Short ventures: profit on success as a share of the stake, paid when built. Medium and great:
+   * yearly earnings on the stake once running, in a calm market.
+   */
   expected_return: number;
-  /** Chance of failure at maturity when calm; scaled by the sentiment multiplier, capped at 1. */
+  /** Chance of failure over the whole build when calm; spread over its quarters and scaled by mood, Acumen and traits. */
   failure_risk: number;
+  /** Each call after the first may overrun: the commitment grows by `share` and `extra_calls` more calls are added. */
+  overrun: { chance: number; share: number; extra_calls: number };
+  /** Great works open in sections as the build goes on, each earning as it opens. 1 for the rest. */
+  sections: number;
+  /** Sector of the company it floats as (data/markets.json). */
+  sector: string;
+  /** Quarters running before it may float. */
+  prove_quarters: number;
+  /** The house's share of the whole project; the rest is other investors'. */
+  stake_share: number;
+  /** Name of the company it floats as. */
+  company_name: string;
   /** Cannot be backed before this year. */
   unlock_year: number;
 }
