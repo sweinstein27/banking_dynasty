@@ -177,7 +177,7 @@ export function stepMark(state: GameState, rng: Rng, data: GameData): void {
   for (const [id, was] of Object.entries(books.goods)) {
     const diff = goodsValue(state, id) - was;
     const type = m.commodities.find((x) => x.id === id);
-    if (diff) addEntry(state, "commodities", "market_revaluation", diff, `${type?.name ?? id}: marked to ${fl(mk.commodities[id]!.price)} a ${type?.unit ?? "unit"}`);
+    if (diff) addEntry(state, "commodities", "market_revaluation", diff, `${type?.name ?? id}: marked to ${fl(mk.commodities[id]!.price)} per ${type?.unit ?? "unit"}`);
   }
 }
 

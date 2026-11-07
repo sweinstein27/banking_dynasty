@@ -30,7 +30,7 @@ export function printBourse(s: GameState): void {
   m.commodities.forEach((t, i) => {
     const mk = s.markets.commodities[t.id]!;
     const held = s.markets.goods[t.id] ?? 0;
-    console.log(`  ${String.fromCharCode(97 + i)}) ${t.name}: ${price(mk.price)} a ${t.unit} (normal ${price(t.base_price * mk.level)}), storage ${price(t.storage)} a quarter${held ? `, you hold ${held}` : ""}`);
+    console.log(`  ${String.fromCharCode(97 + i)}) ${t.name}: ${price(mk.price)} per ${t.unit} (normal ${price(t.base_price * mk.level)}), storage ${price(t.storage)} a quarter${held ? `, you hold ${held}` : ""}`);
   });
   const parts = m.regions.map((r) => `${outcome(m, s.markets.harvest[r.id] ?? "fair").name} in ${r.name}`);
   console.log(`  This year's harvest: ${parts.join(", ")} (index ${harvestIndex(s.markets.harvest, m.regions.map((r) => r.id), m).toFixed(2)}).`);
