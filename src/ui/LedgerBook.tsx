@@ -15,6 +15,7 @@ import type { GameState, LedgerEntry } from "../sim/types";
 import { quartersLeft, ventureBook, venturePayout } from "../sim/ventures";
 import { fl, pct, signedFl } from "./format";
 import { PageTurner, usePages } from "./Pager";
+import { Term } from "./Term";
 import { WorthChart } from "./WorthChart";
 
 const HOLDINGS_PER_PAGE = 5;
@@ -36,7 +37,7 @@ const columns = col.columns([
 
 export function LedgerBook({ base, preview }: { base: GameState; preview: GameState }) {
   return (
-    <section className="panel ledger" aria-label="The Ledger">
+    <div className="doc ledger">
       <Tabs.Root defaultValue="accounts" className="ledger-tabs">
         <Tabs.List className="ribbons" aria-label="Ledger pages">
           <Tabs.Trigger value="accounts" className="ribbon">Accounts</Tabs.Trigger>
@@ -53,7 +54,7 @@ export function LedgerBook({ base, preview }: { base: GameState; preview: GameSt
           <Entries base={base} preview={preview} />
         </Tabs.Content>
       </Tabs.Root>
-    </section>
+    </div>
   );
 }
 
@@ -69,28 +70,28 @@ function Accounts({ state }: { state: GameState }) {
         <div className="leaf">
           <h3>What the house owns</h3>
           <dl className="accounts">
-            <dt>Cash</dt><dd>{fl(house.cash)}</dd>
-            <dt>Loans</dt><dd>{fl(loans)}</dd>
-            <dt>Bonds</dt><dd>{fl(bonds)}</dd>
-            <dt>Ventures</dt><dd>{fl(ventures)}</dd>
+            <dt><Term id="cash">Cash</Term></dt><dd>{fl(house.cash)}</dd>
+            <dt><Term id="loans">Loans</Term></dt><dd>{fl(loans)}</dd>
+            <dt><Term id="bonds">Bonds</Term></dt><dd>{fl(bonds)}</dd>
+            <dt><Term id="ventures">Ventures</Term></dt><dd>{fl(ventures)}</dd>
             <dt className="total">Total</dt><dd className="total">{fl(house.cash + loans + bonds + ventures)}</dd>
           </dl>
         </div>
         <div className="leaf">
           <h3>What the house owes</h3>
           <dl className="accounts">
-            <dt>Deposits</dt><dd>{fl(house.deposits)}</dd>
-            <dt>Borrowings</dt><dd>{fl(debts)}</dd>
+            <dt><Term id="deposits">Deposits</Term></dt><dd>{fl(house.deposits)}</dd>
+            <dt><Term id="borrowings">Borrowings</Term></dt><dd>{fl(debts)}</dd>
             <dt className="total">Total</dt><dd className="total">{fl(house.deposits + debts)}</dd>
           </dl>
         </div>
       </div>
       <WorthChart state={state} now={netWorth(state)} />
       <dl className="ledger-foot">
-        <dt>Net worth</dt><dd className="net-worth">{fl(netWorth(state))}</dd>
-        <dt>Reserve</dt><dd>{fl(house.reserve)}</dd>
-        <dt>Free cash</dt><dd>{fl(freeCash(state))}</dd>
-        <dt>Reputation</dt><dd>{house.reputation} of 100</dd>
+        <dt><Term id="net_worth">Net worth</Term></dt><dd className="net-worth">{fl(netWorth(state))}</dd>
+        <dt><Term id="reserve">Reserve</Term></dt><dd>{fl(house.reserve)}</dd>
+        <dt><Term id="free_cash">Free cash</Term></dt><dd>{fl(freeCash(state))}</dd>
+        <dt><Term id="reputation">Reputation</Term></dt><dd>{house.reputation} of 100</dd>
         <dt>Draws deposits of</dt><dd>{fl(depositLevel(house.reputation, gameData.tuning))}</dd>
       </dl>
     </>
