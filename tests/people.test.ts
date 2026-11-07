@@ -387,6 +387,10 @@ describe("education paths", () => {
     const r = sendToStudy(s, { kind: "send_to_study", heir: carl.id, path: "army" }, still);
     if (!r.ok) throw new Error(r.reason);
     expect(sendToStudy(r.state, { kind: "send_to_study", heir: carl.id, path: "counting_house" }, still).ok).toBe(false);
+    r.state.agendas.studies = [];
+    expect(sendToStudy(r.state, { kind: "send_to_study", heir: carl.id, path: "counting_house" }, still).ok).toBe(true);
+    const again = sendToStudy(r.state, { kind: "send_to_study", heir: carl.id, path: "army" }, still);
+    expect(!again.ok && again.reason).toMatch(/already had/);
     const broke = house();
     broke.house.cash = 100;
     const r2 = sendToStudy(broke, { kind: "send_to_study", heir: kid(broke).id, path: "university" }, still);
@@ -445,5 +449,29 @@ describe("whole runs with the real data", () => {
       letters += state.news.filter((n) => n.kind === "letter" && /awaits your answer/.test(n.text)).length;
     }
     expect(letters).toBeGreaterThan(0);
+  });
+});
+
+describe("harness makers", () => {
+  it("cautious and cautious_no_family answer family letters alike; aggressive grants only ventures; idle answers nothing", async () => {
+    const { peopleMakers } = await import("../src/harness/systems/people");
+    const s = house();
+    letter(s, { kind: "request", person: byName(s, "Amalie").id, agenda: "allowance" });
+    letter(s, { kind: "request", person: byName(s, "Carl").id, agenda: "venture" });
+    letter(s, { kind: "leaving", person: byName(s, "Friedrich").id });
+    const answers = (name: string) => peopleMakers(name, s, still).early.map((m) => m(s)).map((d) => (d && d.kind === "answer_family_letter" ? d.option : null));
+    expect(answers("cautious")).toEqual(["grant", null, "buy_off"]);
+    expect(answers("cautious_no_family")).toEqual(answers("cautious"));
+    expect(answers("aggressive")).toEqual([null, "grant", null]);
+    expect(answers("idle")).toEqual([null, null, null]);
+  });
+
+  it("only cautious sends its successor to the counting house", async () => {
+    const { peopleMakers } = await import("../src/harness/systems/people");
+    const s = fresh();
+    s.world.year = 1817; // Friedrich is 14
+    byName(s, "Friedrich").acumen = 4; // and the best of the heirs, so the successor
+    expect(peopleMakers("cautious", s, still).late.map((m) => m(s))).toEqual([{ kind: "send_to_study", heir: byName(s, "Friedrich").id, path: "counting_house" }]);
+    expect(peopleMakers("cautious_no_family", s, still).late).toHaveLength(0);
   });
 });

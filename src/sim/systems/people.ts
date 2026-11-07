@@ -196,6 +196,8 @@ export interface PeopleState {
   last_asked: Record<string, number>;
   feuds: Feud[];
   studies: Study[];
+  /** Paths each person has begun, by person id: each path is taken once. */
+  studied: Record<string, string[]>;
   /** Family clerks: person id to staff id in state.counting.staff. */
   desks: Record<string, number>;
   /** Successions already looked at for claims. */
@@ -239,6 +241,7 @@ export function createPeople(_data: GameData, rng: Rng): PeopleState {
     last_asked: {},
     feuds: [],
     studies: [],
+    studied: {},
     desks: {},
     successions_seen: 0,
     named: null,
@@ -816,6 +819,7 @@ export function checkSendToStudy(state: GameState, d: SendToStudyDecision, data:
   const age = ageIn(heir, state.world.year);
   if (age < path.min_age || age > path.max_age) return `${heir.name} is ${age}; ${path.name.toLowerCase()} takes those aged ${path.min_age} to ${path.max_age}`;
   if (studyOf(state, heir.id)) return `${heir.name} is already away studying`;
+  if (state.agendas.studied[heir.id]?.includes(path.id)) return `${heir.name} has already had ${path.name.toLowerCase()}`;
   if (path.cost > freeCash(state)) return `Not enough cash above the reserve (cost ${fl(path.cost)}, free ${fl(freeCash(state))})`;
   return null;
 }
@@ -832,6 +836,7 @@ export function sendToStudy(state: GameState, d: SendToStudyDecision, data: Game
     addEntry(next, "cash", "study", -path.cost, `${heir.name}: ${path.name.toLowerCase()}`);
   }
   next.agendas.studies.push({ person: heir.id, path: path.id, start: next.world.turn, until: next.world.turn + path.quarters });
+  next.agendas.studied[heir.id] = [...(next.agendas.studied[heir.id] ?? []), path.id];
   useCapacity(next, "send_to_study", data.tuning);
   log(next, fill(path.start_text, { name: heir.name }));
   return { ok: true, state: next };
