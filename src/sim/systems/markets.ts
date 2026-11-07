@@ -75,8 +75,8 @@ function news(state: GameState, text: string, title?: string): void {
 
 /**
  * The quarter's business, after ventures resolve and before depositors withdraw: every listed
- * company earns (in company order, one draw each); one with a trailing loss may fail (one more draw),
- * writing off the house's shares; at year end dividends are declared and paid on shares held; goods
+ * company earns and may fail (in company order, two draws each; a trailing loss makes failure far
+ * likelier), a failure writing off the house's shares; at year end dividends are declared and paid on shares held; goods
  * in the warehouse spoil a little and pay storage. Mutates `state`.
  */
 export function resolveMarkets(state: GameState, _rng: Rng, data: GameData): void {
@@ -92,13 +92,14 @@ export function stepMarkets(state: GameState, rng: Rng, data: GameData): void {
     const e = quarterEarnings(earningCapital(c), c.base_yield, sector, sentiment, driverFactor(sector, state.markets, m), growthFactor(c, state.world.turn, sector), spread(rng));
     c.earnings = [...c.earnings, e].slice(-4);
 
-    if (trailingEarnings(c) < 0 && rng.next() < Math.min(1, sector.failure * data.tuning.sentiment_multiplier[sentiment])) {
+    const failure = sector.failure * (trailingEarnings(c) < 0 ? 1 : m.prices.sound_failure) * data.tuning.sentiment_multiplier[sentiment];
+    if (rng.next() < Math.min(1, failure)) {
       const lost = holdingValue(state, c.id);
       c.status = "failed";
       c.price = 0;
       if (lost > 0) addEntry(state, "shares", "company_failure", -lost, `${c.name} has failed; its shares are worthless`);
       delete state.markets.shares[c.id];
-      news(state, `${c.name} has failed after a year of losses.${lost > 0 ? ` The house's shares, worth ${fl(lost)}, are worthless.` : ""}`, "A company fails");
+      news(state, `${c.name} has failed${trailingEarnings(c) < 0 ? " after a year of losses" : ""}.${lost > 0 ? ` The house's shares, worth ${fl(lost)}, are worthless.` : ""}`, "A company fails");
       continue;
     }
 

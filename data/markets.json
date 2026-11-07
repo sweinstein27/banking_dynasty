@@ -7,14 +7,14 @@
     { "id": "colonial", "name": "Colonial wares", "unit": "chest", "base_price": 50, "space": 1, "storage": 0.4, "spoilage": 0.005, "volatility": 0.07, "reversion": 0.3, "bounds": { "min": 0.4, "max": 2.5 } }
   ],
   "sectors": [
-    { "id": "bank", "name": "Banks", "required_yield": 0.05, "mood_premium": { "calm": 0, "uneasy": 0.01, "panic": 0.025 }, "mood_earnings": { "calm": 1, "uneasy": 0.85, "panic": 0.6 }, "earnings_noise": 0.25, "price_noise": 0.04, "growth": 0.01, "growth_cap": 1.5, "failure": 0.02 },
-    { "id": "insurance", "name": "Insurance", "required_yield": 0.055, "mood_premium": { "calm": 0, "uneasy": 0.008, "panic": 0.02 }, "mood_earnings": { "calm": 1, "uneasy": 0.9, "panic": 0.75 }, "earnings_noise": 0.3, "price_noise": 0.04, "growth": 0.015, "growth_cap": 1.5, "failure": 0.02 },
-    { "id": "shipping", "name": "Shipping", "required_yield": 0.06, "mood_premium": { "calm": 0, "uneasy": 0.01, "panic": 0.025 }, "mood_earnings": { "calm": 1, "uneasy": 0.85, "panic": 0.6 }, "earnings_noise": 0.35, "price_noise": 0.05, "growth": 0.02, "growth_cap": 1.6, "driver": { "harvest": 0.5 }, "failure": 0.03 },
-    { "id": "utility", "name": "Utilities", "required_yield": 0.045, "mood_premium": { "calm": 0, "uneasy": 0.003, "panic": 0.008 }, "mood_earnings": { "calm": 1, "uneasy": 0.98, "panic": 0.95 }, "earnings_noise": 0.08, "price_noise": 0.015, "growth": 0.02, "growth_cap": 1.6, "failure": 0.005 },
-    { "id": "canal", "name": "Canals", "required_yield": 0.05, "mood_premium": { "calm": 0, "uneasy": 0.006, "panic": 0.015 }, "mood_earnings": { "calm": 1, "uneasy": 0.9, "panic": 0.8 }, "earnings_noise": 0.2, "price_noise": 0.03, "growth": 0.02, "growth_cap": 1.5, "driver": { "harvest": 0.4 }, "failure": 0.01 },
-    { "id": "railway", "name": "Railways", "required_yield": 0.05, "mood_premium": { "calm": 0, "uneasy": 0.012, "panic": 0.03 }, "mood_earnings": { "calm": 1, "uneasy": 0.85, "panic": 0.65 }, "earnings_noise": 0.3, "price_noise": 0.06, "growth": 0.05, "growth_cap": 2, "failure": 0.02 },
-    { "id": "industry", "name": "Industry", "required_yield": 0.065, "mood_premium": { "calm": 0, "uneasy": 0.012, "panic": 0.03 }, "mood_earnings": { "calm": 1, "uneasy": 0.8, "panic": 0.5 }, "earnings_noise": 0.4, "price_noise": 0.06, "growth": 0.02, "growth_cap": 1.6, "driver": { "commodity": "iron", "elasticity": 1 }, "failure": 0.04 },
-    { "id": "textiles", "name": "Textiles", "required_yield": 0.065, "mood_premium": { "calm": 0, "uneasy": 0.012, "panic": 0.03 }, "mood_earnings": { "calm": 1, "uneasy": 0.85, "panic": 0.55 }, "earnings_noise": 0.35, "price_noise": 0.05, "growth": 0.015, "growth_cap": 1.5, "driver": { "commodity": "cloth", "elasticity": 0.8 }, "failure": 0.03 }
+    { "id": "bank", "name": "Banks", "required_yield": 0.04, "mood_premium": { "calm": 0, "uneasy": 0.01, "panic": 0.025 }, "mood_earnings": { "calm": 1, "uneasy": 0.85, "panic": 0.6 }, "earnings_noise": 0.25, "price_noise": 0.04, "growth": 0.01, "growth_cap": 1.5, "failure": 0.02 },
+    { "id": "insurance", "name": "Insurance", "required_yield": 0.042, "mood_premium": { "calm": 0, "uneasy": 0.008, "panic": 0.02 }, "mood_earnings": { "calm": 1, "uneasy": 0.9, "panic": 0.75 }, "earnings_noise": 0.3, "price_noise": 0.04, "growth": 0.01, "growth_cap": 1.3, "failure": 0.02 },
+    { "id": "shipping", "name": "Shipping", "required_yield": 0.048, "mood_premium": { "calm": 0, "uneasy": 0.01, "panic": 0.025 }, "mood_earnings": { "calm": 1, "uneasy": 0.85, "panic": 0.6 }, "earnings_noise": 0.35, "price_noise": 0.05, "growth": 0.01, "growth_cap": 1.3, "driver": { "harvest": 0.5 }, "failure": 0.03 },
+    { "id": "utility", "name": "Utilities", "required_yield": 0.038, "mood_premium": { "calm": 0, "uneasy": 0.003, "panic": 0.008 }, "mood_earnings": { "calm": 1, "uneasy": 0.98, "panic": 0.95 }, "earnings_noise": 0.08, "price_noise": 0.015, "growth": 0.01, "growth_cap": 1.3, "failure": 0.005 },
+    { "id": "canal", "name": "Canals", "required_yield": 0.04, "mood_premium": { "calm": 0, "uneasy": 0.006, "panic": 0.015 }, "mood_earnings": { "calm": 1, "uneasy": 0.9, "panic": 0.8 }, "earnings_noise": 0.2, "price_noise": 0.03, "growth": 0.01, "growth_cap": 1.3, "driver": { "harvest": 0.4 }, "failure": 0.01 },
+    { "id": "railway", "name": "Railways", "required_yield": 0.04, "mood_premium": { "calm": 0, "uneasy": 0.012, "panic": 0.03 }, "mood_earnings": { "calm": 1, "uneasy": 0.85, "panic": 0.65 }, "earnings_noise": 0.3, "price_noise": 0.06, "growth": 0.03, "growth_cap": 1.6, "failure": 0.02 },
+    { "id": "industry", "name": "Industry", "required_yield": 0.05, "mood_premium": { "calm": 0, "uneasy": 0.012, "panic": 0.03 }, "mood_earnings": { "calm": 1, "uneasy": 0.8, "panic": 0.5 }, "earnings_noise": 0.4, "price_noise": 0.06, "growth": 0.01, "growth_cap": 1.3, "driver": { "commodity": "iron", "elasticity": 1 }, "failure": 0.04 },
+    { "id": "textiles", "name": "Textiles", "required_yield": 0.05, "mood_premium": { "calm": 0, "uneasy": 0.012, "panic": 0.03 }, "mood_earnings": { "calm": 1, "uneasy": 0.85, "panic": 0.55 }, "earnings_noise": 0.35, "price_noise": 0.05, "growth": 0.01, "growth_cap": 1.3, "driver": { "commodity": "cloth", "elasticity": 0.8 }, "failure": 0.03 }
   ],
   "companies": [
     { "id": "danube_bank", "name": "Danube Privileged Bank", "sector": "bank", "list_year": 1820, "list_quarter": 1, "shares": 4000, "par": 250, "base_yield": 0.06, "payout": 0.8, "description": "A foreign note-issuing bank whose shares are the first to trade on the Frankfurt bourse." },
@@ -78,7 +78,7 @@
     { "id": "railway-boom-1844", "year": 1844, "quarter": 2, "title": "Railway shares soar", "text": "New lines are planned across the German states, and their shares change hands at a premium before a rail is laid.", "shock": { "sectors": { "railway": 1.2 }, "levels": { "iron": 1.05 } } }
   ],
   "shock_decay": 0.25,
-  "prices": { "speed": 0.35, "bounds": { "min": 0.3, "max": 2.5 }, "distress_value": 0.2, "min_price": 1 },
+  "prices": { "speed": 0.35, "bounds": { "min": 0.3, "max": 2.5 }, "distress_value": 0.2, "sound_failure": 0.1, "min_price": 1 },
   "warehouse": { "default_space": 2000 },
   "reports": [
     { "name": "bourse talk", "width": 0.4, "cost": 0, "quarters": 0 },

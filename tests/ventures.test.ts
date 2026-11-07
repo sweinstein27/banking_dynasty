@@ -143,7 +143,7 @@ describe("calls and the build", () => {
     expect(s.house.cash).toBe(cash0 - 5000);
     stepVentures(s, neutral(), gameData); // the last call, then the payout
     expect(s.ventures[0]!.status).toBe("paid_out");
-    expect(s.house.cash).toBe(cash0 - 7500 + 12500);
+    expect(s.house.cash).toBe(cash0 - 7500 + 11200);
     reconciles(s);
   });
 

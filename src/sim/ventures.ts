@@ -283,9 +283,14 @@ export function stepVentures(state: GameState, rng: Rng, data: GameData): void {
     const sector = sectorOf(data.markets, t.sector);
 
     if (v.status === "listed") {
-      if (callDue(state, v, t)) payCall(state, v, t, data, rng);
       const c = state.markets.companies.find((x) => x.id === v.company);
-      if (c && c.status === "listed") {
+      if (!c || c.status !== "listed") {
+        // The company failed: nobody calls for capital any more.
+        v.calls_stopped = true;
+        continue;
+      }
+      if (callDue(state, v, t)) payCall(state, v, t, data, rng);
+      {
         v.sections_open = sectionsOpen(state, v, t);
         const built = state.world.turn - v.start_turn + 1 >= v.term_quarters;
         c.earning_capital = built ? null : Math.min(c.shares * c.par, Math.round((finalStake(v) / t.stake_share) * (v.sections_open / t.sections)));

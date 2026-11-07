@@ -11,7 +11,7 @@ import type { Decision, GameState } from "../sim/types";
 import { accepted as acceptedCore, letterReplies, lendShare, marriageMakers, safestFirst, shareOfFree, type Maker, type Strategy } from "./common";
 import { countingMakers } from "./systems/counting";
 import { creditMakers } from "./systems/credit";
-import { marketsMakers } from "./systems/markets";
+import { investorWants, marketsMakers, shareOfUncommitted } from "./systems/markets";
 
 /** Every system's early makers, the strategy's own wants, then every system's late makers. */
 function accepted(name: string, state: GameState, data: GameData, wanted: Maker[]): Decision[] {
@@ -116,7 +116,7 @@ export function aggressive(state: GameState, data: GameData): Decision[] {
     const risky = bondOffers(s, data).filter((o) => !o.blocked).sort((a, b) => b.risk - a.risk)[0];
     return risky ? { kind: "buy_bond", state: risky.id, face_value: shareOfFree(s, 0.5) } : null;
   });
-  if (state.world.turn % 4 === 1) wanted.push((s) => ({ kind: "invest_venture", venture: "shipping", amount: shareOfFree(s, 0.5) }));
+  if (state.world.turn % 4 === 1) wanted.push((s) => ({ kind: "invest_venture", venture: "shipping", amount: shareOfUncommitted(s, 0.5) }));
   return accepted("aggressive", state, data, wanted);
 }
 
@@ -142,7 +142,7 @@ export function bondHeavy(state: GameState, data: GameData): Decision[] {
 }
 
 /**
- * Venture-heavy: a 10% reserve, then half of free cash into whichever open venture has the best
+ * Venture-heavy: a 10% reserve, then half of free cash not already promised to calls (A3) into whichever open venture has the best
  * expected gain per quarter at today's odds, and half of the rest into the next best.
  */
 export function ventureHeavy(state: GameState, data: GameData): Decision[] {
@@ -152,10 +152,23 @@ export function ventureHeavy(state: GameState, data: GameData): Decision[] {
   for (let i = 0; i < 2; i++) {
     wanted.push((s) => {
       const o = ranked(s)[i];
-      return o ? { kind: "invest_venture", venture: o.id, amount: shareOfFree(s, 0.5) } : null;
+      return o ? { kind: "invest_venture", venture: o.id, amount: shareOfUncommitted(s, 0.5) } : null;
     });
   }
   return accepted("venture_heavy", state, data, wanted);
+}
+
+/**
+ * Investor (A3): a 20% reserve, then the bourse and the grain trade (src/harness/systems/markets.ts),
+ * and a little lending to the safest-looking borrower with what is left.
+ */
+export function investor(state: GameState, data: GameData): Decision[] {
+  const wanted: Maker[] = [reserveAt(0.2), ...marriageMakers(state, data, "merchant"), ...investorWants(state, data)];
+  wanted.push((s) => {
+    const o = safestFirst(s, data)[0];
+    return o ? lendShare(s, o, 0.1) : null;
+  });
+  return accepted("investor", state, data, wanted);
 }
 
 /** The harness's strategies by name, in the order the summary lists them. */
@@ -165,5 +178,6 @@ export const STRATEGIES: Record<string, Strategy> = {
   aggressive,
   bond_heavy: bondHeavy,
   venture_heavy: ventureHeavy,
+  investor,
   cautious_no_family: cautiousNoFamily,
 };

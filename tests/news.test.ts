@@ -74,11 +74,11 @@ describe("quarter news", () => {
   });
 
   it("reports a short venture paying out when it is built", () => {
-    // A brewery: four calls of 2,500 fl., built in four quarters, returning 25%; no failure or overrun.
+    // A brewery: four calls of 2,500 fl., built in four quarters, returning 12%; no failure or overrun.
     let s = endTurn(fresh(), [{ kind: "invest_venture", venture: "brewery", amount: 10000 }], noDefaults, sureVentures);
     for (let i = 1; i < 4; i++) s = endTurn(s, [], noDefaults, sureVentures);
     expect(s.news.filter((n) => n.kind !== "markets")).toEqual([
-      { turn: 4, kind: "venture_paid_out", text: "Venture #1 (Brewery) succeeded, turning a stake of 10,000 fl. into 12,500 fl." },
+      { turn: 4, kind: "venture_paid_out", text: "Venture #1 (Brewery) succeeded, turning a stake of 10,000 fl. into 11,200 fl." },
     ]);
   });
 

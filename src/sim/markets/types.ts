@@ -56,7 +56,7 @@ export interface SectorType {
   growth_cap: number;
   /** Earnings follow the harvest (index ^ elasticity) or a commodity's price against its base. */
   driver?: { harvest?: number; commodity?: string; elasticity?: number };
-  /** Chance a quarter that a company with a trailing loss fails, before the mood multiplier. */
+  /** Chance a quarter that a company with a trailing loss fails, before the mood multiplier (a sound one: prices.sound_failure of it). */
   failure: number;
 }
 
@@ -140,6 +140,8 @@ export interface MarketsData {
     bounds: { min: number; max: number };
     /** Fair value of a company with no dividend, as a share of par. */
     distress_value: number;
+    /** A company without a trailing loss fails at this share of its sector's failure chance. */
+    sound_failure: number;
     min_price: number;
   };
   warehouse: { default_space: number };

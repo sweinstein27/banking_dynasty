@@ -119,7 +119,7 @@ describe("the price model", () => {
     const c = newCompany(m.companies[0]!, m, "calm", 1, 0);
     const dps = dividendPerShare(c);
     expect(dps).toBeCloseTo(250 * 0.06 * 0.8, 1);
-    expect(fairValue(c, "calm", m)).toBeCloseTo(dps / 0.05, 0);
+    expect(fairValue(c, "calm", m)).toBeCloseTo(dps / sectorOf(m, "bank").required_yield, 0);
     expect(fairValue(c, "panic", m)).toBeLessThan(fairValue(c, "uneasy", m));
     c.earnings = [-100, -100, -100, -100];
     expect(fairValue(c, "calm", m)).toBe(250 * m.prices.distress_value);
