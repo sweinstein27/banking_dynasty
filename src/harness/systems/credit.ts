@@ -90,7 +90,7 @@ export function creditMakers(name: string, _state: GameState, data: GameData): S
   switch (name) {
     case "cautious":
     case "cautious_no_family":
-      return { early: [checkLargestLoan(data), sellWeak(data, 0.55), investigate(data, 8000)], late: [] };
+      return { early: [checkLargestLoan(data), sellWeak(data, 0.55), investigate(data, 15000)], late: [] };
     default:
       return { early: [], late: [] };
   }

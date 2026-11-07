@@ -51,9 +51,28 @@ describe("overrideAt and combine", () => {
   });
 
   it("refuse paths outside tuning and events", () => {
-    expect(() => overrideAt("borrowers.weber.quality", 1)).toThrow(/must start with tuning\., events\., states\. or ventures\./);
+    expect(() => overrideAt("borrowers.weber.quality", 1)).toThrow(/must start with tuning\., credit\., markets\., counting\., scale\., events\., states\. or ventures\./);
     expect(overrideAt("states.naples.coupon", 0.08)).toEqual({ states: { naples: { coupon: 0.08 } } });
     expect(combine(overrideAt("states.naples.coupon", 0.08), overrideAt("states.naples.risk", 0.5))).toEqual({ states: { naples: { coupon: 0.08, risk: 0.5 } } });
+  });
+});
+
+describe("overrides for the wave 1 systems", () => {
+  it("merge into credit, markets and counting data, refusing unknown keys", () => {
+    const d = applyOverrides(gameData, combine(overrideAt("credit.info.inquiry_cost", 600), overrideAt("markets.prices.speed", 0.5)));
+    expect(d.credit.info.inquiry_cost).toBe(600);
+    expect(d.credit.info.report_cost).toBe(gameData.credit.info.report_cost);
+    expect(d.markets.prices.speed).toBe(0.5);
+    expect(() => applyOverrides(gameData, overrideAt("credit.info.nonsense", 1))).toThrow(/not in tuning\.json|nonsense/);
+  });
+
+  it("scale a field on every record of a list, leaving the real data alone", () => {
+    const d = applyOverrides(gameData, overrideAt("scale.ventures.failure_risk", 2));
+    expect(d.ventures.map((v) => v.failure_risk)).toEqual(gameData.ventures.map((v) => v.failure_risk * 2));
+    const m = applyOverrides(gameData, overrideAt("scale.markets.sectors.growth", 0));
+    expect(m.markets.sectors.every((x) => x.growth === 0)).toBe(true);
+    expect(gameData.markets.sectors.some((x) => x.growth > 0)).toBe(true);
+    expect(() => applyOverrides(gameData, overrideAt("scale.ventures.name", 2))).toThrow(/no number/);
   });
 });
 

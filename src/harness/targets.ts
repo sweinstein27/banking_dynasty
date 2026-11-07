@@ -15,7 +15,7 @@ export interface TargetResult {
 }
 
 /** The strategies that should all be able to win. */
-export const CONTENDERS = ["cautious", "aggressive", "bond_heavy", "venture_heavy"];
+export const CONTENDERS = ["cautious", "aggressive", "bond_heavy", "venture_heavy", "investor"];
 
 const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
 

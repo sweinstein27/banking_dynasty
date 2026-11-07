@@ -8,6 +8,15 @@ import type { BondIssuer, GameData, GameEvent, VentureType } from "../sim/tuning
  */
 export interface Overrides {
   tuning?: Record<string, unknown>;
+  /** Partial copies of data/credit.json, data/markets.json and data/counting.json, merged like `tuning`. */
+  credit?: Record<string, unknown>;
+  markets?: Record<string, unknown>;
+  counting?: Record<string, unknown>;
+  /**
+   * Multiplies a numeric field on every record of a list, by "list.field": "ventures.failure_risk",
+   * "markets.sectors.growth", "markets.companies.base_yield". One number moves many records.
+   */
+  scale?: Record<string, number>;
   events?: Record<string, Partial<Pick<GameEvent, "weight" | "cooldown_quarters">>>;
   states?: Record<string, Partial<Pick<BondIssuer, "coupon" | "risk" | "min_reputation">>>;
   ventures?: Record<string, Partial<Pick<VentureType, "expected_return" | "failure_risk" | "term_quarters">>>;
@@ -47,13 +56,33 @@ function merge(base: unknown, patch: unknown, path: string): unknown {
 /** The game data with the overrides applied. Unknown keys, ids or fields are errors, so typos cannot pass silently. */
 export function applyOverrides(data: GameData, o: Overrides): GameData {
   const tuning = o.tuning ? (merge(data.tuning, o.tuning, "") as GameData["tuning"]) : data.tuning;
-  return {
+  const out: GameData = {
     ...data,
     tuning,
+    credit: o.credit ? (merge(data.credit, o.credit, "credit") as GameData["credit"]) : data.credit,
+    markets: o.markets ? (merge(data.markets, o.markets, "markets") as GameData["markets"]) : data.markets,
+    counting: o.counting ? (merge(data.counting, o.counting, "counting") as GameData["counting"]) : data.counting,
     events: patchRecords("events", data.events, o.events),
     states: patchRecords("states", data.states, o.states),
     ventures: patchRecords("ventures", data.ventures, o.ventures),
   };
+  for (const [key, factor] of Object.entries(o.scale ?? {})) scaleField(out, key, factor);
+  return out;
+}
+
+/** Multiplies `field` on every record of the list named by `key` ("ventures.failure_risk", "markets.sectors.growth"). Mutates `data`'s copies. */
+function scaleField(data: GameData, key: string, factor: number): void {
+  const parts = key.split(".");
+  const field = parts.pop()!;
+  let owner: Record<string, unknown> = data as unknown as Record<string, unknown>;
+  for (const k of parts.slice(0, -1)) owner = (owner[k] = { ...(owner[k] as Record<string, unknown>) }) as Record<string, unknown>;
+  const listKey = parts.at(-1)!;
+  const list = owner[listKey];
+  if (!Array.isArray(list)) throw new Error(`Scale "${key}": ${parts.join(".")} is not a list`);
+  owner[listKey] = list.map((r: Record<string, unknown>) => {
+    if (typeof r[field] !== "number") throw new Error(`Scale "${key}": a record has no number "${field}"`);
+    return { ...r, [field]: (r[field] as number) * factor };
+  });
 }
 
 /**
@@ -67,21 +96,26 @@ export function overrideAt(path: string, value: unknown): Overrides {
     if (!id || !field) throw new Error(`Override "${path}" needs an id and a field`);
     return { [root]: { [id]: { [field]: value } } };
   }
-  if (root !== "tuning" || !rest.length) throw new Error(`Override path "${path}" must start with tuning., events., states. or ventures.`);
-  const tuning: Record<string, unknown> = {};
-  let at = tuning;
+  if (root === "scale") return { scale: { [rest.join(".")]: value as number } };
+  if (!(root === "tuning" || root === "credit" || root === "markets" || root === "counting") || !rest.length)
+    throw new Error(`Override path "${path}" must start with tuning., credit., markets., counting., scale., events., states. or ventures.`);
+  const patch: Record<string, unknown> = {};
+  let at = patch;
   rest.forEach((k, i) => {
     if (i === rest.length - 1) at[k] = value;
     else at = (at[k] = {}) as Record<string, unknown>;
   });
-  return { tuning };
+  return { [root]: patch };
 }
 
 /** Combines overrides, later ones winning. */
 export function combine(...all: Overrides[]): Overrides {
   const out: Overrides = {};
   for (const o of all) {
-    if (o.tuning) out.tuning = deepMerge(out.tuning ?? {}, o.tuning);
+    for (const root of ["tuning", "credit", "markets", "counting"] as const) {
+      if (o[root]) out[root] = deepMerge(out[root] ?? {}, o[root]!);
+    }
+    if (o.scale) out.scale = { ...out.scale, ...o.scale };
     for (const kind of ["events", "states", "ventures"] as const) {
       for (const [id, f] of Object.entries(o[kind] ?? {})) out[kind] = { ...out[kind], [id]: { ...(out[kind] as Record<string, object> | undefined)?.[id], ...f } };
     }
