@@ -1,6 +1,7 @@
 import { gameData } from "../src/data";
 import { person } from "../src/sim/family";
 import { newGame } from "../src/sim/init";
+import { createBooks } from "../src/sim/systems/credit";
 import { createRng, type Rng } from "../src/sim/rng";
 import type { GameData } from "../src/sim/tuning";
 import type { Borrower, GameState, Person } from "../src/sim/types";
@@ -51,18 +52,22 @@ const testBorrowers: [number, string, number, number][] = [
   [GOOD_2, "Good Brothers", 0.9, 0.06],
 ];
 
+/** Term of the test borrowers' requests: commercial credit for a year, the old fixed term. */
+export const TEST_TERM = 4;
+
 /**
  * A new game whose borrowers are the four test borrowers, each with an open request for any amount
- * up to 10,000,000 fl. Requests last one quarter, as in play. Nobody has traits, so unit tests of
+ * up to 10,000,000 fl. of commercial credit for TEST_TERM quarters. Requests last one quarter, as in play. Nobody has traits, so unit tests of
  * other systems see neutral stats; trait tests add traits themselves.
  */
 export function fresh(): GameState {
   const s = newGame(quiet, createRng(1));
   for (const p of s.people) p.traits = [];
   s.borrowers = testBorrowers.map(([id, name, quality]): Borrower => ({
-    id, name, trade: "test trade", quality, market_quality: quality, estimate_noise: 0, reported: false, repaid: 0, defaulted: 0, last_default_turn: null, away_until: null,
+    id, name, trade: "test trade", quality, market_quality: quality, books: createBooks(quality, s.world.year, quiet, createRng(id)), file: null,
+    repaid: 0, defaulted: 0, last_default_turn: null, away_until: null,
   }));
-  s.requests = testBorrowers.map(([id, , , max_rate]) => ({ borrower_id: id, amount: 10_000_000, max_rate }));
+  s.requests = testBorrowers.map(([id, , , max_rate]) => ({ borrower_id: id, kind: "commercial", term_quarters: TEST_TERM, amount: 10_000_000, max_rate, talk: "steady" }));
   return s;
 }
 

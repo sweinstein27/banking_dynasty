@@ -5,6 +5,7 @@ import { checkAnswerLetter } from "../sim/letters";
 import { checkMarriage, marriageable, matchMoney } from "../sim/marriages";
 import { lendOffers, type LendOffer } from "../sim/offers";
 import { freeCash } from "../sim/reserves";
+import { readOffer } from "./systems/credit";
 import type { GameData } from "../sim/tuning";
 import type { Decision, GameState } from "../sim/types";
 
@@ -47,9 +48,9 @@ export function accepted(state: GameState, data: GameData, wanted: ((s: GameStat
   return decisions;
 }
 
-/** This quarter's requests, safest-looking first (highest estimate low bound, then borrower id). */
+/** This quarter's requests, safest-looking first (the strategy's reading of their books, then borrower id). */
 export const safestFirst = (s: GameState, data: GameData) =>
-  [...lendOffers(s, data)].sort((a, b) => b.estimate.low - a.estimate.low || a.borrower_id - b.borrower_id);
+  [...lendOffers(s, data)].sort((a, b) => readOffer(b, data) - readOffer(a, data) || a.borrower_id - b.borrower_id);
 
 /**
  * How a strategy answers letters. "safe" takes the costliest response it can afford among those

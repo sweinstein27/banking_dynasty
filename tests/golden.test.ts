@@ -33,7 +33,7 @@ describe("golden run", () => {
     expect(accountBalance(state, "deposits")).toBe(state.house.deposits);
   });
 
-  // A2: wages, upkeep and the counting rolls change every run; the integrator re-records this.
+  // Wave 1 (A1 credit, A2 counting house) changes every run; the integrator re-records this.
   it.skip("matches the recorded result", () => {
     const { state, netWorthByTurn, sentimentByTurn } = play();
     const count = (status: string) => state.loans.filter((l) => l.status === status).length;
@@ -72,7 +72,7 @@ describe("golden run: full economy", () => {
     expect(state.ventures.length).toBeGreaterThan(0);
   });
 
-  // A2: wages, upkeep and the counting rolls change every run; the integrator re-records this.
+  // Wave 1 (A1 credit, A2 counting house) changes every run; the integrator re-records this.
   it.skip("matches the recorded result", () => {
     const { state, netWorthByTurn, sentimentByTurn } = play(economyDecisions);
     const tally = (items: { status: string }[]) =>
@@ -116,14 +116,14 @@ describe("golden run: panic", () => {
     expect(accountBalance(state, "deposits")).toBe(state.house.deposits);
   });
 
-  // A2: wages, upkeep and the counting rolls change the panic seed's run; the integrator re-picks it.
+  // Wave 1 (A1 credit, A2 counting house) changes every run; the integrator re-records this.
   it.skip("still covers what it was chosen for: panic, a run, forced sales, a default, survival", () => {
     expect(panicCoverage(run(), TURNS).checks).toEqual({
       panic: true, run: true, bond_sales: true, loan_sales: true, state_default: true, survives: true,
     });
   });
 
-  // A2: wages, upkeep and the counting rolls change every run; the integrator re-records this.
+  // Wave 1 (A1 credit, A2 counting house) changes every run; the integrator re-records this.
   it.skip("matches the recorded result", () => {
     const { state, netWorthByTurn, sentimentByTurn } = run();
     const tally = (items: { status: string }[]) =>

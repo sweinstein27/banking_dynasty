@@ -1,21 +1,22 @@
-// Named borrowers with hidden quality. The player sees an estimate range; the market's own estimate
-// sets the rate a borrower will pay, so a better estimate than the market's is how you find bargains.
-import { cloneState } from "./state";
+// Named borrowers with hidden quality. The player reads their books (src/sim/systems/credit.ts);
+// the market's own estimate sets the rate a borrower will pay, so reading the books better than
+// the market is how you find bargains.
 import type { DecisionResult } from "./actions";
-import { checkCapacity, useCapacity } from "./capacity";
-import { fl } from "./format";
+import { headStat } from "./family";
 import { addEntry } from "./ledger";
-import { freeCash } from "./reserves";
 import type { Rng } from "./rng";
+import { bandOf, buyFile, checkFile, createBooks } from "./systems/credit";
 import type { GameData, Tuning } from "./tuning";
-import type { Borrower, GameState, Loan, LoanRequest, ReportDecision } from "./types";
+import type { Borrower, GameState, Loan, LoanKind, LoanRequest, ReportDecision } from "./types";
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 const round3 = (x: number) => Math.round(x * 1000) / 1000;
 
+const KINDS: LoanKind[] = ["bill", "commercial", "mortgage"];
+
 /**
  * Draws every borrower in data/borrowers.json: true quality within its range, the market's
- * estimate, and the fixed noise behind the player's estimate. Three rolls per borrower, in data order.
+ * estimate, and their books. Nine rolls per borrower, in data order.
  */
 export function createBorrowers(data: GameData, rng: Rng): Borrower[] {
   const { noise } = data.tuning.loans.market;
@@ -23,32 +24,21 @@ export function createBorrowers(data: GameData, rng: Rng): Borrower[] {
     const [lo, hi] = b.quality;
     const quality = round3(lo + rng.next() * (hi - lo));
     const market_quality = round3(clamp01(quality + (rng.next() * 2 - 1) * noise));
-    const estimate_noise = round3(rng.next() * 2 - 1);
-    return { id: i + 1, name: b.name, trade: b.trade, quality, market_quality, estimate_noise, reported: false, repaid: 0, defaulted: 0, last_default_turn: null, away_until: null };
+    const books = createBooks(quality, data.tuning.start.year, data, rng);
+    return { id: i + 1, name: b.name, trade: b.trade, quality, market_quality, books, file: null, repaid: 0, defaulted: 0, last_default_turn: null, away_until: null };
   });
 }
 
-/** Highest annual rate a borrower pays given the market's estimate: base + spread * (1 - q), to the nearest 0.5%. */
-export function maxRate(marketQuality: number, tuning: Tuning): number {
+/**
+ * Highest annual rate a borrower pays for a loan of this kind and term, given the market's
+ * estimate: base + spread * (1 - q) + the kind's premium (+ premium_per_year for each year beyond
+ * the first), to the nearest 0.5%, never below 0.5%.
+ */
+export function maxRate(marketQuality: number, tuning: Tuning, kind: LoanKind = "commercial", termQuarters = 4): number {
   const { base, spread } = tuning.loans.rate;
-  return Math.round((base + spread * (1 - marketQuality)) * 200) / 200;
-}
-
-/** Half-width of the player's estimate: report_width after a report, otherwise narrowed by the head's Prudence. */
-export function estimateWidth(b: Pick<Borrower, "reported">, prudence: number, tuning: Tuning): number {
-  const e = tuning.loans.estimate;
-  if (b.reported) return e.report_width;
-  return e.width * Math.max(0, 1 - prudence * e.prudence_step);
-}
-
-/** The quality range the player sees, given the head's Prudence. It always contains the true quality. */
-export function estimateRange(b: Borrower, prudence: number, tuning: Tuning): { low: number; high: number } {
-  const w = estimateWidth(b, prudence, tuning);
-  const centre = b.quality + b.estimate_noise * w;
-  return {
-    low: Math.floor(clamp01(centre - w) * 100) / 100,
-    high: Math.ceil(clamp01(centre + w) * 100) / 100,
-  };
+  const k = tuning.loans.kinds[kind];
+  const premium = k.premium + k.premium_per_year * Math.max(0, termQuarters / 4 - 1);
+  return Math.max(0.005, Math.round((base + spread * (1 - marketQuality) + premium) * 200) / 200);
 }
 
 /** True if the borrower currently owes the house money. */
@@ -56,11 +46,31 @@ export function hasActiveLoan(state: GameState, borrowerId: number): boolean {
   return state.loans.some((l) => l.status === "active" && l.borrower_id === borrowerId);
 }
 
+/** The kind a roll in [0, 1) picks, by the kinds' weights. */
+export function kindFor(u: number, tuning: Tuning): LoanKind {
+  const total = KINDS.reduce((s, k) => s + tuning.loans.kinds[k].weight, 0);
+  let x = u * total;
+  for (const k of KINDS) {
+    x -= tuning.loans.kinds[k].weight;
+    if (x < 0) return k;
+  }
+  return KINDS[KINDS.length - 1]!;
+}
+
+/** Chance bourse talk about a borrower tells the truth, given the head's Prudence. */
+export function talkAccuracy(prudence: number, data: GameData): number {
+  const t = data.credit.info.talk;
+  return Math.min(t.max, t.accuracy + t.per_prudence * prudence);
+}
+
 /**
  * Next quarter's requests: up to requests_per_quarter borrowers, picked at random from those with
- * no active loan who are not staying away (after a default, or after the house called a loan in). Each asks for an amount drawn between
- * min and max (to the nearest 500 fl.), grown for every loan repaid, at the rate the market allows.
- * Two rolls per request. Returns the requests sorted by borrower id.
+ * no active loan who are not staying away (after a default, or after the house called a loan in).
+ * Each asks for a kind of loan by the kinds' weights (a mortgage needs collateral to cover at
+ * least the kind's smallest amount, else it becomes commercial credit), a term and an amount in
+ * the kind's ranges (grown for every loan repaid; a mortgage never above mortgage_cover of
+ * collateral), at the rate the market allows, and the bourse says something of them.
+ * Six rolls per request. Returns the requests sorted by borrower id.
  */
 export function drawRequests(state: GameState, data: GameData, rng: Rng): LoanRequest[] {
   const t = data.tuning.loans;
@@ -69,23 +79,62 @@ export function drawRequests(state: GameState, data: GameData, rng: Rng): LoanRe
     (b) => !hasActiveLoan(state, b.id) && (b.away_until === null || turn >= b.away_until),
   );
   const count = Math.min(pool.length, t.requests_per_quarter);
+  const accuracy = count > 0 ? talkAccuracy(headStat(state, "prudence", data), data) : 0;
   const requests: LoanRequest[] = [];
   for (let i = 0; i < count; i++) {
     const j = i + Math.floor(rng.next() * (pool.length - i));
     [pool[i], pool[j]] = [pool[j]!, pool[i]!];
     const b = pool[i]!;
-    const a = t.request_amount;
-    const growth = Math.min(a.max_growth, 1 + a.growth_per_repaid * b.repaid);
-    const amount = Math.round(((a.min + rng.next() * (a.max - a.min)) * growth) / 500) * 500;
-    requests.push({ borrower_id: b.id, amount, max_rate: maxRate(b.market_quality, data.tuning) });
+    let kind = kindFor(rng.next(), data.tuning);
+    const uAmount = rng.next();
+    const uTerm = rng.next();
+    const growth = Math.min(t.request_growth.max, 1 + t.request_growth.per_repaid * b.repaid);
+    const amountFor = (k: LoanKind) => {
+      const [lo, hi] = t.kinds[k].amount;
+      return Math.round(((lo + uAmount * (hi - lo)) * growth) / 500) * 500;
+    };
+    let amount = amountFor(kind);
+    if (kind === "mortgage") {
+      amount = Math.min(amount, Math.floor((b.books.collateral * t.mortgage_cover) / 500) * 500);
+      if (amount < t.kinds.mortgage.amount[0]) {
+        kind = "commercial";
+        amount = amountFor(kind);
+      }
+    }
+    const [tlo, thi] = t.kinds[kind].term;
+    const term_quarters = tlo + Math.min(thi - tlo, Math.floor(uTerm * (thi - tlo + 1)));
+    const truthful = rng.next() < accuracy;
+    const randomBand = data.credit.bands[Math.min(data.credit.bands.length - 1, Math.floor(rng.next() * data.credit.bands.length))]!.id;
+    const talk = truthful ? bandOf(b.quality, data) : randomBand;
+    requests.push({ borrower_id: b.id, kind, term_quarters, amount, max_rate: maxRate(b.market_quality, data.tuning, kind, term_quarters), talk });
   }
   return requests.sort((x, y) => x.borrower_id - y.borrower_id);
 }
 
-/** Marks a loan defaulted, writes off its principal, and updates the borrower's record. Mutates `state`. */
+/**
+ * What the house recovers when a loan defaults: the kind's recovery share of the principal,
+ * scaled down when the borrower's collateral covers less than the principal. Whole gulden.
+ */
+export function defaultRecovery(state: GameState, loan: Loan, tuning: Tuning): number {
+  const share = tuning.loans.kinds[loan.kind]?.recovery ?? 0;
+  if (share <= 0 || loan.principal <= 0) return 0;
+  const b = state.borrowers.find((x) => x.id === loan.borrower_id);
+  const cover = b ? Math.min(1, b.books.collateral / loan.principal) : 0;
+  return Math.round(loan.principal * share * cover);
+}
+
+/**
+ * Marks a loan defaulted, writes off its principal, recovers what the collateral allows (mortgages),
+ * and updates the borrower's record. Mutates `state`.
+ */
 export function recordDefault(state: GameState, loan: Loan, note: string, tuning: Tuning): void {
   loan.status = "defaulted";
+  const recovered = defaultRecovery(state, loan, tuning);
   addEntry(state, "loans", "default", -loan.principal, note);
+  if (recovered > 0) {
+    state.house.cash += recovered;
+    addEntry(state, "cash", "recovery", recovered, `Loan #${loan.id}: recovered from ${loan.borrower_name}'s collateral`);
+  }
   const b = state.borrowers.find((x) => x.id === loan.borrower_id);
   if (!b) return;
   b.defaulted += 1;
@@ -103,28 +152,11 @@ export function recordRepayment(state: GameState, loan: Loan, tuning: Tuning): v
 }
 
 /** Returns why a report decision is invalid, or null if it can go ahead. */
-export function checkReport(state: GameState, d: ReportDecision, tuning: Tuning): string | null {
-  const b = state.borrowers.find((x) => x.id === d.borrower);
-  if (!b) return `Unknown borrower #${d.borrower}`;
-  const noAction = checkCapacity(state, "report", tuning);
-  if (noAction) return noAction;
-  if (!state.requests.some((r) => r.borrower_id === b.id)) return `${b.name} is not asking for a loan this quarter`;
-  if (b.reported) return `You already have a report on ${b.name}`;
-  const cost = tuning.loans.estimate.report_cost;
-  if (cost > freeCash(state)) return `Not enough cash above the reserve (cost ${fl(cost)}, free ${fl(freeCash(state))})`;
-  return null;
+export function checkReport(state: GameState, d: ReportDecision, data: GameData): string | null {
+  return checkFile(state, d.borrower, "report", data);
 }
 
 /** Pays a correspondent for a report on a borrower. Returns a new state; the input is not changed. */
 export function buyReport(state: GameState, d: ReportDecision, data: GameData): DecisionResult {
-  const reason = checkReport(state, d, data.tuning);
-  if (reason) return { ok: false, reason };
-  const next = cloneState(state);
-  const b = next.borrowers.find((x) => x.id === d.borrower)!;
-  const cost = data.tuning.loans.estimate.report_cost;
-  b.reported = true;
-  next.house.cash -= cost;
-  useCapacity(next, "report", data.tuning);
-  addEntry(next, "cash", "report", -cost, `Correspondent's report on ${b.name}`);
-  return { ok: true, state: next };
+  return buyFile(state, d.borrower, "report", data);
 }

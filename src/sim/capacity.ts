@@ -28,6 +28,7 @@ const BY_KIND: Readonly<Record<string, Pool>> = {
   invest_venture: "deals",
   call_loan: "deals",
   report: "reports",
+  inquire: "reports",
   consult_analyst: "opinions",
   court_house: "head",
   arrange_marriage: "head",

@@ -16,7 +16,7 @@ const HEIRS_PER_PAGE = 3;
 const STAT_NAMES: Record<Stat, string> = { acumen: "Acumen", prudence: "Prudence", connections: "Connections" };
 const STAT_EFFECT: Record<Stat, string> = {
   acumen: "ventures fail less",
-  prudence: "sharper borrower estimates",
+  prudence: "truer bourse talk",
   connections: "states sell bonds sooner",
 };
 

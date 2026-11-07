@@ -1,7 +1,7 @@
 import type { CountingData } from "./systems/counting";
 import type { CreditData } from "./systems/credit";
 import type { MarketsData } from "./systems/markets";
-import type { Quarter, Sentiment } from "./types";
+import type { LoanKind, Quarter, Sentiment } from "./types";
 
 export interface Tuning {
   start: {
@@ -185,22 +185,19 @@ export interface Tuning {
   };
   loans: {
     p0: number;
-    term_quarters: number;
     min_amount: number;
     /** Borrowers asking for a loan each quarter. */
     requests_per_quarter: number;
-    /** A request is drawn between min and max, then grows by growth_per_repaid for each loan repaid, up to max_growth times. */
-    request_amount: { min: number; max: number; growth_per_repaid: number; max_growth: number };
-    /** Highest rate a borrower pays: base + spread * (1 - market_quality), to the nearest half percent. */
+    /** A request's amount grows by per_repaid for each loan the borrower has repaid, up to max times. */
+    request_growth: { per_repaid: number; max: number };
+    /** The kinds of loan a borrower asks for, from short bills to long mortgages. */
+    kinds: Record<LoanKind, LoanKindTuning>;
+    /** A mortgage request is never more than this share of the borrower's collateral; below the kind's minimum, they ask for commercial credit instead. */
+    mortgage_cover: number;
+    /** Highest rate a borrower pays: base + spread * (1 - market_quality) + the kind's premium, to the nearest half percent. */
     rate: { base: number; spread: number };
     /** Market quality is true quality plus up to +/- noise; a default lowers it, a repayment raises it. */
     market: { noise: number; default_penalty: number; repaid_bonus: number };
-    /**
-     * The player's estimate is a range of +/- width around a point that always lies within width of the
-     * truth. Each point of Prudence narrows width by prudence_step; a report sets it to report_width.
-     */
-    estimate: { width: number; prudence_step: number; report_width: number; report_cost: number };
-    /** A borrower who defaults asks for nothing for this many quarters. */
     defaulter_absence_quarters: number;
   };
 }
@@ -377,6 +374,25 @@ export interface TraitType {
   /** The virtue an heir gains at 18 when this stat has reached virtue_stat. */
   virtue_for?: "acumen" | "prudence" | "connections";
   effects: TraitEffects;
+}
+
+/** One kind of loan in tuning.loans.kinds. */
+export interface LoanKindTuning {
+  /** Share of requests that ask for this kind. */
+  weight: number;
+  /** Term in quarters, drawn as a whole number in [min, max]. */
+  term: [number, number];
+  /** Amount asked, drawn in [min, max] before growth, to the nearest 500 fl. */
+  amount: [number, number];
+  /** Added to the borrower's highest rate, plus premium_per_year for each year of term beyond the first. */
+  premium: number;
+  premium_per_year: number;
+  /** Multiplies the quarterly default chance. */
+  default_factor: number;
+  /** On default the house recovers this share of the principal, scaled down if collateral covers less than the principal. */
+  recovery: number;
+  /** Principal is repaid in equal parts each quarter instead of all at term. */
+  amortizes: boolean;
 }
 
 export interface BorrowerType {

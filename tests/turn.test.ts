@@ -4,7 +4,7 @@ import { newGame } from "../src/sim/init";
 import { accountBalance } from "../src/sim/ledger";
 import { endTurn, loanBook, netWorth } from "../src/sim/turn";
 import type { LendDecision } from "../src/sim/types";
-import { FAIR, fixedRng, fresh, noDefaults, POOR, quiet } from "./helpers";
+import { FAIR, fixedRng, fresh, noDefaults, POOR, quiet, TEST_TERM } from "./helpers";
 
 const lendFair: LendDecision = { kind: "lend", amount: 10000, rate: 0.08, borrower: FAIR };
 
@@ -40,9 +40,9 @@ describe("endTurn: interest and repayment", () => {
     let s = fresh();
     const start = s.house.cash;
     s = endTurn(s, [lendFair], noDefaults, quiet);
-    for (let i = 1; i < gameData.tuning.loans.term_quarters; i++) s = endTurn(s, [], noDefaults, quiet);
+    for (let i = 1; i < TEST_TERM; i++) s = endTurn(s, [], noDefaults, quiet);
     expect(s.loans[0]!.status).toBe("repaid");
-    expect(s.house.cash).toBe(start + 200 * gameData.tuning.loans.term_quarters);
+    expect(s.house.cash).toBe(start + 200 * TEST_TERM);
     expect(loanBook(s)).toBe(0);
 
     const after = endTurn(s, [], noDefaults, quiet);

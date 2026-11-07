@@ -4,7 +4,7 @@
 import { Tabs } from "radix-ui";
 import { useState } from "react";
 import { gameData } from "../data";
-import { estimateRange } from "../sim/borrowers";
+import { fileLines, KIND_WORDS } from "../sim/systems/credit";
 import { capacityLeft } from "../sim/capacity";
 import { headStat } from "../sim/family";
 import { bondOffers, lendOffers, ventureOffers } from "../sim/offers";
@@ -61,13 +61,13 @@ function Borrowers({ state }: { state: GameState }) {
       head: `${o.name}, ${o.trade}`,
       tag: "Asking",
       lines: [
-        `Wants up to ${fl(o.amount)} at up to ${pct(o.max_rate)} a year.`,
-        `Quality ${o.estimate.low.toFixed(2)} to ${o.estimate.high.toFixed(2)}${o.reported ? ", from a report" : ""}.`,
+        `A ${KIND_WORDS[o.kind]} for ${o.term_quarters} quarters: up to ${fl(o.amount)} at up to ${pct(o.max_rate)} a year. ${o.years_in_trade} years in trade.`,
+        o.talk_text,
+        ...fileLines(o.file, state.world.turn, gameData),
         o.repaid === 0 && o.defaulted === 0 ? "No history with the house." : `With the house: repaid ${o.repaid}, defaulted ${o.defaulted}.`,
       ],
     })),
     ...known.map((b) => {
-      const r = estimateRange(b, prudence, gameData.tuning);
       const lent = state.loans.filter((l) => l.borrower_id === b.id && l.status === "active").reduce((n, l) => n + l.principal, 0);
       const away = b.away_until !== null && b.away_until > state.world.turn;
       return {
@@ -76,7 +76,7 @@ function Borrowers({ state }: { state: GameState }) {
         tag: lent > 0 ? "Borrowing" : away ? "Away" : "Known",
         lines: [
           lent > 0 ? `Owes the house ${fl(lent)}` : away ? `Asks for nothing for ${b.away_until! - state.world.turn} more quarters.` : "Not asking this quarter.",
-          `Quality ${r.low.toFixed(2)} to ${r.high.toFixed(2)}${b.reported ? ", from a report" : ""}.`,
+          ...fileLines(b.file, state.world.turn, gameData),
           `With the house: repaid ${b.repaid}, defaulted ${b.defaulted}.`,
         ],
       };
@@ -86,7 +86,7 @@ function Borrowers({ state }: { state: GameState }) {
   return (
     <>
       <p className="small muted">
-        Merchants who ask for a <Term id="loans">loan</Term> this quarter, then others the house knows. You see an <Term id="estimate">estimate</Term> of quality, never the truth.
+        Merchants who ask for a <Term id="loans">loan</Term> this quarter, then others the house knows. You never see their true soundness: read their <Term id="books">books</Term>.
       </p>
       {rows.length === 0 ? <p className="muted">No one is asking for a loan this quarter.</p> : (
         <ul className="rows">

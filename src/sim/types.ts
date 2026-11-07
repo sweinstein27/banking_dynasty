@@ -1,6 +1,6 @@
 // Field names follow the data model in docs/spec.md so save files line up with it.
 import type { CountingCategory, CountingDecision, CountingState } from "./systems/counting";
-import type { CreditCategory, CreditDecision, CreditState } from "./systems/credit";
+import type { Band, BookFile, Books, CreditCategory, CreditDecision, CreditState } from "./systems/credit";
 import type { MarketsAccount, MarketsCategory, MarketsDecision, MarketsState } from "./systems/markets";
 
 export type Sentiment = "calm" | "uneasy" | "panic";
@@ -88,19 +88,19 @@ export interface Succession {
   passed_over: number | null;
 }
 
-/** A merchant house that borrows from the player. Quality is hidden: the player sees estimateRange. */
+/** A merchant house that borrows from the player. Quality is hidden: the player reads its books (milestone A1). */
 export interface Borrower {
   id: number;
   name: string;
   trade: string;
-  /** True chance-of-repayment quality, 0 (worst) to 1 (best). Never shown to the player. */
+  /** True soundness, 0 (worst) to 1 (best). Never shown to the player; defaults come from it. */
   quality: number;
-  /** What the market believes. Sets the highest rate the borrower will pay; falls after a default. */
+  /** What the market believes. Sets the highest rate the borrower will pay and what other houses pay for its loans; falls after a default. */
   market_quality: number;
-  /** Fixed draw in [-1, 1] placing the player's estimate around the truth, so it cannot be re-rolled. */
-  estimate_noise: number;
-  /** A correspondent's report has been bought: the estimate is narrow from now on. */
-  reported: boolean;
+  /** The borrower's real books, changing each quarter. Never shown whole: the player sees them through a BookFile. */
+  books: Books;
+  /** The latest report or inquiry the house bought, or null. */
+  file: BookFile | null;
   repaid: number;
   defaulted: number;
   last_default_turn: number | null;
@@ -108,19 +108,28 @@ export interface Borrower {
   away_until: number | null;
 }
 
+/** Bills of exchange (a quarter or two), commercial credit (one to three years), mortgages and long credit (five to ten years). */
+export type LoanKind = "bill" | "commercial" | "mortgage";
+
 /** A borrower asking the house for a loan this quarter. */
 export interface LoanRequest {
   borrower_id: number;
+  kind: LoanKind;
+  term_quarters: number;
   /** Most the borrower will take, in whole gulden. */
   amount: number;
   /** Highest annual rate the borrower will pay. */
   max_rate: number;
+  /** What the bourse says of the borrower this quarter (free, sometimes wrong). */
+  talk: Band;
 }
 
 export interface Loan {
   id: number;
   borrower_id: number;
   borrower_name: string;
+  kind: LoanKind;
+  /** Principal still owed. Mortgages repay part of it each quarter. */
   principal: number;
   /** Annual rate, e.g. 0.08 for 8%. */
   rate: number;
@@ -369,7 +378,7 @@ export interface LendDecision {
   rate: number;
 }
 
-/** Buy a correspondent's report on a borrower who is asking for a loan: narrows the quality estimate. */
+/** Buy a correspondent's report on a borrower who is asking for a loan or owes the house: turnover, profit, debts and payment record. */
 export interface ReportDecision {
   kind: "report";
   borrower: number;

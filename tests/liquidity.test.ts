@@ -7,7 +7,7 @@ import { loanSalePrice, principalToSell, raiseCash, resolveWithdrawals } from ".
 import { lend, quarterlyInterest } from "../src/sim/loans";
 import { endTurn, loanBook, netWorth } from "../src/sim/turn";
 import type { GameState, LendDecision } from "../src/sim/types";
-import { fresh, GOOD, noDefaults, quiet, reopenRequests } from "./helpers";
+import { fresh, GOOD, noDefaults, quiet, reopenRequests, TEST_TERM } from "./helpers";
 
 const tuning = gameData.tuning;
 const panicShare = tuning.sentiment.withdrawal_share.panic;
@@ -196,7 +196,7 @@ describe("bankruptcy", () => {
   it("is avoided in End Turn when this quarter's repayments arrive before withdrawals", () => {
     // A loan repaid this quarter adds cash before withdrawals, which can save the house.
     let s = house({ cash: 0, deposits: 50000, loans: [20000] });
-    s.world.turn = s.loans[0]!.start_turn + tuning.loans.term_quarters - 1;
+    s.world.turn = s.loans[0]!.start_turn + TEST_TERM - 1;
     s = endTurn(s, [], noDefaults, quiet);
     expect(s.loans[0]!.status).toBe("repaid");
     expect(s.house.status).toBe("solvent");

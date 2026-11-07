@@ -11,7 +11,7 @@ import type { GameData } from "../sim/tuning";
 import type { Decision, GameState } from "../sim/types";
 import { accepted as acceptedCore, letterReplies, lendShare, marriageMakers, safestFirst, shareOfFree, type Maker, type Strategy } from "./common";
 import { countingMakers } from "./systems/counting";
-import { creditMakers } from "./systems/credit";
+import { creditMakers, readOffer } from "./systems/credit";
 import { marketsMakers } from "./systems/markets";
 
 /** Every system's early makers, the strategy's own wants, then every system's late makers. */
@@ -64,15 +64,11 @@ function cautiousPlay(state: GameState, data: GameData, educate: boolean): Decis
   if (state.world.sentiment === "panic" && shortForWithdrawals(state, data)) wanted.push(() => ({ kind: "pay_slowly" }));
   wanted.push(reserveAt(worried ? 0.6 : 0.4));
   wanted.push(...marriageMakers(state, data, "best"));
-  wanted.push((s) => {
-    // A report on the best-paying request not yet checked.
-    const o = lendOffers(s, data).filter((x) => !x.reported).sort((a, b) => b.max_rate - a.max_rate || a.borrower_id - b.borrower_id)[0];
-    return o ? { kind: "report", borrower: o.borrower_id } : null;
-  });
+  // Reports and inquiries come from the credit makers (src/harness/systems/credit.ts).
   for (let i = 0; i < 2; i++) {
     wanted.push((s) => {
       const o = safestFirst(s, data)[0];
-      return o && o.estimate.low >= 0.6 ? lendShare(s, o, 0.25) : null;
+      return o && readOffer(o, data) >= 0.65 ? lendShare(s, o, 0.25) : null;
     });
   }
   if (educate) wanted.push((s) => {

@@ -5,10 +5,8 @@ import { Tabs } from "radix-ui";
 import { useMemo } from "react";
 import { gameData } from "../data";
 import { bondBook, bondValue, quarterlyCoupon } from "../sim/bonds";
-import { estimateRange } from "../sim/borrowers";
 import { debtBook, debtInterest } from "../sim/crisis";
 import { depositLevel } from "../sim/deposits";
-import { headStat } from "../sim/family";
 import { freeCash } from "../sim/reserves";
 import { loanBook, netWorth } from "../sim/turn";
 import type { GameState, LedgerEntry } from "../sim/types";
@@ -98,12 +96,11 @@ function Accounts({ state }: { state: GameState }) {
   );
 }
 
-/** The player's quality estimate for a borrower. True quality is never shown. */
+/** What the house knows of a borrower's books. True quality is never shown. */
 function estimateText(state: GameState, borrowerId: number): string {
-  const b = state.borrowers.find((x) => x.id === borrowerId);
-  if (!b) return "no estimate";
-  const r = estimateRange(b, headStat(state, "prudence", gameData), gameData.tuning);
-  return `quality ${r.low.toFixed(2)} to ${r.high.toFixed(2)}`;
+  const f = state.borrowers.find((x) => x.id === borrowerId)?.file;
+  if (!f) return "no report";
+  return `${f.tier === "inquiry" ? "inquiry" : "report"}: profit ${fl(f.profit)}, debts ${fl(f.debts)}`;
 }
 
 function Holdings({ state }: { state: GameState }) {

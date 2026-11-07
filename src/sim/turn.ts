@@ -4,7 +4,7 @@ import { bondBook, markBonds, resolveBonds } from "./bonds";
 import { applyDecision } from "./decisions";
 import { addEntry } from "./ledger";
 import { resolveWithdrawals } from "./liquidity";
-import { drawRequests, recordDefault, recordRepayment } from "./borrowers";
+import { drawRequests } from "./borrowers";
 import { debtBook, serviceDebts } from "./crisis";
 import { resolveDeposits } from "./deposits";
 import { resolveEvents } from "./events";
@@ -12,7 +12,7 @@ import { headEffects, resolveFamily } from "./family";
 import { resolveHouses } from "./houses";
 import { settleLetters } from "./letters";
 import { quarterNews } from "./news";
-import { defaultChance, quarterlyInterest } from "./loans";
+import { serviceLoans } from "./loans";
 import type { Rng } from "./rng";
 import { moodWithWarnings, nextSentiment } from "./sentiment";
 import type { GameData } from "./tuning";
@@ -34,8 +34,8 @@ export function loanBook(state: GameState): number {
 /**
  * Resolves one quarter:
  * 1. apply decisions, then settle the quarter's letters (unanswered ones take their default response;
- * chances are rolled), 2. roll defaults, 3. collect interest from survivors,
- * 4. repay loans that reached their term, 5. roll bond defaults and pay coupons,
+ * chances are rolled), 2. to 4. service loans (roll defaults, collect interest from survivors,
+ * repay loans that reached their term and parts of mortgages), then every borrower trades a quarter (credit), 5. roll bond defaults and pay coupons,
  * 6. resolve ventures that reach their term, 7. pay interest on debts and repay those due, then
  * depositors withdraw for the current mood (less if paying slowly, nothing if suspended), with
  * forced sales if cash runs short (bankruptcy if even that fails), then interest is credited to
@@ -62,28 +62,7 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
   const { world, house } = next;
   settleLetters(next, rng, data);
 
-  for (const loan of next.loans) {
-    if (loan.status !== "active") continue;
-
-    if (rng.next() < defaultChance(loan.quality, world.sentiment, data.tuning, next.trade_risk)) {
-      recordDefault(next, loan, `Loan #${loan.id}: ${loan.borrower_name} defaulted`, data.tuning);
-      continue;
-    }
-
-    const interest = quarterlyInterest(loan);
-    house.cash += interest;
-    addEntry(next, "cash", "interest", interest, `Loan #${loan.id}: interest from ${loan.borrower_name}`);
-
-    const quartersElapsed = world.turn - loan.start_turn + 1;
-    if (quartersElapsed >= loan.term_quarters) {
-      loan.status = "repaid";
-      house.cash += loan.principal;
-      const note = `Loan #${loan.id}: ${loan.borrower_name} repaid`;
-      addEntry(next, "cash", "repayment", loan.principal, note);
-      addEntry(next, "loans", "repayment", -loan.principal, note);
-      recordRepayment(next, loan, data.tuning);
-    }
-  }
+  serviceLoans(next, rng, data);
 
   resolveCredit(next, rng, data);
   resolveBonds(next, rng, data);

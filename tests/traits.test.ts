@@ -3,6 +3,7 @@ import { gameData } from "../src/data";
 import { reputationGate } from "../src/sim/bonds";
 import { applyDecisions } from "../src/sim/decisions";
 import { createFamily, effectiveStat, headStat, investCost, isTrained, quarterlyDeathChance, resolveFamily, successor } from "../src/sim/family";
+import { talkAccuracy } from "../src/sim/borrowers";
 import { lendOffers, ventureOffers } from "../src/sim/offers";
 import { endTurn } from "../src/sim/turn";
 import { createRng } from "../src/sim/rng";
@@ -125,11 +126,11 @@ describe("traits acting on the business (the head's traits only)", () => {
     expect(effectiveStat(s.people[0]!, "prudence", gameData)).toBe(1);
   });
 
-  it("an aloof head faces higher bond gates; a prudent one sees narrower borrower estimates", () => {
+  it("an aloof head faces higher bond gates; a prudent one hears truer bourse talk", () => {
     const prussia = gameData.states.find((st) => st.id === "prussia")!;
     expect(reputationGate(withHead("aloof"), prussia, gameData)).toBe(prussia.min_reputation + 2 * gameData.tuning.family.connections_step);
-    const width = (s: ReturnType<typeof fresh>) => { const o = lendOffers(s, gameData)[0]!; return o.estimate.high - o.estimate.low; };
-    expect(width(withHead("prudent"))).toBeLessThan(width(withHead()));
+    const accuracy = (s: ReturnType<typeof fresh>) => talkAccuracy(headStat(s, "prudence", gameData), gameData);
+    expect(accuracy(withHead("prudent"))).toBeGreaterThan(accuracy(withHead()));
   });
 
   it("a gambler's ventures fail more often", () => {

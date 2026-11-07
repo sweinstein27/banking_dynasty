@@ -20,10 +20,10 @@ describe("cloneState", () => {
     const c = cloneState(s);
     c.house.cash = 1;
     c.people[0]!.acumen = 9;
-    c.borrowers[0]!.reported = true;
+    c.borrowers[0]!.books.turnover = 1;
     expect(s.house.cash).toBe(100000);
     expect(s.people[0]!.acumen).toBe(5);
-    expect(s.borrowers[0]!.reported).toBe(false);
+    expect(s.borrowers[0]!.books.turnover).not.toBe(1);
   });
 
   it("gives the histories new lists, so adding to one leaves the original alone", () => {

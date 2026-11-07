@@ -33,17 +33,42 @@ export const GLOSSARY: Record<string, GlossaryCard> = {
   },
   loans: {
     title: "Loans to merchants",
-    body: (d) =>
-      `Merchants borrow for ${d.tuning.loans.term_quarters} quarters and pay interest every quarter. A loan counts at its principal until it is repaid, or it [[default|defaults]]. You see an [[estimate]] of a borrower's quality, never the truth.`,
+    body: (d) => {
+      const k = d.tuning.loans.kinds;
+      return `Merchants ask for three kinds of loan: [[bill|bills of exchange]] for ${k.bill.term[0]} to ${k.bill.term[1]} quarters, commercial credit for ${k.commercial.term[0]} to ${k.commercial.term[1]} quarters, and [[mortgage|mortgages]] for ${k.mortgage.term[0] / 4} to ${k.mortgage.term[1] / 4} years. Each pays interest every quarter. A loan counts at its principal until it is repaid, sold ([[sell_loan]]), or it [[default|defaults]]. You never see a borrower's true soundness: read their [[books]].`;
+    },
+  },
+  bill: {
+    title: "Bills of exchange",
+    body: () => "Short credit, a quarter or two, for a merchant's goods on the road. Small, frequent and a little cheaper than other loans.",
+  },
+  mortgage: {
+    title: "Mortgages",
+    body: (d) => `Long credit secured on a borrower's property: never more than ${pct(d.tuning.loans.mortgage_cover)} of their collateral. Repaid in equal parts each quarter. Less likely to default, and on a default the collateral brings back up to ${pct(d.tuning.loans.kinds.mortgage.recovery)} of what is owed.`,
+  },
+  books: {
+    title: "A borrower's books",
+    body: () => "Every merchant keeps books: turnover, profit, debts owed to others, collateral, and a record of late payments. You never see a score or a verdict. Free [[talk]] on the bourse gives a hint; a [[report]] shows the books as the merchant keeps them; an [[inquiry]] finds the truth beneath. Weak houses flatter their books, so read with care.",
+  },
+  talk: {
+    title: "Bourse talk",
+    body: () => "What the bourse says of a merchant this quarter: free, but sometimes wrong. The head's [[prudence]] makes it more often right.",
   },
   estimate: {
-    title: "Estimate of quality",
-    body: (d) =>
-      `How likely a borrower is to repay, from 0 to 1, as a range that always contains the truth. The head's [[prudence]] narrows it; a [[report]] for ${fl(d.tuning.loans.estimate.report_cost)} narrows it most.`,
+    title: "Reading a borrower",
+    body: () => "There is no estimate of quality: read their [[books]].",
   },
   report: {
     title: "A correspondent's report",
-    body: () => "A look at a borrower's books. It narrows your [[estimate]] of their quality to a tight range around the truth, and uses one of the quarter's [[actions]].",
+    body: (d) => `For ${fl(d.credit.info.report_cost)}, a correspondent sends the borrower's books as kept: turnover, profit, debts and late payments. It is a snapshot, worth buying again after ${d.credit.info.stale_quarters} quarters. Uses a correspondent's time ([[actions|capacity]]).`,
+  },
+  inquiry: {
+    title: "A full inquiry",
+    body: (d) => `For ${fl(d.credit.info.inquiry_cost)}, everything a report shows, plus the borrower's collateral, their true profit, and your partner's private remarks.`,
+  },
+  sell_loan: {
+    title: "Selling a loan",
+    body: () => "Another house will buy a loan from you for less than it is owed: the discount grows with the market's doubts about the borrower, the years left and the market's mood. The buyer prices on the market's view, not the truth, so a loan you know to be weak can be worth selling.",
   },
   default: {
     title: "Default",
@@ -163,7 +188,7 @@ export const GLOSSARY: Record<string, GlossaryCard> = {
   },
   prudence: {
     title: "Prudence",
-    body: () => "The head's eye for a bad borrower: each point narrows your [[estimate]] of a borrower's quality.",
+    body: (d) => `The head's eye for a bad borrower: each point makes [[talk|bourse talk]] about ${pct(d.credit.info.talk.per_prudence)} more often right.`,
   },
   connections: {
     title: "Connections",

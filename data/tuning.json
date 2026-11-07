@@ -113,13 +113,17 @@
   },
   "loans": {
     "p0": 0.015,
-    "term_quarters": 4,
     "min_amount": 1000,
-    "requests_per_quarter": 3,
-    "request_amount": { "min": 5000, "max": 20000, "growth_per_repaid": 0.25, "max_growth": 3 },
+    "requests_per_quarter": 4,
+    "request_growth": { "per_repaid": 0.25, "max": 3 },
+    "kinds": {
+      "bill": { "weight": 0.45, "term": [1, 2], "amount": [1000, 6000], "premium": -0.01, "premium_per_year": 0, "default_factor": 1, "recovery": 0, "amortizes": false },
+      "commercial": { "weight": 0.4, "term": [4, 12], "amount": [5000, 20000], "premium": 0, "premium_per_year": 0.0025, "default_factor": 1, "recovery": 0, "amortizes": false },
+      "mortgage": { "weight": 0.15, "term": [20, 40], "amount": [15000, 60000], "premium": 0.01, "premium_per_year": 0, "default_factor": 0.6, "recovery": 0.6, "amortizes": true }
+    },
+    "mortgage_cover": 0.75,
     "rate": { "base": 0.05, "spread": 0.22 },
     "market": { "noise": 0.15, "default_penalty": 0.15, "repaid_bonus": 0.02 },
-    "estimate": { "width": 0.25, "prudence_step": 0.05, "report_width": 0.05, "report_cost": 500 },
     "defaulter_absence_quarters": 12
   }
 }
