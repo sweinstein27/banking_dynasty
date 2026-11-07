@@ -3,6 +3,7 @@ import { gameData } from "../src/data";
 import { checkBuyBond, reputationGate } from "../src/sim/bonds";
 import { acumenFactor, ageIn, connectionsBonus, createFamily, headOf, headStat, heirsOf } from "../src/sim/family";
 import { newGame } from "../src/sim/init";
+import { talkAccuracy } from "../src/sim/borrowers";
 import { bondOffers, lendOffers, ventureOffers } from "../src/sim/offers";
 import { createRng } from "../src/sim/rng";
 import { endTurn } from "../src/sim/turn";
@@ -68,17 +69,16 @@ describe("family helpers", () => {
   });
 });
 
-describe("Prudence: borrower estimates", () => {
-  it("a more prudent head sees a narrower range around the truth", () => {
-    const rng = createRng(4);
-    const s = newGame(gameData, rng);
-    const width = (prudence: number) => {
+describe("Prudence: bourse talk", () => {
+  it("a more prudent head hears truer talk, up to the cap", () => {
+    const s = newGame(gameData, createRng(4));
+    const accuracy = (prudence: number) => {
       s.people[0]!.prudence = prudence;
-      const o = lendOffers(s, gameData)[0]!;
-      return o.estimate.high - o.estimate.low;
+      return talkAccuracy(headStat(s, "prudence", gameData), gameData);
     };
-    expect(width(9)).toBeLessThan(width(5));
-    expect(width(5)).toBeLessThan(width(1));
+    expect(accuracy(9)).toBeGreaterThan(accuracy(5));
+    expect(accuracy(5)).toBeGreaterThan(accuracy(1));
+    expect(accuracy(10)).toBeLessThanOrEqual(gameData.credit.info.talk.max);
   });
 });
 

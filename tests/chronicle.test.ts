@@ -93,7 +93,7 @@ describe("chronicle", () => {
 
   it("writes possessives properly and never doubles a full stop", () => {
     const s = fresh();
-    s.loans.push({ id: 1, borrower_id: 1, borrower_name: "Brenner Brothers", principal: 2000, rate: 0.1, quality: 0.5, start_turn: 1, term_quarters: 4, status: "defaulted" });
+    s.loans.push({ id: 1, borrower_id: 1, borrower_name: "Brenner Brothers", kind: "commercial", principal: 2000, rate: 0.1, quality: 0.5, start_turn: 1, term_quarters: 4, status: "defaulted" });
     s.ledger.push({ id: 99, turn: 1, account: "loans", category: "default", amount: -2000, note: "Loan #1: Brenner Brothers defaulted" });
     const text = chronicle(s, gameData).join(" ");
     expect(text).toContain("The worst default was Brenner Brothers', in 1815, which cost 2,000 fl. ");

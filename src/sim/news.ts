@@ -44,7 +44,8 @@ export function quarterNews(before: GameState, after: GameState, data: GameData)
 
   for (const loan of after.loans) {
     if (loan.status !== "defaulted" || before.loans.find((l) => l.id === loan.id)?.status === "defaulted") continue;
-    add("loan_default", `${loan.borrower_name} defaulted, losing the full principal of ${fl(loan.principal)}`);
+    const back = entries.find((e) => e.category === "recovery" && e.note.startsWith(`Loan #${loan.id}:`))?.amount ?? 0;
+    add("loan_default", back > 0 ? `${loan.borrower_name} defaulted on ${fl(loan.principal)} The collateral brings back ${fl(back)}` : `${loan.borrower_name} defaulted, losing the full principal of ${fl(loan.principal)}`);
   }
 
   for (const id of after.defaulted_states) {

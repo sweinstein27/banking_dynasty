@@ -141,16 +141,18 @@ function Footer({ error, canConfirm, onConfirm }: { error: string | null; canCon
   );
 }
 
-/** One borrower's request, as a choice button: what they want, what they pay, and your estimate. */
+/** One borrower's request, as a choice button: what they want, what they pay, what the bourse says and any report. */
 function OfferSummary({ o }: { o: LendOffer }) {
   return (
     <>
       <strong>{o.name}, {o.trade}</strong>
-      <span>Wants up to {fl(o.amount)} and pays up to {pct(o.max_rate)} a year.</span>
-      <span>
-        Your estimate of quality: {o.estimate.low.toFixed(2)} to {o.estimate.high.toFixed(2)}
-        {o.reported ? " (from a report)" : ""}.
-      </span>
+      <span>Wants up to {fl(o.amount)} for {o.term_quarters} quarters ({o.kind}) and pays up to {pct(o.max_rate)} a year. {o.years_in_trade} years in trade.</span>
+      <span>{o.talk_text}</span>
+      {o.file && (
+        <span>
+          {o.file.tier === "inquiry" ? "Inquiry" : "Report"}: turnover {fl(o.file.turnover)}, profit {fl(o.file.profit)}, debts {fl(o.file.debts)}, late {o.file.late_payments} times.
+        </span>
+      )}
       <span className="muted">
         {o.repaid === 0 && o.defaulted === 0 ? "No history with the house." : `With the house: repaid ${o.repaid}, defaulted ${o.defaulted}.`}
       </span>
@@ -198,7 +200,7 @@ function LendForm(props: FormProps) {
           <input inputMode="decimal" value={rate} onChange={(e) => setRate(e.target.value)} />
         </label>
       </div>
-      <p className="muted">Term {gameData.tuning.loans.term_quarters} quarters. Interest is paid each quarter, starting this one.</p>
+      <p className="muted">Term {chosen ? `${chosen.term_quarters} quarters` : "as the borrower asks"}. Interest is paid each quarter, starting this one.</p>
       <Footer error={error} canConfirm={chosen !== undefined} onConfirm={() => chosen && submit({ kind: "lend", borrower: chosen.borrower_id, amount: parseAmount(amount), rate: Number(rate) / 100 })} />
     </>
   );
@@ -209,18 +211,18 @@ function ReportForm(props: FormProps) {
   const { error, submit } = useSubmit(props);
   const [id, setId] = useState("");
   const offers = lendOffers(state, gameData);
-  const { report_cost } = gameData.tuning.loans.estimate;
+  const { report_cost } = gameData.credit.info;
 
   if (!offers.length) return <><NoRequests /><Footer error={null} canConfirm={false} onConfirm={() => {}} /></>;
   return (
     <>
-      <p>A correspondent looks into a borrower's books for {fl(report_cost)} The estimate of their quality narrows to a tight range around the truth.</p>
+      <p>A correspondent looks into a borrower's books for {fl(report_cost)} You see their turnover, profit, debts and payment record.</p>
       <h3>Borrower</h3>
       <Choices value={id} onChange={setId}>
         {offers.map((o) => (
-          <Choice key={o.borrower_id} value={String(o.borrower_id)} disabled={o.reported}>
+          <Choice key={o.borrower_id} value={String(o.borrower_id)} disabled={!o.file_stale}>
             <OfferSummary o={o} />
-            {o.reported && <span className="error">Already reported</span>}
+            {!o.file_stale && <span className="error">Already reported</span>}
           </Choice>
         ))}
       </Choices>

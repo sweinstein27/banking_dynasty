@@ -5,7 +5,8 @@ import { newGame } from "../src/sim/init";
 import { runOver } from "../src/sim/actions";
 import { capacityLeft } from "../src/sim/capacity";
 import { bondBook, bondValue, quarterlyCoupon } from "../src/sim/bonds";
-import { bondOffers, lendOffers, ventureOffers } from "../src/sim/offers";
+import { bondOffers, lendOffers, loanSaleOffers, ventureOffers } from "../src/sim/offers";
+import type { BookFile } from "../src/sim/systems/credit";
 import { chronicle } from "../src/sim/chronicle";
 import { borrowingRoom, debtBook, inCrisis, lenders, lendingTerms } from "../src/sim/crisis";
 import { houseRanking, opinionWord } from "../src/sim/houses";
@@ -18,7 +19,7 @@ import { checkAnswerLetter, describeOption, unansweredLetters } from "../src/sim
 import { freeCash } from "../src/sim/reserves";
 import { createRng } from "../src/sim/rng";
 import { endTurn, loanBook, netWorth } from "../src/sim/turn";
-import type { ArrangeMarriageDecision, Decision, GameState, LedgerEntry, Person } from "../src/sim/types";
+import type { ArrangeMarriageDecision, Decision, GameState, LedgerEntry, LoanKind, Person } from "../src/sim/types";
 import { quartersLeft, ventureBook, venturePayout } from "../src/sim/ventures";
 
 function argValue(name: string): number | undefined {
@@ -85,7 +86,7 @@ function printHoldings(s: GameState) {
   }
   for (const l of active) {
     const left = l.term_quarters - (s.world.turn - l.start_turn);
-    console.log(`  #${l.id} ${l.borrower_name}: ${fl(l.principal)} at ${pct(l.rate)}, ${left} qtr left`);
+    console.log(`  #${l.id} ${l.borrower_name}, ${KIND_WORDS[l.kind]}: ${fl(l.principal)} at ${pct(l.rate)}, ${left} qtr left`);
   }
 }
 
@@ -98,12 +99,28 @@ function printLedger(entries: LedgerEntry[]) {
   }
 }
 
+const KIND_WORDS: Record<LoanKind, string> = { bill: "bill of exchange", commercial: "commercial credit", mortgage: "mortgage" };
+
+function fileLines(f: BookFile | null, turn: number): string[] {
+  if (!f) return ["      No report bought."];
+  const age = turn - f.turn;
+  const lines = [
+    `      ${f.tier === "inquiry" ? "Inquiry" : "Report"} ${age === 0 ? "this quarter" : `${age} qtr old`}: turnover ${fl(f.turnover)} a year, profit ${fl(f.profit)}, debts ${fl(f.debts)}, late ${f.late_payments} times in two years`,
+  ];
+  if (f.tier === "inquiry") {
+    lines.push(`      Collateral ${fl(f.collateral ?? 0)}, true profit ${fl(f.true_profit ?? 0)}`);
+    lines.push(`      ${gameData.credit.remarks[f.remark!]}`);
+  }
+  return lines;
+}
+
 function printRequests(preview: GameState): ReturnType<typeof lendOffers> {
   const offers = lendOffers(preview, gameData);
   if (!offers.length) console.log("No one is asking for a loan this quarter.");
   offers.forEach((o, i) => {
-    const est = `quality ${o.estimate.low.toFixed(2)} to ${o.estimate.high.toFixed(2)}${o.reported ? " (report)" : ""}`;
-    console.log(`  ${i + 1}) ${o.name}, ${o.trade}: wants up to ${fl(o.amount)}, pays up to ${pct(o.max_rate)}, ${est}, repaid ${o.repaid}, defaulted ${o.defaulted}`);
+    console.log(`  ${i + 1}) ${o.name}, ${o.trade}, ${o.years_in_trade} years in trade: ${KIND_WORDS[o.kind]} for ${o.term_quarters} qtr, up to ${fl(o.amount)} at up to ${pct(o.max_rate)}; repaid ${o.repaid}, defaulted ${o.defaulted} with us`);
+    console.log(`      ${o.talk_text}`);
+    for (const line of fileLines(o.file, preview.world.turn)) console.log(line);
   });
   return offers;
 }
@@ -119,12 +136,38 @@ async function askLend(preview: GameState): Promise<Decision | null> {
 }
 
 async function askReport(preview: GameState): Promise<Decision | null> {
-  console.log(`A correspondent's report costs ${fl(tuning.loans.estimate.report_cost)} and narrows the estimate.`);
-  const offers = printRequests(preview);
-  if (!offers.length) return null;
-  const o = offers[Number(await ask(`Borrower (1-${offers.length}): `)) - 1];
-  if (!o) return console.log("Unknown borrower."), null;
-  return { kind: "report", borrower: o.borrower_id };
+  const info = gameData.credit.info;
+  console.log(`A correspondent's report (${fl(info.report_cost)}) shows turnover, profit, debts and payment record.`);
+  console.log(`A full inquiry (${fl(info.inquiry_cost)}) adds collateral, the true profit and a partner's private remarks.`);
+  const asking = printRequests(preview).map((o) => ({ id: o.borrower_id, name: o.name }));
+  const owing = loanSaleOffers(preview, gameData)
+    .filter((l) => !asking.some((a) => a.id === l.borrower_id))
+    .map((l) => ({ id: l.borrower_id, name: l.name }))
+    .filter((x, i, all) => all.findIndex((y) => y.id === x.id) === i);
+  owing.forEach((x, i) => {
+    console.log(`  ${asking.length + i + 1}) ${x.name} (owes the house)`);
+    for (const line of fileLines(preview.borrowers.find((b) => b.id === x.id)!.file, preview.world.turn)) console.log(line);
+  });
+  const all = [...asking, ...owing];
+  if (!all.length) return null;
+  const who = all[Number(await ask(`Borrower (1-${all.length}): `)) - 1];
+  if (!who) return console.log("Unknown borrower."), null;
+  const tier = (await ask("[r] Report  [i] Full inquiry: "))?.trim();
+  if (tier === "r") return { kind: "report", borrower: who.id };
+  if (tier === "i") return { kind: "inquire", borrower: who.id };
+  return null;
+}
+
+async function askSellLoan(preview: GameState): Promise<Decision | null> {
+  const offers = loanSaleOffers(preview, gameData);
+  if (!offers.length) return console.log("No active loans to sell."), null;
+  console.log("Another house would buy:");
+  offers.forEach((o, i) => {
+    console.log(`  ${i + 1}) #${o.loan_id} ${o.name}, ${KIND_WORDS[o.kind]}: ${fl(o.principal)} at ${pct(o.rate)}, ${o.quarters_left} qtr left; they pay ${fl(o.price)}`);
+  });
+  const o = offers[Number(await ask(`Loan (1-${offers.length}): `)) - 1];
+  if (!o) return console.log("Unknown loan."), null;
+  return { kind: "sell_loan", loan: o.loan_id };
 }
 
 async function askBond(preview: GameState): Promise<Decision | null> {
@@ -305,10 +348,10 @@ async function main() {
 
     while (!ended) {
       printStatus(preview);
-      const choice = (await ask("[1] Lend  [2] Report  [3] Buy bonds  [4] Back venture  [5] Set reserve  [6] View holdings  [7] End turn  [8] Crisis measures  [9] Invest in family  [h] Houses  [q] Quit: "))?.trim();
+      const choice = (await ask("[1] Lend  [2] Report or inquiry  [s] Sell a loan  [3] Buy bonds  [4] Back venture  [5] Set reserve  [6] View holdings  [7] End turn  [8] Crisis measures  [9] Invest in family  [h] Houses  [q] Quit: "))?.trim();
       if (choice === null || choice === undefined || choice === "q") return;
-      if (choice === "1" || choice === "2" || choice === "3" || choice === "4" || choice === "5" || choice === "8" || choice === "9") {
-        const askFor = { "1": askLend, "2": askReport, "3": askBond, "4": askVenture, "5": askReserve, "8": askCrisis, "9": askFamily }[choice];
+      if (choice === "1" || choice === "2" || choice === "s" || choice === "3" || choice === "4" || choice === "5" || choice === "8" || choice === "9") {
+        const askFor = { "1": askLend, "2": askReport, s: askSellLoan, "3": askBond, "4": askVenture, "5": askReserve, "8": askCrisis, "9": askFamily }[choice];
         const d = await askFor(preview);
         if (!d) continue;
         const r = applyDecision(preview, d, gameData);
@@ -317,7 +360,11 @@ async function main() {
           queued.push(d);
           preview = r.state;
           if (d.kind === "lend") console.log("Loan agreed.");
-          else if (d.kind === "report") console.log("Report received.");
+          else if (d.kind === "report" || d.kind === "inquire") {
+            console.log(d.kind === "report" ? "Report received." : "Inquiry made.");
+            for (const line of fileLines(preview.borrowers.find((b) => b.id === d.borrower)!.file, preview.world.turn)) console.log(line);
+          }
+          else if (d.kind === "sell_loan") console.log("Loan sold.");
           else if (d.kind === "buy_bond") console.log("Bonds bought.");
           else if (d.kind === "invest_venture") console.log("Venture backed.");
           else if (d.kind === "set_reserve") console.log(`Reserve set to ${fl(d.amount)}`);

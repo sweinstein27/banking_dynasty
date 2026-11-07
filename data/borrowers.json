@@ -10,5 +10,13 @@
   { "name": "Neumann", "trade": "leather goods", "quality": [0.5, 0.85] },
   { "name": "Albrecht", "trade": "colonial wares", "quality": [0.25, 0.75] },
   { "name": "Fuchs and Kramer", "trade": "dyestuffs", "quality": [0.4, 0.8] },
-  { "name": "Wagner", "trade": "salt trader", "quality": [0.6, 0.95] }
+  { "name": "Wagner", "trade": "salt trader", "quality": [0.6, 0.95] },
+  { "name": "Holzapfel", "trade": "paper mill", "quality": [0.45, 0.85] },
+  { "name": "Kirchner and Lang", "trade": "hops and malt", "quality": [0.4, 0.85] },
+  { "name": "Seidel", "trade": "porcelain dealer", "quality": [0.35, 0.8] },
+  { "name": "Moll", "trade": "coffee house supplier", "quality": [0.3, 0.75] },
+  { "name": "Pfeiffer und Toechter", "trade": "linen weavers", "quality": [0.5, 0.9] },
+  { "name": "Ebert", "trade": "glassworks", "quality": [0.35, 0.8] },
+  { "name": "Lorenz", "trade": "book printer", "quality": [0.5, 0.9] },
+  { "name": "Kuehn and Hesse", "trade": "cattle dealers", "quality": [0.3, 0.8] }
 ]

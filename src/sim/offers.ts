@@ -1,25 +1,48 @@
 // What each decision can be made with right now, for the terminal and the UI to list.
 import { bondPrice, reputationGate, stateRisk } from "./bonds";
 import { headEffects, headStat } from "./family";
-import { estimateRange } from "./borrowers";
+import { fileStale, quartersLeft, salePrice, yearsInTrade, type Band, type BookFile } from "./systems/credit";
 import type { GameData } from "./tuning";
-import type { GameState } from "./types";
+import type { GameState, LoanKind } from "./types";
 import { ventureFailureChance } from "./ventures";
 
-/** A loan request as the player may see it: no true quality, only the estimate range. */
+/**
+ * A loan request as the player may see it: no true quality and no verdict, only what is public,
+ * what the bourse says and whatever report or inquiry the house has bought.
+ */
 export interface LendOffer {
   borrower_id: number;
   name: string;
   trade: string;
+  kind: LoanKind;
+  term_quarters: number;
   /** Most the borrower will take, in whole gulden. */
   amount: number;
   /** Highest annual rate the borrower will pay. */
   max_rate: number;
-  /** The player's quality estimate; it always contains the true quality. */
-  estimate: { low: number; high: number };
-  reported: boolean;
+  years_in_trade: number;
+  /** What the bourse says this quarter (free, sometimes wrong). */
+  talk: Band;
+  talk_text: string;
+  /** The latest report or inquiry bought, as it stood then, or null. */
+  file: BookFile | null;
+  /** True if there is no file, or it is old enough to buy again. */
+  file_stale: boolean;
   repaid: number;
   defaulted: number;
+}
+
+/** An active loan the house could sell to another house today. */
+export interface LoanSaleOffer {
+  loan_id: number;
+  borrower_id: number;
+  name: string;
+  kind: LoanKind;
+  principal: number;
+  rate: number;
+  quarters_left: number;
+  /** What another house pays today, in whole gulden. */
+  price: number;
 }
 
 export interface BondOffer {
@@ -53,14 +76,35 @@ export function lendOffers(state: GameState, data: GameData): LendOffer[] {
       borrower_id: b.id,
       name: b.name,
       trade: b.trade,
+      kind: r.kind,
+      term_quarters: r.term_quarters,
       amount: r.amount,
       max_rate: r.max_rate,
-      estimate: estimateRange(b, headStat(state, "prudence", data), data.tuning),
-      reported: b.reported,
+      years_in_trade: yearsInTrade(b, state.world.year),
+      talk: r.talk,
+      talk_text: data.credit.talk[r.talk],
+      file: b.file,
+      file_stale: fileStale(b.file, state.world.turn, data),
       repaid: b.repaid,
       defaulted: b.defaulted,
     };
   });
+}
+
+/** Active loans and what each would fetch if sold today, oldest first. */
+export function loanSaleOffers(state: GameState, data: GameData): LoanSaleOffer[] {
+  return state.loans
+    .filter((l) => l.status === "active")
+    .map((l) => ({
+      loan_id: l.id,
+      borrower_id: l.borrower_id,
+      name: l.borrower_name,
+      kind: l.kind,
+      principal: l.principal,
+      rate: l.rate,
+      quarters_left: quartersLeft(l, state.world.turn),
+      price: salePrice(l, state, data),
+    }));
 }
 
 export function bondOffers(state: GameState, data: GameData): BondOffer[] {

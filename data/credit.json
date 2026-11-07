@@ -1,1 +1,43 @@
-{}
+{
+  "books": {
+    "turnover": { "min": 30000, "max": 250000, "drift": 0.05, "mood": { "calm": 0.01, "uneasy": -0.02, "panic": -0.06 } },
+    "margin": { "base": 0.06, "per_quality": 0.1, "spread": 0.02, "mood": { "calm": 0, "uneasy": -0.01, "panic": -0.03 } },
+    "dressing": 0.04,
+    "debts": { "base": 0.15, "per_unsoundness": 0.5, "spread": 0.1 },
+    "collateral": { "base": 0.2, "per_quality": 0.6, "spread": 0.15 },
+    "years_in_trade": { "min": 3, "max": 60 },
+    "late": { "chance": 0.15, "window_quarters": 8 },
+    "remark_spread": 0.05
+  },
+  "bands": [
+    { "id": "sound", "min": 0.8 },
+    { "id": "steady", "min": 0.65 },
+    { "id": "stretched", "min": 0.5 },
+    { "id": "doubtful", "min": 0 }
+  ],
+  "info": {
+    "report_cost": 300,
+    "inquiry_cost": 1200,
+    "stale_quarters": 4,
+    "talk": { "accuracy": 0.6, "per_prudence": 0.03, "max": 0.9 }
+  },
+  "sale": {
+    "base": 0.03,
+    "per_risk": 0.15,
+    "per_year_left": 0.01,
+    "mood": { "calm": 0, "uneasy": 0.05, "panic": 0.15 },
+    "max": 0.6
+  },
+  "talk": {
+    "sound": "On the bourse they say the house's paper is as good as gold.",
+    "steady": "The bourse thinks it a steady house that pays when it says.",
+    "stretched": "There is talk on the bourse that the house is buying more than it can carry.",
+    "doubtful": "A broker whispers that the house's bills have been refused twice this season."
+  },
+  "remarks": {
+    "sound": "My partner says the house is sound to its cellars: little debt, honest books, money put by.",
+    "steady": "My partner finds the books in order. Nothing to fear, nothing to boast of.",
+    "stretched": "My partner thinks the profits are dressed up and the warehouse half pledged already.",
+    "doubtful": "My partner would not lend them a thaler. The books hide more than they show."
+  }
+}

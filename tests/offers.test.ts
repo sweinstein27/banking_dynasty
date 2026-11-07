@@ -9,15 +9,17 @@ import { checkInvestVenture } from "../src/sim/ventures";
 const { tuning } = gameData;
 
 describe("lendOffers", () => {
-  it("lists this quarter's requests with name, amount, rate and estimate, never true quality", () => {
+  it("lists this quarter's requests with name, kind, term, amount, rate and talk, never true quality or the books", () => {
     const s = fresh();
     const offers = lendOffers(s, gameData);
     expect(offers.map((o) => o.borrower_id)).toEqual(s.requests.map((r) => r.borrower_id));
     const good = offers.find((o) => o.borrower_id === GOOD)!;
-    expect(good).toMatchObject({ name: "Good and Co.", trade: "test trade", amount: 10_000_000, max_rate: 0.06, reported: false, repaid: 0, defaulted: 0 });
-    expect(good.estimate.low).toBeLessThanOrEqual(0.9);
-    expect(good.estimate.high).toBeGreaterThanOrEqual(0.9);
-    for (const o of offers) expect(o).not.toHaveProperty("quality");
+    expect(good).toMatchObject({ name: "Good and Co.", trade: "test trade", kind: "commercial", term_quarters: 4, amount: 10_000_000, max_rate: 0.06, talk: "steady", file: null, file_stale: true, repaid: 0, defaulted: 0 });
+    expect(good.talk_text).toBe(gameData.credit.talk.steady);
+    for (const o of offers) {
+      expect(o).not.toHaveProperty("quality");
+      expect(o).not.toHaveProperty("books");
+    }
   });
 
   it("is empty when no one asks", () => {
