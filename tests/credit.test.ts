@@ -240,10 +240,11 @@ describe("loans of many lengths", () => {
 
   it("long loans keep rolling for default every quarter, at the kind's default_factor", () => {
     let s = decide(asking("mortgage", 40), { kind: "lend", borrower: GOOD, amount: 20000, rate: 0.08 });
-    // p = p0 * 1 * (1 - 0.9) * 0.6 = 0.0009: a roll of 0.001 survives, 0.0005 defaults.
-    s = endTurn(s, [], fixedRng(0.001, 0.999999), quiet);
+    // p = p0 * calm (1) * (1 - 0.9) * the mortgage's default_factor: a roll just above survives, just below defaults.
+    const p = gameData.tuning.loans.p0 * (1 - 0.9) * gameData.tuning.loans.kinds.mortgage.default_factor;
+    s = endTurn(s, [], fixedRng(p * 1.1, 0.999999), quiet);
     expect(s.loans[0]!.status).toBe("active");
-    s = endTurn(s, [], fixedRng(0.0005, 0.999999), quiet);
+    s = endTurn(s, [], fixedRng(p * 0.9, 0.999999), quiet);
     expect(s.loans[0]!.status).toBe("defaulted");
   });
 

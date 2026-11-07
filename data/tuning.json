@@ -119,7 +119,7 @@
     "min_amount": 1000
   },
   "loans": {
-    "p0": 0.015,
+    "p0": 0.025,
     "min_amount": 1000,
     "requests_per_quarter": 4,
     "request_growth": { "per_repaid": 0.25, "max": 3 },

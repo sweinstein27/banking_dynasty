@@ -1,0 +1,2 @@
+{ "base": { "tuning": { "loans": { "p0": 0.025 } }, "credit": { "info": { "inquiry_cost": 600, "report_cost": 150 } }, "scale": { "markets.sectors.failure": 2, "ventures.failure_risk": 1.25 } },
+  "vary": { "scale.markets.sectors.growth": [0.5], "scale.markets.companies.payout": [1], "scale.markets.sectors.price_noise": [1, 2] } }

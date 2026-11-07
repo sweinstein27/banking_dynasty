@@ -80,7 +80,8 @@ describe("ventureOffers", () => {
     const calm = ventureOffers(s, gameData).find((o) => o.id === "mill")!.failure_chance;
     s.world.sentiment = "panic";
     const panic = ventureOffers(s, gameData).find((o) => o.id === "mill")!.failure_chance;
-    expect(calm).toBe(0.15);
-    expect(panic).toBe(Math.min(1, 0.15 * tuning.sentiment_multiplier.panic));
+    const risk = gameData.ventures.find((v) => v.id === "mill")!.failure_risk;
+    expect(calm).toBeCloseTo(risk);
+    expect(panic).toBeCloseTo(Math.min(1, risk * tuning.sentiment_multiplier.panic));
   });
 });

@@ -95,15 +95,18 @@ describe("Acumen: venture failure", () => {
     const s = fresh();
     s.people[0]!.acumen = 10;
     const mill = ventureOffers(s, gameData).find((o) => o.id === "mill")!;
-    expect(mill.failure_chance).toBeCloseTo(0.15 * 0.75);
-    // While it is built, the risk is spread over its quarters: 1 - 0.85^(1/8) a quarter, about 0.0201
-    // for a neutral head and 0.0151 for an able one. A roll of 0.018 lies between (A3).
+    const millType = gameData.ventures.find((v) => v.id === "mill")!;
+    expect(mill.failure_chance).toBeCloseTo(millType.failure_risk * acumenFactor(10, tuning));
+    // While it is built, the risk is spread over its calls: 1 - (1 - risk)^(1 / calls) a quarter. A roll
+    // halfway between a neutral head's quarterly risk and an able one's survives for the able head only (A3).
+    const quarterly = (risk: number) => 1 - Math.pow(1 - risk, 1 / millType.calls);
+    const roll = (quarterly(millType.failure_risk) + quarterly(millType.failure_risk * acumenFactor(10, tuning))) / 2;
     const resolve = (acumen: number) => {
       const s0 = fresh();
       s0.people[0]!.acumen = acumen;
       const r = applyDecision(s0, { kind: "invest_venture", venture: "mill", amount: 10000 }, gameData);
       if (!r.ok) throw new Error(r.reason);
-      stepVentures(r.state, fixedRng(0.018, 0.999999), gameData);
+      stepVentures(r.state, fixedRng(roll, 0.999999), gameData);
       return r.state.ventures[0]!.status;
     };
     expect(resolve(10)).toBe("active");

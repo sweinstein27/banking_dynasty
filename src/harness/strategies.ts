@@ -118,26 +118,48 @@ export function aggressive(state: GameState, data: GameData): Decision[] {
   return accepted("aggressive", state, data, wanted);
 }
 
-/**
- * Bond-heavy: a 15% reserve, then most free cash into the two open states with the best coupon
- * after expected defaults, and a little lending to the safest-looking borrower.
- */
-export function bondHeavy(state: GameState, data: GameData): Decision[] {
-  const yieldAfterDefaults = (o: ReturnType<typeof bondOffers>[number]) => o.coupon - 4 * bondDefaultChance(o.risk, "calm", data.tuning);
-  const ranked = (s: GameState) => bondOffers(s, data).filter((o) => !o.blocked).sort((a, b) => yieldAfterDefaults(b) - yieldAfterDefaults(a) || a.id.localeCompare(b.id));
-  const wanted: Maker[] = [reserveAt(0.15), ...marriageMakers(state, data, "merchant")];
-  for (let i = 0; i < 2; i++) {
-    wanted.push((s) => {
-      const o = ranked(s)[i];
-      return o ? { kind: "buy_bond", state: o.id, face_value: shareOfFree(s, 0.4) } : null;
-    });
-  }
-  wanted.push((s) => {
-    const o = safestFirst(s, data)[0];
-    return o ? lendShare(s, o, 0.1) : null;
-  });
-  return accepted("bond_heavy", state, data, wanted);
+/** How a bond house plays: the reserve it keeps, the riskiest state it buys without limit, and its cap on riskier ones. */
+export interface BondPlay {
+  reserve: number;
+  /** States with risk above this are "risky". */
+  risky_above: number;
+  /** Most of the bond book (at face) a risky state may make up; 1 means no cap. */
+  risky_cap: number;
 }
+
+export const BOND_PLAY: BondPlay = { reserve: 0.15, risky_above: 0.4, risky_cap: 0.2 };
+
+/**
+ * Bond-heavy: a reserve, then most free cash into the two open states with the best coupon after
+ * expected defaults (risky states only up to a share of the bond book), and a little lending to the
+ * safest-looking borrower.
+ */
+export function bondHeavyWith(play: BondPlay): Strategy {
+  return (state, data) => {
+    const yieldAfterDefaults = (o: ReturnType<typeof bondOffers>[number]) => o.coupon - 4 * bondDefaultChance(o.risk, "calm", data.tuning);
+    const book = (s: GameState, id?: string) => s.bonds.filter((x) => x.status === "active" && (!id || x.issuer_state === id)).reduce((n, x) => n + x.face_value, 0);
+    const allowed = (s: GameState, o: ReturnType<typeof bondOffers>[number]) =>
+      o.risk <= play.risky_above || play.risky_cap >= 1 || book(s, o.id) < play.risky_cap * Math.max(1, book(s));
+    const ranked = (s: GameState) =>
+      bondOffers(s, data)
+        .filter((o) => !o.blocked && allowed(s, o))
+        .sort((a, b) => yieldAfterDefaults(b) - yieldAfterDefaults(a) || a.id.localeCompare(b.id));
+    const wanted: Maker[] = [reserveAt(play.reserve), ...marriageMakers(state, data, "merchant")];
+    for (let i = 0; i < 2; i++) {
+      wanted.push((s) => {
+        const o = ranked(s)[i];
+        return o ? { kind: "buy_bond", state: o.id, face_value: shareOfFree(s, 0.4) } : null;
+      });
+    }
+    wanted.push((s) => {
+      const o = safestFirst(s, data)[0];
+      return o ? lendShare(s, o, 0.1) : null;
+    });
+    return accepted("bond_heavy", state, data, wanted);
+  };
+}
+
+export const bondHeavy: Strategy = (state, data) => bondHeavyWith(BOND_PLAY)(state, data);
 
 /**
  * Venture-heavy: a 10% reserve, then half of free cash not already promised to calls (A3) into whichever open venture has the best

@@ -16,8 +16,8 @@
     { "id": "doubtful", "min": 0 }
   ],
   "info": {
-    "report_cost": 300,
-    "inquiry_cost": 1200,
+    "report_cost": 150,
+    "inquiry_cost": 600,
     "stale_quarters": 4,
     "talk": { "accuracy": 0.6, "per_prudence": 0.03, "max": 0.9 }
   },

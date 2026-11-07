@@ -125,7 +125,7 @@ describe("the price model", () => {
   it("prices a share on its dividends at the required yield, rising with the mood's premium", () => {
     const c = newCompany(m.companies[0]!, m, "calm", 1, 0);
     const dps = dividendPerShare(c);
-    expect(dps).toBeCloseTo(250 * 0.06 * 0.8, 1);
+    expect(dps).toBeCloseTo(m.companies[0]!.par * m.companies[0]!.base_yield * m.companies[0]!.payout, 1);
     expect(fairValue(c, "calm", m)).toBeCloseTo(dps / sectorOf(m, "bank").required_yield, 0);
     expect(fairValue(c, "panic", m)).toBeLessThan(fairValue(c, "uneasy", m));
     c.earnings = [-100, -100, -100, -100];
