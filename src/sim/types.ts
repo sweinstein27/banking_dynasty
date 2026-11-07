@@ -166,21 +166,49 @@ export interface Bond {
   status: BondStatus;
 }
 
-export type VentureStatus = "active" | "paid_out" | "failed" | "sold";
+/**
+ * "active": building or running, not listed, counted at cost. "listed": floated on the bourse; the
+ * stake is now shares (state.markets), though calls may still come in. "paid_out": a short venture
+ * that paid its return. "forfeited" is not a status: a forfeited stake stays active, smaller, with
+ * no more calls.
+ */
+export type VentureStatus = "active" | "paid_out" | "failed" | "sold" | "listed";
 
-/** Capital backing one venture. Field names follow the spec's venture table, plus timing. */
+/** Building pays calls and risks failure; running earns (great works earn from their first open section). */
+export type VenturePhase = "building" | "running";
+
+/** Capital backing one venture. Field names follow the spec's venture table, plus timing and the build (A3). */
 export interface Venture {
   id: number;
   /** Id from data/ventures.json. */
   type: string;
-  /** Whole gulden still at stake (reduced if part is sold to meet withdrawals). */
+  /** Whole gulden of the house's paid-in stake still held (reduced by a sale or a forfeit). */
   invested: number;
   expected_return: number;
   failure_risk: number;
   unlock_year: number;
   start_turn: number;
+  /** Quarters of the build, overruns included. */
   term_quarters: number;
   status: VentureStatus;
+  phase: VenturePhase;
+  /** Whole gulden the house promised, overruns included. */
+  committed: number;
+  /** Whole gulden paid in so far, before any sale or forfeit. */
+  called: number;
+  /** Calls planned (overruns add more) and calls paid. */
+  calls: number;
+  calls_paid: number;
+  /** True once a call went unpaid: no further calls. */
+  calls_stopped: boolean;
+  /** Sections of a great work open and earning (out of the type's sections). */
+  sections_open: number;
+  /** The last four quarters' earnings on the house's stake, oldest first. */
+  earnings: number[];
+  /** Turn it began running, or null while building with nothing open. */
+  run_start_turn: number | null;
+  /** The company it floated as, once listed. */
+  company: string | null;
 }
 
 export interface LedgerEntry {
@@ -208,7 +236,8 @@ export type NewsKind =
   | "warning"
   | "crisis"
   | "family"
-  | "houses";
+  | "houses"
+  | "markets";
 
 /** One message for the News panel, written when a quarter resolves. */
 export interface NewsItem {

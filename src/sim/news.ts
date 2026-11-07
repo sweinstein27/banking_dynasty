@@ -59,11 +59,13 @@ export function quarterNews(before: GameState, after: GameState, data: GameData)
     const was = before.ventures.find((b) => b.id === v.id);
     if (!was || was.status === v.status) continue;
     const name = data.ventures.find((t) => t.id === v.type)?.name ?? v.type;
+    // The stake as written off the ventures account this quarter: a call paid in the same quarter counts (A3).
+    const mine = (account: "cash" | "ventures", category: "venture_payout" | "venture_failure") =>
+      sum(entries.filter((e) => e.account === account && e.category === category && e.note.startsWith(`Venture #${v.id}:`)));
     if (v.status === "paid_out") {
-      const payout = sum(entries.filter((e) => e.account === "cash" && e.category === "venture_payout" && e.note.startsWith(`Venture #${v.id}:`)));
-      add("venture_paid_out", `Venture #${v.id} (${name}) succeeded, turning a stake of ${fl(was.invested)} into ${fl(payout)}`);
+      add("venture_paid_out", `Venture #${v.id} (${name}) succeeded, turning a stake of ${fl(-mine("ventures", "venture_payout"))} into ${fl(mine("cash", "venture_payout"))}`);
     } else if (v.status === "failed") {
-      add("venture_failed", `Venture #${v.id} (${name}) failed. The stake of ${fl(was.invested)} is lost.`);
+      add("venture_failed", `Venture #${v.id} (${name}) failed. The stake of ${fl(-mine("ventures", "venture_failure"))} is lost.`);
     }
   }
 

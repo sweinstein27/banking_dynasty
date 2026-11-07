@@ -7,6 +7,7 @@ import type { GameData } from "./tuning";
 import { loanBook } from "./turn";
 import type { Decision, GameState, LedgerAccount } from "./types";
 import { ventureBook } from "./ventures";
+import { commoditiesBook, sharesBook } from "./systems/markets";
 
 export const SAVE_VERSION = 13;
 
@@ -57,6 +58,9 @@ export function parseSave(text: string, data: GameData): ParseResult {
   for (const key of ["credit", "counting", "markets"] as const) {
     if (!isObject(s[key])) return { ok: false, reason: `Save file state is missing "${key}"` };
   }
+  const mk = s.markets as Record<string, unknown>;
+  if (!Array.isArray(mk.companies) || !isObject(mk.commodities) || !isObject(mk.shares) || !isObject(mk.goods) || !isObject(mk.harvest) || !isUint32(mk.rng_state))
+    return { ok: false, reason: "Save file markets are incomplete" };
   if (!isObject(s.risk_shift)) return { ok: false, reason: 'Save file state is missing "risk_shift"' };
   if (typeof s.trade_risk !== "number") return { ok: false, reason: 'Save file state is missing "trade_risk"' };
   if (!("panic_warning" in s)) return { ok: false, reason: 'Save file state is missing "panic_warning"' };
@@ -79,6 +83,8 @@ export function parseSave(text: string, data: GameData): ParseResult {
     ventures: ventureBook(state),
     deposits: state.house.deposits,
     borrowings: debtBook(state),
+    shares: sharesBook(state),
+    commodities: commoditiesBook(state),
   };
   for (const [account, balance] of Object.entries(books) as [LedgerAccount, number][]) {
     if (accountBalance(state, account) !== balance)

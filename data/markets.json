@@ -1,1 +1,89 @@
-{}
+{
+  "commodities": [
+    { "id": "grain", "name": "Grain", "unit": "Malter", "base_price": 10, "space": 1, "storage": 0.15, "spoilage": 0.02, "volatility": 0.06, "reversion": 0.4, "bounds": { "min": 0.4, "max": 2.5 }, "harvest": { "regions": ["rhine", "north", "south"], "elasticity": 1.5 } },
+    { "id": "wine", "name": "Wine", "unit": "Ohm", "base_price": 60, "space": 3, "storage": 0.4, "spoilage": 0.005, "volatility": 0.05, "reversion": 0.3, "bounds": { "min": 0.5, "max": 2.2 }, "harvest": { "regions": ["rhine"], "elasticity": 0.8 }, "fair_lift": 0.06 },
+    { "id": "cloth", "name": "Cloth", "unit": "bale", "base_price": 80, "space": 2, "storage": 0.5, "spoilage": 0, "volatility": 0.05, "reversion": 0.3, "bounds": { "min": 0.5, "max": 2 }, "fair_lift": 0.08 },
+    { "id": "iron", "name": "Iron", "unit": "ton", "base_price": 40, "space": 2, "storage": 0.1, "spoilage": 0, "volatility": 0.05, "reversion": 0.25, "bounds": { "min": 0.5, "max": 2.2 } },
+    { "id": "colonial", "name": "Colonial wares", "unit": "chest", "base_price": 50, "space": 1, "storage": 0.4, "spoilage": 0.005, "volatility": 0.07, "reversion": 0.3, "bounds": { "min": 0.4, "max": 2.5 } }
+  ],
+  "sectors": [
+    { "id": "bank", "name": "Banks", "required_yield": 0.05, "mood_premium": { "calm": 0, "uneasy": 0.01, "panic": 0.025 }, "mood_earnings": { "calm": 1, "uneasy": 0.85, "panic": 0.6 }, "earnings_noise": 0.25, "price_noise": 0.04, "growth": 0.01, "growth_cap": 1.5, "failure": 0.02 },
+    { "id": "insurance", "name": "Insurance", "required_yield": 0.055, "mood_premium": { "calm": 0, "uneasy": 0.008, "panic": 0.02 }, "mood_earnings": { "calm": 1, "uneasy": 0.9, "panic": 0.75 }, "earnings_noise": 0.3, "price_noise": 0.04, "growth": 0.015, "growth_cap": 1.5, "failure": 0.02 },
+    { "id": "shipping", "name": "Shipping", "required_yield": 0.06, "mood_premium": { "calm": 0, "uneasy": 0.01, "panic": 0.025 }, "mood_earnings": { "calm": 1, "uneasy": 0.85, "panic": 0.6 }, "earnings_noise": 0.35, "price_noise": 0.05, "growth": 0.02, "growth_cap": 1.6, "driver": { "harvest": 0.5 }, "failure": 0.03 },
+    { "id": "utility", "name": "Utilities", "required_yield": 0.045, "mood_premium": { "calm": 0, "uneasy": 0.003, "panic": 0.008 }, "mood_earnings": { "calm": 1, "uneasy": 0.98, "panic": 0.95 }, "earnings_noise": 0.08, "price_noise": 0.015, "growth": 0.02, "growth_cap": 1.6, "failure": 0.005 },
+    { "id": "canal", "name": "Canals", "required_yield": 0.05, "mood_premium": { "calm": 0, "uneasy": 0.006, "panic": 0.015 }, "mood_earnings": { "calm": 1, "uneasy": 0.9, "panic": 0.8 }, "earnings_noise": 0.2, "price_noise": 0.03, "growth": 0.02, "growth_cap": 1.5, "driver": { "harvest": 0.4 }, "failure": 0.01 },
+    { "id": "railway", "name": "Railways", "required_yield": 0.05, "mood_premium": { "calm": 0, "uneasy": 0.012, "panic": 0.03 }, "mood_earnings": { "calm": 1, "uneasy": 0.85, "panic": 0.65 }, "earnings_noise": 0.3, "price_noise": 0.06, "growth": 0.05, "growth_cap": 2, "failure": 0.02 },
+    { "id": "industry", "name": "Industry", "required_yield": 0.065, "mood_premium": { "calm": 0, "uneasy": 0.012, "panic": 0.03 }, "mood_earnings": { "calm": 1, "uneasy": 0.8, "panic": 0.5 }, "earnings_noise": 0.4, "price_noise": 0.06, "growth": 0.02, "growth_cap": 1.6, "driver": { "commodity": "iron", "elasticity": 1 }, "failure": 0.04 },
+    { "id": "textiles", "name": "Textiles", "required_yield": 0.065, "mood_premium": { "calm": 0, "uneasy": 0.012, "panic": 0.03 }, "mood_earnings": { "calm": 1, "uneasy": 0.85, "panic": 0.55 }, "earnings_noise": 0.35, "price_noise": 0.05, "growth": 0.015, "growth_cap": 1.5, "driver": { "commodity": "cloth", "elasticity": 0.8 }, "failure": 0.03 }
+  ],
+  "companies": [
+    { "id": "danube_bank", "name": "Danube Privileged Bank", "sector": "bank", "list_year": 1820, "list_quarter": 1, "shares": 4000, "par": 250, "base_yield": 0.06, "payout": 0.8, "description": "A foreign note-issuing bank whose shares are the first to trade on the Frankfurt bourse." },
+    { "id": "rhenish_fire", "name": "Rhenish Fire Assurance", "sector": "insurance", "list_year": 1825, "list_quarter": 1, "shares": 2000, "par": 250, "base_yield": 0.065, "payout": 0.75, "description": "Insures warehouses and town houses along the Rhine against fire." },
+    { "id": "rhine_steam", "name": "Rhine Steam Packet Company", "sector": "shipping", "list_year": 1827, "list_quarter": 2, "shares": 3000, "par": 250, "base_yield": 0.075, "payout": 0.8, "description": "Steamboats between Mainz and Cologne, carrying passengers, grain and wine." },
+    { "id": "main_gas", "name": "Main Gas Light Company", "sector": "utility", "list_year": 1828, "list_quarter": 3, "shares": 1200, "par": 250, "base_yield": 0.05, "payout": 0.9, "description": "Gas for Frankfurt's lamps and the houses of its richer citizens." },
+    { "id": "main_water", "name": "Main Waterworks Company", "sector": "utility", "list_year": 1834, "list_quarter": 4, "shares": 1600, "par": 250, "base_yield": 0.048, "payout": 0.9, "description": "Pumps and pipes bringing clean water into the city." },
+    { "id": "nidda_railway", "name": "Nidda Valley Railway", "sector": "railway", "list_year": 1838, "list_quarter": 3, "shares": 12000, "par": 250, "base_yield": 0.055, "payout": 0.85, "description": "A line north from Frankfurt into the Wetterau, its shares oversubscribed many times over." },
+    { "id": "saar_iron", "name": "Saar Ironworks Company", "sector": "industry", "list_year": 1840, "list_quarter": 1, "shares": 4000, "par": 250, "base_yield": 0.08, "payout": 0.7, "description": "Blast furnaces and rolling mills selling rails to the new lines." },
+    { "id": "continental_gas", "name": "Continental Gas Society", "sector": "utility", "list_year": 1844, "list_quarter": 1, "shares": 3000, "par": 250, "base_yield": 0.052, "payout": 0.9, "description": "A London-backed company lighting towns across the German states." },
+    { "id": "upper_rhine_railway", "name": "Upper Rhine Railway", "sector": "railway", "list_year": 1845, "list_quarter": 2, "shares": 16000, "par": 250, "base_yield": 0.05, "payout": 0.85, "description": "A trunk line south towards Heidelberg and Basel." }
+  ],
+  "regions": [
+    { "id": "rhine", "name": "the Rhine and Hesse", "weight": 0.4 },
+    { "id": "north", "name": "the north and east", "weight": 0.35 },
+    { "id": "south", "name": "the south", "weight": 0.25 }
+  ],
+  "harvest": {
+    "outcomes": [
+      { "id": "failed", "name": "failed", "index": 0.6, "weight": 0.05 },
+      { "id": "poor", "name": "poor", "index": 0.82, "weight": 0.2 },
+      { "id": "fair", "name": "fair", "index": 1, "weight": 0.45 },
+      { "id": "good", "name": "good", "index": 1.1, "weight": 0.22 },
+      { "id": "bumper", "name": "a bumper crop", "index": 1.22, "weight": 0.08 }
+    ],
+    "shared_weather": 0.6,
+    "historic": {
+      "1816": { "rhine": "failed", "north": "poor", "south": "failed" },
+      "1817": { "all": "fair" },
+      "1845": { "all": "poor" },
+      "1846": { "rhine": "poor", "north": "failed", "south": "poor" },
+      "1847": { "all": "bumper" }
+    }
+  },
+  "trades": {
+    "grain dealer": { "regions": ["rhine", "north", "south"], "elasticity": 1.5 },
+    "wine importer": { "regions": ["rhine"], "elasticity": 1 },
+    "river freight": { "regions": ["rhine", "north", "south"], "elasticity": 1 }
+  },
+  "trade_factor_cap": 2,
+  "fairs": { "quarters": [2, 3], "fade_from": 1830, "fade_to": 1836, "floor": 0.3 },
+  "event_shocks": {
+    "london-shares-1825": { "shares": 0.9, "commodities": { "colonial": 0.95 } },
+    "london-banks-1825": { "shares": 0.8, "sectors": { "bank": 0.9 }, "commodities": { "colonial": 0.8 } },
+    "panic-1826": { "shares": 0.9, "commodities": { "colonial": 0.9, "cloth": 0.92 } },
+    "july-revolution-1830": { "shares": 0.88, "commodities": { "wine": 0.92 } },
+    "zollverein-1834": { "levels": { "cloth": 0.95, "colonial": 0.95 } },
+    "frankfurt-zollverein-1836": { "levels": { "cloth": 1.08, "colonial": 1.05 } },
+    "railway-1835": { "sectors": { "railway": 1.1 }, "levels": { "iron": 1.05 } },
+    "crisis-1847": { "shares": 0.8, "commodities": { "iron": 0.85, "cloth": 0.9 } },
+    "february-revolution-1848": { "shares": 0.75 },
+    "march-revolutions-1848": { "shares": 0.85, "commodities": { "iron": 0.9 } },
+    "good-harvest": { "commodities": { "grain": 0.92 } },
+    "poor-harvest": { "commodities": { "grain": 1.1 } },
+    "warehouse-fire": { "sectors": { "insurance": 0.93 } }
+  },
+  "news": [
+    { "id": "london-speculation-1825", "year": 1825, "quarter": 2, "title": "Speculation fever in London", "text": "Every mail brings news of new companies floated in London, and their shares rise by the week. Frankfurt brokers catch the fever.", "shock": { "shares": 1.15, "commodities": { "colonial": 1.12 } } },
+    { "id": "railway-issue-1838", "year": 1838, "quarter": 3, "title": "Railway shares oversubscribed", "text": "Subscriptions for railway shares come in many times over what is offered. Ironmasters raise their prices for rails.", "shock": { "sectors": { "railway": 1.2 }, "levels": { "iron": 1.1 } } },
+    { "id": "rhine-crisis-1840", "year": 1840, "quarter": 3, "title": "War talk on the Rhine", "text": "Paris demands the Rhine as France's border, and the German press answers with songs and threats. Shares fall; grain and iron are bought against a war.", "shock": { "shares": 0.9, "commodities": { "grain": 1.1, "iron": 1.06 } } },
+    { "id": "railway-boom-1844", "year": 1844, "quarter": 2, "title": "Railway shares soar", "text": "New lines are planned across the German states, and their shares change hands at a premium before a rail is laid.", "shock": { "sectors": { "railway": 1.2 }, "levels": { "iron": 1.05 } } }
+  ],
+  "shock_decay": 0.25,
+  "prices": { "speed": 0.35, "bounds": { "min": 0.3, "max": 2.5 }, "distress_value": 0.2, "min_price": 1 },
+  "warehouse": { "default_space": 2000 },
+  "reports": [
+    { "name": "bourse talk", "width": 0.4, "cost": 0, "quarters": 0 },
+    { "name": "an annual report", "width": 0.15, "cost": 500, "quarters": 4 },
+    { "name": "a full inquiry", "width": 0, "cost": 2000, "quarters": 4 }
+  ],
+  "commission": { "shares": 0.005, "commodities": 0.01 }
+}

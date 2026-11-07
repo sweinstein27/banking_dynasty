@@ -19,7 +19,7 @@ import type { GameData } from "./tuning";
 import type { Decision, GameState, Quarter } from "./types";
 import { resolveCounting } from "./systems/counting";
 import { resolveCredit } from "./systems/credit";
-import { marketsBook, resolveMarkets } from "./systems/markets";
+import { markMarkets, marketsBook, resolveMarkets } from "./systems/markets";
 import { resolveVentures, ventureBook } from "./ventures";
 
 /** NetWorth = Cash + Loans + Bonds + Ventures + market holdings - Deposits - Borrowings. Ventures count at cost until they resolve. */
@@ -44,7 +44,7 @@ export function loanBook(state: GameState): number {
  * (a roll into panic starts a warning countdown instead; a running countdown overrides the roll),
  * 9. fire events for next quarter (they can override the mood; those with responses leave letters), then the family's quarter (the
  * head may die and an heir succeed; at year end a child may be born), 10. mark bonds to that mood's
- * prices and each state's risk, 11. draw next quarter's loan requests, 12. write the quarter's
+ * prices and each state's risk, then the markets (harvest, shocks, listings, prices), 11. draw next quarter's loan requests, 12. write the quarter's
  * news, 13. at year end, record the year's net worth, 14. advance the calendar.
  * Throws if the run is over (bankrupt, or past tuning.end), or if a decision is invalid (check with applyDecision first).
  */
@@ -99,6 +99,7 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
   resolveEvents(next, rng, data);
   resolveFamily(next, rng, data);
   markBonds(next, data);
+  markMarkets(next, data);
   next.requests = drawRequests(next, data, rng);
   next.news.push(...quarterNews(state, next, data));
 
