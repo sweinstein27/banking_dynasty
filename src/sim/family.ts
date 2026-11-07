@@ -7,6 +7,7 @@ import { addEntry } from "./ledger";
 import { freeCash } from "./reserves";
 import type { Rng } from "./rng";
 import type { GameData, Tuning } from "./tuning";
+import { acceptsPassingOver } from "./systems/people";
 import { birthTrait, comingOfAgeTrait, drawTrait, openTraits, traitEffects } from "./traits";
 import type { DesignateHeirDecision, GameState, InvestFamilyDecision, Person } from "./types";
 
@@ -167,7 +168,9 @@ export function succeed(state: GameState, data: GameData): void {
   next.is_head = true;
   if (!trained) next.inexperienced_until = turn + t.inexperience_quarters;
   const passedOver = eldest && eldest.id !== next.id ? eldest.id : null;
-  const loss = (trained ? t.reputation_trained : t.reputation_untrained) + (passedOver !== null ? t.passed_over_reputation : 0);
+  // A loyal eldest (B2) accepts being passed over, and the bourse has nothing to mutter about.
+  const muttering = passedOver !== null && !acceptsPassingOver(state, eldest!, data);
+  const loss = (trained ? t.reputation_trained : t.reputation_untrained) + (muttering ? t.passed_over_reputation : 0);
   state.house.reputation = Math.max(0, state.house.reputation - loss);
   state.successions.push({ turn, from: dead.id, to: next.id, trained, named: named !== undefined, passed_over: passedOver });
 }

@@ -1,1 +1,182 @@
-{}
+{
+  "enabled": true,
+  "loyalty": {
+    "start_heir": 60,
+    "start_spouse": 70,
+    "min": 0,
+    "max": 100,
+    "loyal": 70,
+    "disloyal": 25,
+    "grant": 15,
+    "refuse": 15,
+    "passed_over_by_naming": 10,
+    "after_claim_paid": 60,
+    "drift_to": 50,
+    "drift_per_year": 5
+  },
+  "requests": {
+    "chance": 0.15,
+    "min_age": 16,
+    "cooldown_quarters": 8
+  },
+  "agendas": [
+    {
+      "id": "venture",
+      "weight": 1,
+      "cost": 2000,
+      "chance": 0.35,
+      "payout": 5000,
+      "title": "{name} wants to back a venture",
+      "text": "{name} has met a man with a scheme for a mill on the Nidda and asks for {cost} to buy into it.",
+      "grant_text": "{name} buys into the mill.",
+      "won_text": "The mill pays: {name} brings back {payout} to the house.",
+      "lost_text": "The mill comes to nothing, and the money with it.",
+      "refuse_text": "{name} is told no, and sulks."
+    },
+    {
+      "id": "charity",
+      "weight": 1,
+      "cost": 1500,
+      "reputation": 2,
+      "title": "{name} asks for a gift to the poor",
+      "text": "{name} asks that the house give {cost} to the orphanage, in the family's name.",
+      "grant_text": "The gift is made, and the city hears of it.",
+      "refuse_text": "{name} is told the house cannot spare it."
+    },
+    {
+      "id": "match",
+      "weight": 1,
+      "title": "{name} wants a match for {member}",
+      "text": "{name} writes that {member} is of age and unmarried, and that {house} would welcome the match.",
+      "grant_text": "The match is made.",
+      "refuse_text": "{name} is told to wait, and does not take it well."
+    },
+    {
+      "id": "desk",
+      "weight": 1,
+      "min_acumen": 6,
+      "trait": "shrewd",
+      "title": "{name} wants a desk in the counting house",
+      "text": "{name} asks to work in the counting house as a clerk, at the usual wage.",
+      "grant_text": "{name} takes a desk among the clerks.",
+      "refuse_text": "{name} is told the desks are for clerks."
+    },
+    {
+      "id": "allowance",
+      "weight": 1,
+      "cost": 1000,
+      "trait": "spendthrift",
+      "title": "{name} asks for an allowance",
+      "text": "{name} has debts with a tailor and a wine merchant, and asks the house for {cost}",
+      "grant_text": "The debts are paid.",
+      "refuse_text": "{name} is told to settle them alone."
+    }
+  ],
+  "agenda_traits": {
+    "venture": ["reckless", "gambler"],
+    "charity": ["pious"]
+  },
+  "split": {
+    "chance": 0.25,
+    "feud_chance": 0.5,
+    "buy_off": 3000,
+    "buy_off_loyalty": 20,
+    "forbid_stay": 0.5,
+    "forbid_loyalty": 10,
+    "capital_share": 0.1,
+    "capital_max": 25000,
+    "deposit_share": 0.1,
+    "reputation": 5,
+    "opinion": -50,
+    "baseline": -30,
+    "feud_opinion": -70,
+    "reputation_base": 20,
+    "reputation_per_connection": 3,
+    "bold_traits": ["reckless", "gambler"],
+    "title": "{name} means to leave the house",
+    "text": "{name} writes that the house has no place for them, and that they mean to open a bank of their own.",
+    "buy_off_text": "{name} is persuaded to stay, at a price.",
+    "stay_text": "{name} gives way, and stays.",
+    "leave_text": "{name} leaves to found {house}, taking {capital} of capital and {deposits} of deposits."
+  },
+  "claims": {
+    "share": 0.1,
+    "max": 20000,
+    "law_cost": 1000,
+    "law_win": 0.5,
+    "law_reputation": 2,
+    "law_loyalty": 20,
+    "title": "{name} claims a share of the house",
+    "text": "{name}, passed over for {head}, claims {amount} as their due from the house.",
+    "pay_text": "The claim is paid, and {name} is reconciled.",
+    "law_won_text": "The court dismisses {name}'s claim. The bourse talks of it.",
+    "law_lost_text": "The court finds for {name}: the house pays {amount}.",
+    "refuse_text": "{name}'s claim is refused. A feud begins."
+  },
+  "feuds": {
+    "reputation_per_quarter": 1,
+    "reconcile_share": 0.05,
+    "title": "{name} offers terms",
+    "text": "{name} will end the quarrel with {head} for {amount}.",
+    "pay_text": "{name} and {head} are reconciled.",
+    "refuse_text": "The feud goes on.",
+    "ended_death_text": "With {head} dead, {name}'s feud is buried with them."
+  },
+  "studies": [
+    {
+      "id": "university",
+      "name": "University (law)",
+      "min_age": 16,
+      "max_age": 22,
+      "quarters": 8,
+      "cost": 2000,
+      "gains": { "prudence": 2, "connections": 1 },
+      "trait": "shrewd",
+      "trait_chance": 0.25,
+      "contact_opinion": 10,
+      "loyalty": 5,
+      "start_text": "{name} goes to Heidelberg to read law.",
+      "return_text": "{name} returns from Heidelberg with a doctorate in law."
+    },
+    {
+      "id": "london",
+      "name": "Apprenticeship in London",
+      "min_age": 16,
+      "max_age": 24,
+      "quarters": 8,
+      "cost": 2400,
+      "gains": { "acumen": 2, "connections": 1 },
+      "loyalty": 5,
+      "start_text": "{name} sails for London, to learn the trade in a merchant bank there.",
+      "return_text": "{name} returns from London, knowing bills of exchange as few in Frankfurt do."
+    },
+    {
+      "id": "army",
+      "name": "An officer's commission",
+      "min_age": 16,
+      "max_age": 22,
+      "quarters": 8,
+      "cost": 800,
+      "gains": { "connections": 1, "prudence": 1 },
+      "trait": "hale",
+      "trait_chance": 0.3,
+      "loyalty": 5,
+      "start_text": "{name} takes a commission in the Austrian service.",
+      "return_text": "{name} returns from the army, upright and well known at court."
+    },
+    {
+      "id": "counting_house",
+      "name": "The counting house",
+      "min_age": 14,
+      "max_age": 20,
+      "quarters": 4,
+      "cost": 0,
+      "gains": { "acumen": 1, "prudence": 1 },
+      "loyalty": 10,
+      "start_text": "{name} starts at a stool in the counting house.",
+      "return_text": "{name} has learned the books from the clerks."
+    }
+  ],
+  "desk_traits": { "prudent": "careful", "reckless": "sanguine", "shrewd": "sharp" },
+  "desk_trait_default": "careful"
+}

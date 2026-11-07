@@ -37,6 +37,8 @@ export const quiet: GameData = {
     candidates_per_role: 0,
     advice: { ...gameData.counting.advice, enabled: false },
   },
+  // People (B2): no family letters, so no rolls and no claims or feuds; studies still work.
+  people: { ...gameData.people, enabled: false },
 };
 
 /** Test borrowers with known quality, standing in for the old tiers. GOOD_2 is a second good borrower. */
