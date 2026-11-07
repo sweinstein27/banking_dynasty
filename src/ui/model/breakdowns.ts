@@ -190,8 +190,8 @@ export function breakdown(id: BreakdownId, base: GameState, preview: GameState, 
       const market = marketsBook(preview);
       if (market !== 0) parts.push({ label: "Market holdings", value: fl(market), amount: market });
       parts.push(
-        { label: "Less deposits owed", value: fl(-preview.house.deposits), amount: -preview.house.deposits, term: "deposits" },
-        { label: "Less borrowings", value: fl(-debtBook(preview)), amount: -debtBook(preview), term: "borrowings" },
+        { label: "Less deposits owed", value: fl(-preview.house.deposits || 0), amount: -preview.house.deposits || 0, term: "deposits" },
+        { label: "Less borrowings", value: fl(-debtBook(preview) || 0), amount: -debtBook(preview) || 0, term: "borrowings" },
       );
       const sections: Section[] = [{ heading: "What the house owns, less what it owes", lines: parts, total: { label: "Net worth", value: fl(now), amount: now } }];
       if (lastTurn(base) > 0) {

@@ -249,9 +249,11 @@ button.rail-button.game { margin-top: auto; }
 .desk .desk-head h2 { color: var(--gilt-light); font-size: 1.3rem; }
 .desk .coins-label { color: var(--chrome-muted); }
 .desk .ribbons { border-bottom-color: var(--gilt-dim); }
-.desk .letters > .muted { color: var(--chrome-muted); }
+.desk .orders { flex: 1; }
+.desk .orders h3 { border-bottom: 1px solid var(--rule); padding-bottom: 0.15rem; }
+.desk .orders > .muted { font-style: italic; }
+.orders-foot { margin-top: auto; justify-content: flex-end; }
 .desk .desk-tabs { background: linear-gradient(160deg, #26402f, #1b2d21); border: 1px solid #0f1a13; border-radius: 2px; padding: 0.4rem 0.5rem 0.5rem; }
-.desk .letters { margin-top: auto; }
 .desk .letter { color: var(--ink); }
 .desk button.turn { flex: none; }
 
@@ -539,7 +541,7 @@ button.cameo { padding: 0; min-height: 0; border: none; cursor: pointer; }
     var(--paper);
   border: 1px solid var(--rule);
   outline: 1px solid var(--rule); outline-offset: -0.6rem;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--gilt), 0 0 0 6px var(--frame-2), 0 0 0 7px var(--gilt-dim);
 }
 .title-page h1 { font-size: 2.8rem; }
 .subtitle { font-family: var(--display); font-style: italic; font-size: 1.15rem; color: var(--muted); }
@@ -554,6 +556,7 @@ button.cameo { padding: 0; min-height: 0; border: none; cursor: pointer; }
 
 .overlay { position: fixed; inset: 0; background: rgba(20, 12, 6, 0.55); z-index: 10; }
 .dialog {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--gilt), 0 0 0 5px var(--frame-2), 0 0 0 6px var(--gilt-dim);
   position: fixed; z-index: 11; top: 50%; left: 50%; transform: translate(-50%, -50%);
   width: min(58rem, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto;
   padding: 1rem 1.4rem;

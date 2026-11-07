@@ -75,7 +75,7 @@ function Borrowers({ state }: { state: GameState }) {
         head: `${b.name}, ${b.trade}`,
         tag: lent > 0 ? "Borrowing" : away ? "Away" : "Known",
         lines: [
-          lent > 0 ? `Owes the house ${fl(lent)}.` : away ? `Asks for nothing for ${b.away_until! - state.world.turn} more quarters.` : "Not asking this quarter.",
+          lent > 0 ? `Owes the house ${fl(lent)}` : away ? `Asks for nothing for ${b.away_until! - state.world.turn} more quarters.` : "Not asking this quarter.",
           `Quality ${r.low.toFixed(2)} to ${r.high.toFixed(2)}${b.reported ? ", from a report" : ""}.`,
           `With the house: repaid ${b.repaid}, defaulted ${b.defaulted}.`,
         ],
@@ -119,7 +119,7 @@ function States({ state }: { state: GameState }) {
               <p className="row-head"><strong>{o.name}</strong> {o.blocked ? <span className="chip chip-away">Closed</span> : <span className="chip chip-asking">Selling</span>}</p>
               <p className="small">Coupon {pct(o.coupon)} a year. Risk {o.risk}. Price {o.price} per fl. of face value.</p>
               {o.blocked && <p className="small error">{keepUnits(o.blocked)}</p>}
-              {held.length > 0 && <p className="small good">{keepUnits(`You hold ${fl(held.reduce((n, b) => n + b.face_value, 0))} face, worth ${fl(held.reduce((n, b) => n + bondValue(b), 0))}.`)}</p>}
+              {held.length > 0 && <p className="small good">{keepUnits(`You hold ${fl(held.reduce((n, b) => n + b.face_value, 0))} face, worth ${fl(held.reduce((n, b) => n + bondValue(b), 0))}`)}</p>}
             </li>
           );
         })}

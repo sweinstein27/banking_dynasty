@@ -10,6 +10,7 @@ import type { Decision, GameState, Person } from "../sim/types";
 import { MarriageDialog } from "./MarriageDialog";
 import { pct } from "./format";
 import { PageTurner, usePages } from "./Pager";
+import { Term } from "./Term";
 
 const HEIRS_PER_PAGE = 3;
 const STAT_NAMES: Record<Stat, string> = { acumen: "Acumen", prudence: "Prudence", connections: "Connections" };
@@ -43,7 +44,7 @@ function Cameo({ p, year, onOpen }: { p: Person; year: number; onOpen: (p: Perso
 
 /** Trait names under a person's name. The sheet explains them. */
 function TraitLabels({ p }: { p: Person }) {
-  if (!p.traits.length) return <p className="small muted">No traits yet</p>;
+  if (!p.traits.length) return <p className="small muted">No <Term id="traits">traits</Term> yet</p>;
   return (
     <p className="traits">
       {p.traits.map((id) => <span key={id} className="trait">{traitById(id, gameData)?.name ?? id}</span>)}
@@ -175,7 +176,7 @@ export function FamilyPanel({ state, onDecide }: { state: GameState; onDecide?: 
             <ul className="stat-list">
               {STATS.map((k) => (
                 <li key={k}>
-                  <span className="stat-name">{STAT_NAMES[k]}</span>
+                  <span className="stat-name"><Term id={k}>{STAT_NAMES[k]}</Term></span>
                   <Pips value={headStat(state, k, gameData)} max={max} />
                   <span className="stat-effect">{STAT_EFFECT[k]}</span>
                 </li>
@@ -187,7 +188,7 @@ export function FamilyPanel({ state, onDecide }: { state: GameState; onDecide?: 
         </div>
       )}
 
-      <h3>Heirs</h3>
+      <h3><Term id="heir">Heirs</Term></h3>
       {heirs.length === 0 ? (
         <p className="stamp">No heirs. If the head dies, a distant cousin takes over, untrained.</p>
       ) : (
@@ -208,7 +209,7 @@ export function FamilyPanel({ state, onDecide }: { state: GameState; onDecide?: 
                     {STATS.map((k) => `${STAT_NAMES[k]} ${effectiveStat(p, k, gameData)}`).join(", ")}
                   </p>
                   <p className={trained ? "small good" : "small muted"}>
-                    {trained ? "Trained" : `Untrained: needs ${tuning.family.succession.adult_age}+ and a total of ${tuning.family.succession.trained_total}`}
+                    {trained ? <Term id="trained">Trained</Term> : <><Term id="trained">Untrained</Term>: needs {tuning.family.succession.adult_age}+ and a total of {tuning.family.succession.trained_total}</>}
                   </p>
                 </div>
               </li>

@@ -1,5 +1,5 @@
-// The desk: this quarter's decisions as cards, the actions left as coins, and queued actions as
-// letters waiting to go out when the quarter ends.
+// The desk: this quarter's decisions as cards on a blotter, the actions left as coins, and the
+// quarter's orders on a sheet, waiting to go out when the quarter ends.
 import { Tabs } from "radix-ui";
 import { useState } from "react";
 import { gameData } from "../data";
@@ -76,9 +76,10 @@ export function Desk({ api, game }: { api: GameApi; game: Game }) {
         <Tabs.Content value="crisis" className="cards">{cards(CRISIS_KINDS, "crisis-card")}</Tabs.Content>
       </Tabs.Root>
 
-      <div className="letters">
+      <div className="doc orders">
+        <h3>Orders for this quarter</h3>
         {game.queued.length === 0 ? (
-          <p className="muted">{left === 0 ? "No actions left. End the quarter." : "Nothing queued. Queued actions go out when the quarter ends."}</p>
+          <p className="muted">{left === 0 ? "No actions left. End the quarter." : "Nothing ordered yet. Orders go out when the quarter ends, and show in the books at once."}</p>
         ) : (
           <>
             <ol className="letter-list">
@@ -87,7 +88,9 @@ export function Desk({ api, game }: { api: GameApi; game: Game }) {
                 <li className="letter">{replies.length === 1 ? describe(replies[0]!, game.base) : `Replies to ${replies.length} letters`}</li>
               )}
             </ol>
-            <button className="turn" onClick={api.clearQueue}>Take back all</button>
+            <div className="row orders-foot">
+              <button className="turn" onClick={api.clearQueue}>Take back all</button>
+            </div>
           </>
         )}
       </div>
