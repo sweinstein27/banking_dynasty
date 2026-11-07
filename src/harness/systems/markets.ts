@@ -103,7 +103,7 @@ export function marketsMakers(name: string, _state: GameState, data: GameData): 
       return { early: none, late: [buySharesIn(["utility"], 0.15, 30000)] };
     case "aggressive":
       // Railway shares, and grain after a bad harvest.
-      return { early: none, late: [sellRipeGoods(data), speculateGrain(data, 0.1, 0.3), buySharesIn(["railway", "industry"], 0.3, 10000)] };
+      return { early: none, late: [sellRipeGoods(data), speculateGrain(data, 0.1, 0.3), buySharesIn(["railway", "industry"], 0.15, 10000)] };
     case "bond_heavy":
       // A little in banks and insurance, the bourse's bond-like shares.
       return { early: none, late: [buySharesIn(["bank", "insurance", "utility"], 0.1, 20000)] };
