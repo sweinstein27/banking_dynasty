@@ -3,6 +3,7 @@ import { addEntry } from "./ledger";
 import { raiseFromMarkets } from "./markets/holdings";
 import { payWithdrawal } from "./reserves";
 import { applyWithdrawals } from "./sentiment";
+import { raiseFromFinance } from "./systems/finance";
 import type { Tuning } from "./tuning";
 import type { Bond, GameState } from "./types";
 
@@ -42,7 +43,8 @@ export function ventureSalePrice(amount: number, tuning: Tuning): number {
 
 /**
  * Sells assets at a discount until `needed` cash is raised or nothing is left to sell.
- * Order: bonds (most liquid, oldest first), then shares and goods (A3), then loans (oldest
+ * Order: bonds (most liquid, oldest first), then shares and goods (A3), then assets and credit to
+ * other houses (A5), then loans (oldest
  * first), then unlisted ventures (oldest first, steepest discount). Only the slice needed is sold: the rest stays on the books and keeps
  * earning. A holding sold down to nothing gets status `sold`. Returns the cash raised.
  * Mutates `state`; callers pass a draft copy.
@@ -66,6 +68,7 @@ export function raiseCash(state: GameState, needed: number, tuning: Tuning, purp
     addEntry(state, "bonds", "forced_sale", -(bookBefore - bondValue(bond)), note);
   }
   if (raised < needed) raised += raiseFromMarkets(state, needed - raised, tuning, purpose);
+  if (raised < needed) raised += raiseFromFinance(state, needed - raised, tuning, purpose);
   for (const loan of state.loans) {
     if (raised >= needed) break;
     if (loan.status !== "active") continue;

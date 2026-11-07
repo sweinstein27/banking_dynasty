@@ -1,1 +1,110 @@
-{}
+{
+  "contracts": {
+    "announce_chance": 0.04,
+    "eras": [
+      { "from": 1815, "to": 1824, "factor": 2, "why": "post-war loans" },
+      { "from": 1826, "to": 1829, "factor": 0.3, "why": "London stopped foreign loans after the crisis of December 1825" }
+    ],
+    "mood_factor": { "calm": 1, "uneasy": 0.5, "panic": 0 },
+    "sizes": {
+      "prussia": [300000, 600000],
+      "austria": [300000, 600000],
+      "france": [200000, 500000],
+      "bavaria": [100000, 250000],
+      "naples": [100000, 200000]
+    },
+    "size_step": 50000,
+    "coupon_premium": [0, 0.01],
+    "terms": [10, 15, 20],
+    "reputation_premium": 10,
+    "caution": 0.05,
+    "commissions": [0.01, 0.015, 0.02, 0.025, 0.03, 0.035, 0.04, 0.045, 0.05],
+    "prestige_weight": 0.02,
+    "placement": {
+      "quarters": 2,
+      "base": { "calm": 0.55, "uneasy": 0.3, "panic": 0.1 },
+      "reputation_floor": 0.6,
+      "reputation_slope": 0.8,
+      "risk_drag": 0.5,
+      "per_correspondent": 0.05,
+      "noise": 0.2,
+      "max": 0.9
+    },
+    "prestige": { "good_share": 0.75, "good": 3, "big_size": 400000, "big": 5, "stuck_share": 0.4, "stuck": -3 },
+    "rivals": {
+      "wealth_cover": 0.5,
+      "bid_chance": { "bold": 0.8, "cautious": 0.5 },
+      "commission": { "bold": [0.015, 0.035], "cautious": [0.02, 0.04] },
+      "reputation_gain": 2
+    }
+  },
+  "house_loans": {
+    "base_chance": 0.3,
+    "distress_scale": 4,
+    "mood_floor": { "calm": 0, "uneasy": 0.1, "panic": 0.4 },
+    "temperament_factor": { "bold": 1.5, "cautious": 1 },
+    "min_opinion": -60,
+    "share_of_wealth": 0.05,
+    "min_amount": 5000,
+    "term_quarters": 4,
+    "max_rate": { "base": 0.08, "urgency": 0.12, "dislike": 0.04 },
+    "urgency": { "calm": 0, "uneasy": 0.5, "panic": 1 },
+    "min_rate": 0.04,
+    "gratitude": [
+      { "up_to": 0.08, "opinion": 25 },
+      { "up_to": 0.12, "opinion": 10 },
+      { "up_to": 1, "opinion": -5 }
+    ],
+    "repaid_opinion": 5,
+    "rescue_factor": 0.5,
+    "recovery": { "calm": 0.3, "uneasy": 0.3, "panic": 0.2 }
+  },
+  "auctions": {
+    "bids": [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
+    "rival_wealth_cover": 5,
+    "rival_bid_chance": 0.5,
+    "rival_bid": { "calm": 0.75, "uneasy": 0.6, "panic": 0.45 },
+    "rival_noise": 0.1,
+    "collateral_share": 0.5,
+    "min_appraisal": 2000,
+    "ship_trades": ["river freight", "shipping"],
+    "house_lots": [
+      { "kind": "warehouse", "name": "{house}'s bonded warehouse", "share": 0.12 },
+      { "kind": "ship", "name": "{house}'s Rhine barge fleet", "share": 0.08 },
+      { "kind": "shares", "name": "{house}'s parcel of {company} shares", "share": 0.08 },
+      { "kind": "broker_place", "name": "{house}'s broker's place on the bourse", "share": 0.03 }
+    ],
+    "assets": {
+      "warehouse": { "yield": 0.06, "loss_chance": 0.005, "mood_income": false },
+      "ship": { "yield": 0.12, "loss_chance": 0.015, "mood_income": true },
+      "broker_place": { "yield": 0.04, "loss_chance": 0, "mood_income": false }
+    },
+    "mood_income": { "calm": 1, "uneasy": 0.7, "panic": 0.4 },
+    "winter_quarters": [1, 4],
+    "winter_factor": 2,
+    "broker_place_reputation": 2,
+    "sale_discount": 0.15
+  },
+  "insurance": {
+    "requests_per_quarter": 2,
+    "ship_weight": 0.6,
+    "ship": { "value": [5000, 30000], "quarters": 1, "loss_chance": 0.02, "salvage": [0, 0.3] },
+    "warehouse": { "value": [5000, 40000], "quarters": 4, "loss_chance": 0.0025, "damage": [0.3, 1] },
+    "value_step": 500,
+    "load": 0.4,
+    "lines": [0.25, 0.5, 1],
+    "storm": { "chance": 0.04, "winter_chance": 0.08, "ship_factor": 6 },
+    "cities": ["Frankfurt", "Hamburg", "Mainz", "Cologne"],
+    "ship_names": ["Hoffnung", "Fortuna", "Concordia", "Mercur", "Elisabeth", "Rheinlust", "Zwei Brueder", "Amalia", "Friedrich Wilhelm", "Neptun", "Catharina", "Germania"],
+    "great_fires": [
+      {
+        "year": 1842,
+        "quarter": 2,
+        "city": "Hamburg",
+        "chance": 0.5,
+        "title": "The great fire of Hamburg",
+        "text": "Fire has burned for three days through the old town of Hamburg. Whole streets of warehouses are ash, and the underwriters are counting their claims."
+      }
+    ]
+  }
+}
