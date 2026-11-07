@@ -22,14 +22,17 @@
     { "size": "large", "name": "Grand counting room", "desks": 24, "build": 6000, "upkeep": 80 }
   ],
   "facilities": {
-    "strongroom": { "name": "Strongroom", "description": "Iron doors and a vault: depositors trust it, and ask for less of their money in a panic.", "build": 3000, "upkeep": 25 },
+    "strongroom": { "name": "Strongroom", "description": "Iron doors and a vault: depositors trust it, bring more money in calm years, and ask for less of it in a panic.", "build": 3000, "upkeep": 25 },
     "archive": { "name": "Archive", "description": "Shelves of old ledgers: payment records go back further.", "build": 1000, "upkeep": 10 },
-    "courier_stable": { "name": "Courier stable", "description": "Riders on the post roads: warnings of a panic reach the house at once, not a quarter late.", "build": 1500, "upkeep": 30 },
-    "reception_rooms": { "name": "Reception rooms", "description": "Rooms fit to receive the bourse: courting wins more favour, and houses agree to marriages more readily.", "build": 2000, "upkeep": 30 },
+    "courier_stable": { "name": "Courier stable", "description": "Riders on the post roads: warnings of a panic reach the house at once, not a quarter late, and prices from Vienna and Paris arrive first, so bonds are bought below the market.", "build": 1500, "upkeep": 30 },
+    "reception_rooms": { "name": "Reception rooms", "description": "Rooms fit to receive the bourse: courting wins more favour, houses agree to marriages more readily, and the house's name rises a little every year.", "build": 2000, "upkeep": 30 },
     "warehouse": { "name": "Warehouse", "description": "A warehouse on the Main: space to store goods.", "build": 2000, "upkeep": 20 }
   },
   "effects": {
     "strongroom_panic_withdrawals": 0.75,
+    "strongroom_deposit_level": 1.2,
+    "reception_yearly_reputation": 1,
+    "courier_bond_edge": 0.02,
     "record_quarters": 12,
     "archive_record_quarters": 24,
     "warehouse_space": 40,
