@@ -87,8 +87,8 @@ export const GLOSSARY: Record<string, GlossaryCard> = {
   },
   ventures: {
     title: "Ventures",
-    body: () =>
-      "Mills, shipping lines and later railways. Money is locked up until the venture ends, then it pays out or fails. Ventures count at cost until then. The head's [[acumen]] makes failure less likely; a stormy [[market_mood]] makes it more likely.",
+    body: (d) =>
+      `Mills, shipping lines and later railways, built over years. You commit a sum and it is called in [[calls|instalments]]; a build may [[overrun]]. Short ventures pay out when built. Medium and great ones then run and earn, great works opening in [[sections]], and a venture that earns well [[listing|lists on the bourse]]. An unlisted stake can be sold privately for ${pct(1 - d.tuning.ventures.unlisted_discount)} of what was paid in. The head's [[acumen]] makes failure less likely; a stormy [[market_mood]] makes it more likely.`,
   },
   deposits: {
     title: "Deposits",
@@ -203,6 +203,97 @@ export const GLOSSARY: Record<string, GlossaryCard> = {
     title: "Alliance by marriage",
     body: (d) =>
       `A marriage ties two houses. An ally's rumours spare you, but if an ally fails your [[reputation]] falls by ${d.tuning.family.marriage.ally_failure_reputation}. Children need a married couple.`,
+  },
+  payment_record: {
+    title: "Payment record",
+    body: (d) => `How often the borrower paid other lenders late, as far back as the house's records reach: ${d.counting.effects.record_quarters} quarters, or ${d.counting.effects.archive_record_quarters} with an [[archive]].`,
+  },
+  collateral: {
+    title: "Collateral",
+    body: () => "Property and goods the borrower could pledge. Only a full [[inquiry]] finds it. A [[mortgage]] is secured on it.",
+  },
+  analyst_opinion: {
+    title: "An analyst's opinion",
+    body: (d) => {
+      const a = d.counting.analysts;
+      return `An analyst reads a borrower's [[books]] and writes one word: sound, doubtful or unsound. A middling analyst is right about ${pct(a.base_accuracy + a.per_skill * 5)} of the time; skill and [[staff_trait|trait]] change that, between ${pct(a.min_accuracy)} and ${pct(a.max_accuracy)}. Each analyst writes ${d.tuning.capacity.per_analyst} a quarter, only on merchants asking for a loan.`;
+    },
+  },
+  desks: {
+    title: "Desks",
+    body: (d) => `Clerks, correspondents, analysts and tellers each need a desk in the counting room: ${d.counting.rooms.map((r) => `${r.desks} in the ${r.name.toLowerCase()}`).join(", ")}. A partner needs none. Enlarging the room takes a quarter.`,
+  },
+  staff_skill: {
+    title: "Skill",
+    body: (d) => `How good a member of staff is, from ${d.counting.skill.min} to ${d.counting.skill.cap}. New hires come with ${d.counting.skill.min} to ${d.counting.skill.max}; skill rises a point for every ${d.counting.skill.quarters_per_point} quarters served. It makes an [[analyst_opinion|analyst]] right more often and an advisor's letters truer ([[council]]).`,
+  },
+  staff_trait: {
+    title: "Staff traits",
+    body: (d) => d.counting.traits.map((t) => `${t.name}: ${t.description}`).join(" "),
+  },
+  hiring: {
+    title: "Hiring and dismissing",
+    body: (d) => `Each quarter brings ${d.counting.candidates_per_role} candidates for each post. A hire starts work, and is paid, from next quarter; a dismissed member works out this quarter. Neither uses any [[actions|capacity]]. Wages: ${Object.values(d.counting.roles).map((r) => `${r.name.toLowerCase()} ${fl(r.wage)}`).join(", ")} a quarter.`,
+  },
+  council: {
+    title: "The advisor council",
+    body: () => "The chief clerk (the longest serving clerk) watches the house's cash, the head correspondent the bourse abroad, and the head's spouse the heir. Each writes when they see trouble, and sometimes when there is none: [[staff_skill|skill]] makes them truer, and a careful advisor cries wolf where a sanguine one stays calm ([[staff_trait|traits]]).",
+  },
+  archive: {
+    title: "Archive",
+    body: (d) => `Shelves of old ledgers: a borrower's [[payment_record]] reaches back ${d.counting.effects.archive_record_quarters} quarters instead of ${d.counting.effects.record_quarters}.`,
+  },
+  warehouse: {
+    title: "Warehouse",
+    body: (d) => `Goods need somewhere to lie. Without a warehouse the house can hold none; with one it stores ${d.counting.effects.warehouse_space * d.markets.warehouse.units_per_lot} units of space. Grain and colonial wares take 1 unit each, cloth and iron 2, wine 3. Upkeep is the building's; [[storage]] is charged on top for each unit held.`,
+  },
+  shares: {
+    title: "Shares",
+    body: (d) => `Part-ownership of a company on the Frankfurt bourse. The price moves toward what investors will pay for its [[dividend]] in today's [[market_mood|mood]], plus news and chance. Each trade pays a broker's [[commission]] of ${pct(d.markets.commission.shares)}. Shares count at their last price; a company can fail.`,
+  },
+  dividend: {
+    title: "Dividend",
+    body: () => "Paid once a year, at the year end, from the last four quarters' earnings. The yield is the dividend as a share of today's price.",
+  },
+  earnings_estimate: {
+    title: "Earnings estimate",
+    body: (d) => `What the house believes a company earned over the last year: a range around the truth. ${d.markets.reports.map((r) => `${r.name[0]!.toUpperCase() + r.name.slice(1)} puts it within ${pct(r.width)} either way${r.cost ? ` for ${fl(r.cost)}, good for ${r.quarters} quarters` : ", free"}`).join(". ")}.`,
+  },
+  commission: {
+    title: "Commission",
+    body: (d) => `The broker's cut on every trade: ${pct(d.markets.commission.shares)} on shares, ${pct(d.markets.commission.commodities)} on goods. It is added to what a purchase costs and taken from what a sale raises.`,
+  },
+  goods: {
+    title: "Goods",
+    body: () => "Grain, wine, cloth, iron and colonial wares, bought and sold at Frankfurt. Prices drift toward a target set by the [[harvest]], the fairs and the news, so the trend shows which way the target lies. Goods need a [[warehouse]] and cost [[storage]].",
+  },
+  storage: {
+    title: "Storage and spoilage",
+    body: () => "Each unit held costs handling and insurance every quarter, paid from cash. Grain rots and wine leaks: a share of them is lost each quarter.",
+  },
+  harvest: {
+    title: "The harvest",
+    body: () => "Each summer the harvest is gathered in three regions, from failed to a bumper crop. A poor harvest lifts the price of grain and wine and makes grain dealers, wine importers and river freight more likely to [[default]] ([[trade_risk]]).",
+  },
+  trade_risk: {
+    title: "Harvest and borrowers",
+    body: (d) => `A borrower in a trade that lives on the harvest is more likely to [[default]] after a bad one, and less after a good one, by up to ${d.markets.trade_factor_cap} times.`,
+  },
+  calls: {
+    title: "Calls",
+    body: () => "A venture's money is called in instalments: the first when you commit, then one every few quarters until the build is done. Each call is paid from cash; if one cannot be paid the house forfeits part of its stake.",
+  },
+  overrun: {
+    title: "Overruns",
+    body: () => "Builds rarely keep to plan. At each call a venture may overrun: the sum committed grows and more calls are added, so the build takes longer.",
+  },
+  sections: {
+    title: "Sections",
+    body: () => "A great work (a canal or a trunk railway) opens a section at a time as it is built, and each open section earns before the whole is done.",
+  },
+  listing: {
+    title: "Listing",
+    body: (d) => `A medium or great venture that has run for a while and earned at least ${pct(d.tuning.ventures.float.min_yield)} a year on its stake floats on the bourse: the stake becomes [[shares]] of ${fl(d.tuning.ventures.float.par)} each, which can be sold at the bourse price instead of privately at a discount.`,
   },
 };
 
