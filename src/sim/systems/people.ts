@@ -20,6 +20,7 @@ import { arrangeMarriage, checkMarriage, marriageable } from "../marriages";
 import { freeCash } from "../reserves";
 import { createRng, type Rng } from "../rng";
 import { cloneState } from "../state";
+import { netWorth } from "../turn";
 import { openTraits } from "../traits";
 import type { GameData } from "../tuning";
 import type { Decision, GameState, OtherHouse, Person } from "../types";
@@ -127,12 +128,15 @@ export interface PeopleData {
   };
   feuds: {
     reputation_per_quarter: number;
+    /** A feud dies out after this many quarters. */
+    max_quarters: number;
     reconcile_share: number;
     title: string;
     text: string;
     pay_text: string;
     refuse_text: string;
     ended_death_text: string;
+    cooled_text: string;
   };
   studies: StudyData[];
   /** A family clerk's staff trait, from their own traits. */
@@ -599,8 +603,9 @@ function tendDesks(state: GameState): void {
 /** What a member leaving now would take: capital, and deposits that follow them. */
 export function splitTerms(state: GameState, data: GameData): { capital: number; deposits: number } {
   const s = data.people.split;
+  // A share of the house's own capital (net worth), not of its cash, most of which is depositors' money.
   const cash = Math.max(0, state.house.cash);
-  const capital = Math.min(s.capital_max, round100(cash * s.capital_share));
+  const capital = Math.min(s.capital_max, cash, round100(Math.max(0, netWorth(state)) * s.capital_share));
   const deposits = Math.min(round100(Math.max(0, state.house.deposits) * s.deposit_share), Math.max(0, cash - capital));
   return { capital, deposits };
 }
@@ -664,10 +669,10 @@ export function splitOff(state: GameState, p: Person, data: GameData): OtherHous
 
 // ---------------------------------------------------------------- claims and feuds
 
-/** What a claim asks now: a share of cash, capped. */
+/** What a claim asks now: a share of the house's net worth (its own capital, not depositors' cash), capped. */
 export function claimAmount(state: GameState, data: GameData): number {
   const c = data.people.claims;
-  return Math.min(c.max, round100(Math.max(0, state.house.cash) * c.share));
+  return Math.min(c.max, round100(Math.max(0, netWorth(state)) * c.share));
 }
 
 /**
@@ -692,6 +697,16 @@ function claimsAtSuccession(state: GameState, data: GameData): void {
     if (isLoyal(state, p, data)) continue;
     newLetter(state, "claim", p.id, { amount: claimAmount(state, data) });
   }
+}
+
+/** A feud that has run max_quarters dies out on its own. Draws nothing. Mutates `state`. */
+function coolFeuds(state: GameState, data: GameData): void {
+  const max = data.people.feuds.max_quarters;
+  for (const f of state.agendas.feuds.filter((x) => state.world.turn - x.since >= max)) {
+    const who = personById(state, f.person);
+    if (who) log(state, fill(data.people.feuds.cooled_text, { name: who.name, head: personById(state, f.head)?.name ?? "the head" }));
+  }
+  state.agendas.feuds = state.agendas.feuds.filter((x) => state.world.turn - x.since < max);
 }
 
 /** Naming a younger heir over older adult heirs costs their loyalty. Draws nothing. Mutates `state`. */
@@ -801,7 +816,7 @@ function yearEnd(state: GameState, rng: Rng, data: GameData): void {
     if (rng.next() < (feud ? data.people.split.feud_chance : data.people.split.chance)) newLetter(state, "leaving", p.id);
   }
   for (const f of state.agendas.feuds) {
-    const amount = round100(Math.max(0, state.house.cash) * data.people.feuds.reconcile_share);
+    const amount = round100(Math.max(0, netWorth(state)) * data.people.feuds.reconcile_share);
     newLetter(state, "reconcile", f.person, { amount });
   }
 }
@@ -899,6 +914,7 @@ export function resolvePeople(state: GameState, _rng: Rng, data: GameData): void
     tendDesks(state);
     noticeNaming(state, data);
     claimsAtSuccession(state, data);
+    coolFeuds(state, data);
     const feuds = state.agendas.feuds.length;
     if (feuds) state.house.reputation = Math.max(0, state.house.reputation - feuds * data.people.feuds.reputation_per_quarter);
     if (state.world.quarter === 4) yearEnd(state, rng, data);

@@ -115,12 +115,14 @@
   },
   "feuds": {
     "reputation_per_quarter": 1,
+    "max_quarters": 12,
     "reconcile_share": 0.05,
     "title": "{name} offers terms",
     "text": "{name} will end the quarrel with {head} for {amount}.",
     "pay_text": "{name} and {head} are reconciled.",
     "refuse_text": "The feud goes on.",
-    "ended_death_text": "With {head} dead, {name}'s feud is buried with them."
+    "ended_death_text": "With {head} dead, {name}'s feud is buried with them.",
+    "cooled_text": "Three years on, {name} and {head} have stopped speaking of their quarrel."
   },
   "studies": [
     {

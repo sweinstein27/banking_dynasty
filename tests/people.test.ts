@@ -190,16 +190,16 @@ describe("an heir splitting off", () => {
     addSpouse(s, carl.id, 1811);
     s.house.designated_heir = carl.id;
     const { capital, deposits } = splitTerms(s, still);
-    expect(capital).toBe(10000); // 10% of 100,000
+    expect(capital).toBe(5000); // 10% of net worth (50,000), not of cash
     expect(deposits).toBe(5000); // 10% of 50,000
     const h = splitOff(s, carl, still);
     expect(s.houses).toContainEqual(h);
-    expect(h).toMatchObject({ name: "Carl Adler & Co.", temperament: "bold", wealth: 10000, opinion: P.split.opinion, failed_turn: null });
+    expect(h).toMatchObject({ name: "Carl Adler & Co.", temperament: "bold", wealth: 5000, opinion: P.split.opinion, failed_turn: null });
     expect(carl.role).toBe("left");
     expect(s.people.find((p) => p.spouse === carl.id)!.role).toBe("left");
     expect(s.house.designated_heir).toBeNull();
     expect(heirsOf(s).map((p) => p.name)).not.toContain("Carl Adler");
-    expect(s.house.cash).toBe(100000 - 15000);
+    expect(s.house.cash).toBe(100000 - 10000);
     expect(s.house.deposits).toBe(45000);
     expect(s.house.reputation).toBe(50 - P.split.reputation);
     expect(accountBalance(s, "cash")).toBe(s.house.cash);
@@ -264,13 +264,13 @@ describe("claims at succession", () => {
     resolvePeople(s, NO_RNG, still);
   }
 
-  it("older adult heirs who are not loyal claim a share of cash", () => {
+  it("older adult heirs who are not loyal claim a share of net worth", () => {
     const s = house();
     passOver(s);
     const claims = s.agendas.letters.filter((l) => l.kind === "claim");
     expect(claims.map((l) => l.person).sort()).toEqual([byName(s, "Friedrich").id, byName(s, "Amalie").id].sort());
     expect(claims[0]!.amount).toBe(claimAmount(s, still));
-    expect(claims[0]!.amount).toBe(10000);
+    expect(claims[0]!.amount).toBe(5000); // 10% of 50,000 net worth
   });
 
   it("a loyal eldest accepts it: no claim, and no reputation for passing over", () => {
@@ -325,6 +325,20 @@ describe("claims at succession", () => {
     expect(s.agendas.feuds.every((f) => f.head === headOf(s)!.id)).toBe(true);
     expect(s.agendas.feuds).toHaveLength(0);
     expect(s.agendas.log.some((e) => /buried/.test(e.text))).toBe(true);
+  });
+
+  it("a feud dies out after max_quarters", () => {
+    const s = house();
+    passOver(s);
+    resolvePeople(s, NO_RNG, still);
+    expect(s.agendas.feuds).toHaveLength(2);
+    s.world.turn += P.feuds.max_quarters - 1;
+    resolvePeople(s, NO_RNG, still);
+    expect(s.agendas.feuds).toHaveLength(2);
+    s.world.turn += 1;
+    resolvePeople(s, NO_RNG, still);
+    expect(s.agendas.feuds).toHaveLength(0);
+    expect(s.agendas.log.some((e) => /stopped speaking/.test(e.text))).toBe(true);
   });
 
   it("a feud offers terms at year end; accepting ends it", () => {
