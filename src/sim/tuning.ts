@@ -142,8 +142,13 @@ export interface Tuning {
     /** A called loan returns this share of its principal now; the borrower stays away for absence_quarters. */
     call_loan: { recovery: number; absence_quarters: number };
   };
-  /** Shared by every decision type. */
-  actions_per_turn: number;
+  /**
+   * What the house can do in a quarter (milestone A2): each decision kind draws on one pool (see
+   * src/sim/capacity.ts). The head gives `head` units of time, a partner `partner` more; each
+   * working clerk gives per_clerk deals, each correspondent per_correspondent reports, each analyst
+   * per_analyst opinions.
+   */
+  capacity: { head: number; partner: number; per_clerk: number; per_correspondent: number; per_analyst: number };
   sentiment_multiplier: Record<Sentiment, number>;
   sentiment: {
     /** Chance per quarter of moving from one mood to another. Whatever is left over is the chance of staying. */

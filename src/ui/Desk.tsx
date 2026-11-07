@@ -3,7 +3,7 @@
 import { Tabs } from "radix-ui";
 import { useState } from "react";
 import { gameData } from "../data";
-import { capacityLeft } from "../sim/capacity";
+import { capacityLeft, capacityTotal } from "../sim/capacity";
 import { inCrisis } from "../sim/crisis";
 import { investCost } from "../sim/family";
 import { describeSystemDecision } from "../sim/decisions";
@@ -36,6 +36,7 @@ const HINTS: Record<DecisionKind, string> = {
 export function Desk({ api, game }: { api: GameApi; game: Game }) {
   const { tuning } = gameData;
   const left = capacityLeft(game.preview, tuning);
+  const total = capacityTotal(game.preview, tuning);
   const crisis = inCrisis(game.preview);
   const [open, setOpen] = useState<DecisionKind | null>(null);
   const [tab, setTab] = useState("business");
@@ -57,11 +58,11 @@ export function Desk({ api, game }: { api: GameApi; game: Game }) {
       <header className="desk-head">
         <h2>The Desk</h2>
         <LetterStack state={game.preview} onSubmit={api.queue} />
-        <div className="coins" aria-label={`${left} of ${tuning.actions_per_turn} actions left this quarter`}>
-          {Array.from({ length: tuning.actions_per_turn }, (_, i) => (
+        <div className="coins" aria-label={`${left} of ${total} actions left this quarter`}>
+          {Array.from({ length: total }, (_, i) => (
             <span key={i} className={i < left ? "coin" : "coin spent"} />
           ))}
-          <span className="coins-label">{left} of {tuning.actions_per_turn} actions left</span>
+          <span className="coins-label">{left} of {total} actions left</span>
         </div>
       </header>
 

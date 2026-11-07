@@ -62,7 +62,8 @@ describe("runOnce", () => {
     const { run, years } = runOnce("idle", STRATEGIES.idle!, 3, gameData);
     const rng = createRng(3);
     let s = newGame(gameData, rng);
-    while (!runOver(s, gameData.tuning)) s = endTurn(s, [], rng, gameData);
+    // A2: idle dismisses its staff in the first quarter, then does nothing.
+    while (!runOver(s, gameData.tuning)) s = endTurn(s, STRATEGIES.idle!(s, gameData), rng, gameData);
     expect(run).toMatchObject({ strategy: "idle", seed: 3, outcome: "finished", last_turn: 144, final_net_worth: netWorth(s), final_reputation: s.house.reputation });
     expect(years.map((y) => y.year)).toEqual(Array.from({ length: 36 }, (_, i) => 1815 + i));
     expect(years.at(-1)!.net_worth).toBe(netWorth(s));

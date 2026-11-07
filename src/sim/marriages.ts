@@ -9,6 +9,7 @@ import { changeOpinion } from "./houses";
 import { addEntry } from "./ledger";
 import { freeCash } from "./reserves";
 import { cloneState } from "./state";
+import { houseTerms } from "./systems/counting";
 import type { GameData } from "./tuning";
 import type { ArrangeMarriageDecision, GameState, OtherHouse, Person } from "./types";
 
@@ -37,10 +38,12 @@ export function dowryIn(h: OtherHouse, data: GameData): number {
 /** Money a match moves: positive comes in, negative goes out. */
 export function matchMoney(state: GameState, d: Pick<ArrangeMarriageDecision, "with" | "form">, data: GameData): number {
   const m = data.tuning.family.marriage;
-  if (d.with === "merchant") return -m.merchant.cost;
+  // A partner (the counting house) makes what the house pays cheaper.
+  const pay = (n: number) => -Math.round(n * houseTerms(state, data).cost_factor);
+  if (d.with === "merchant") return pay(m.merchant.cost);
   const h = state.houses.find((x) => x.id === d.with);
   if (!h) return 0;
-  return d.form === "in" ? dowryIn(h, data) : -m.out.dowry;
+  return d.form === "in" ? dowryIn(h, data) : pay(m.out.dowry);
 }
 
 /** Returns why a match is refused, or null if it can go ahead. */
@@ -60,7 +63,9 @@ export function checkMarriage(state: GameState, d: ArrangeMarriageDecision, data
   if (!h) return `Unknown house "${d.with}"`;
   if (h.failed_turn !== null) return `${h.name} has failed`;
   const terms = d.form === "in" ? m.in : m.out;
-  if (h.opinion < terms.min_opinion) return `${h.name} will not hear of a match (opinion ${h.opinion}, needs ${terms.min_opinion})`;
+  // Reception rooms (the counting house) make houses readier to agree.
+  const needs = terms.min_opinion - houseTerms(state, data).marriage_opinion;
+  if (h.opinion < needs) return `${h.name} will not hear of a match (opinion ${h.opinion}, needs ${needs})`;
   if (d.form === "in" && state.house.reputation < h.reputation - m.in.reputation_gap)
     return `${h.name} thinks your house beneath it (reputation ${state.house.reputation}, needs ${h.reputation - m.in.reputation_gap})`;
   return null;

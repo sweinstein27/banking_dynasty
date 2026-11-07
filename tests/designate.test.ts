@@ -31,7 +31,7 @@ describe("naming an heir", () => {
     const s0 = house();
     const s = decide(s0, 3);
     expect(s.house.designated_heir).toBe(3);
-    expect(s.actions_this_turn).toBe(1);
+    expect(s.actions_this_turn).toBe(0); // A2: naming an heir uses no capacity
     expect(s.house.cash).toBe(s0.house.cash);
     expect(s.ledger).toHaveLength(s0.ledger.length);
   });

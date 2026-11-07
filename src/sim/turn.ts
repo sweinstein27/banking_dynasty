@@ -17,7 +17,7 @@ import type { Rng } from "./rng";
 import { moodWithWarnings, nextSentiment } from "./sentiment";
 import type { GameData } from "./tuning";
 import type { Decision, GameState, Quarter } from "./types";
-import { resolveCounting } from "./systems/counting";
+import { resolveCounting, withdrawalFactor } from "./systems/counting";
 import { resolveCredit } from "./systems/credit";
 import { marketsBook, resolveMarkets } from "./systems/markets";
 import { resolveVentures, ventureBook } from "./ventures";
@@ -91,7 +91,7 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
   resolveMarkets(next, rng, data);
   serviceDebts(next, data.tuning);
   resolveCounting(next, rng, data);
-  resolveWithdrawals(next, data.tuning, headEffects(next, data).withdrawals);
+  resolveWithdrawals(next, data.tuning, headEffects(next, data).withdrawals * withdrawalFactor(next, data));
   resolveDeposits(next, data.tuning);
   resolveHouses(next, rng, data);
   const rolled = nextSentiment(world.sentiment, rng.next(), data.tuning);

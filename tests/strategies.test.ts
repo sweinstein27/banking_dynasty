@@ -18,8 +18,6 @@ function run(strategy: Strategy, seed: number): { state: GameState; decisions: D
     const ds = strategy(s, gameData);
     const r = applyDecisions(s, ds, gameData);
     if (!r.ok) throw new Error(`seed ${seed} turn ${s.world.turn}: ${r.reason}`);
-    // Replies to letters use no action.
-    expect(ds.filter((d) => d.kind !== "answer_letter").length).toBeLessThanOrEqual(gameData.tuning.actions_per_turn);
     decisions.push(...ds);
     s = endTurn(s, ds, rng, gameData);
   }
@@ -49,8 +47,10 @@ describe("harness strategies", () => {
     for (const [name, st] of Object.entries(STRATEGIES)) expect(run(st, 3).state, name).toEqual(runs[name]![2]!.state);
   });
 
-  it("idle never decides anything", () => {
-    expect(kinds("idle")).toEqual([]);
+  it("idle decides nothing but dismissing its staff (A2)", () => {
+    expect(new Set(kinds("idle"))).toEqual(new Set(["dismiss"]));
+    // Three on the first quarter of each seed, and never again.
+    expect(runs.idle!.every((r) => r.decisions.length === gameData.counting.start.staff.length)).toBe(true);
   });
 
   it("cautious keeps a reserve, checks borrowers, lends, buys safe bonds and educates heirs", () => {

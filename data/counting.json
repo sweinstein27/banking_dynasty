@@ -1,1 +1,86 @@
-{}
+{
+  "start": {
+    "room": "small",
+    "staff": [
+      { "role": "clerk", "name": "Matthias Ebert", "skill": 5, "trait": "careful" },
+      { "role": "clerk", "name": "Konrad Haas", "skill": 3, "trait": "sanguine" },
+      { "role": "correspondent", "name": "Simon Leclerc", "skill": 4, "trait": "sharp" }
+    ]
+  },
+  "roles": {
+    "clerk": { "name": "Clerk", "description": "Writes up loans, bond purchases and venture shares: one deal a quarter.", "wage": 25, "desk": true, "max": null },
+    "correspondent": { "name": "Correspondent", "description": "Writes to merchants and agents abroad: two reports on borrowers a quarter, and each one after the first makes reports cheaper.", "wage": 50, "desk": true, "max": null },
+    "analyst": { "name": "Analyst", "description": "Reads a borrower's books and writes an opinion: two a quarter, right more often with skill.", "wage": 60, "desk": true, "max": null },
+    "teller": { "name": "Teller", "description": "Serves depositors at the counter: in calm times deposits grow faster.", "wage": 20, "desk": true, "max": 5 },
+    "partner": { "name": "Partner", "description": "A junior partner shares the head's work: more of the head's time, cheaper courting and marriages, warmer houses.", "wage": 150, "desk": false, "max": 1 }
+  },
+  "skill": { "min": 2, "max": 6, "cap": 10, "quarters_per_point": 8 },
+  "candidates_per_role": 3,
+  "rooms": [
+    { "size": "small", "name": "Small counting room", "desks": 6, "build": 0, "upkeep": 10 },
+    { "size": "medium", "name": "Counting room", "desks": 12, "build": 2000, "upkeep": 30 },
+    { "size": "large", "name": "Grand counting room", "desks": 24, "build": 6000, "upkeep": 80 }
+  ],
+  "facilities": {
+    "strongroom": { "name": "Strongroom", "description": "Iron doors and a vault: depositors trust it, and ask for less of their money in a panic.", "build": 3000, "upkeep": 25 },
+    "archive": { "name": "Archive", "description": "Shelves of old ledgers: payment records go back further.", "build": 1000, "upkeep": 10 },
+    "courier_stable": { "name": "Courier stable", "description": "Riders on the post roads: warnings of a panic reach the house at once, not a quarter late.", "build": 1500, "upkeep": 30 },
+    "reception_rooms": { "name": "Reception rooms", "description": "Rooms fit to receive the bourse: courting wins more favour, and houses agree to marriages more readily.", "build": 2000, "upkeep": 30 },
+    "warehouse": { "name": "Warehouse", "description": "A warehouse on the Main: space to store goods.", "build": 2000, "upkeep": 20 }
+  },
+  "effects": {
+    "strongroom_panic_withdrawals": 0.75,
+    "record_quarters": 12,
+    "archive_record_quarters": 24,
+    "warehouse_space": 40,
+    "reception_court_opinion": 10,
+    "reception_marriage_opinion": 10,
+    "partner_cost_factor": 0.7,
+    "partner_court_opinion": 5,
+    "correspondent_report_discount": 0.1,
+    "correspondent_max_discount": 0.3,
+    "teller_catch_up": 0.02
+  },
+  "analysts": {
+    "base_accuracy": 0.55,
+    "per_skill": 0.04,
+    "min_accuracy": 0.5,
+    "max_accuracy": 0.95,
+    "sound_from": 0.6,
+    "doubtful_from": 0.4
+  },
+  "traits": [
+    { "id": "careful", "name": "Careful", "description": "Sees trouble everywhere, and sometimes where there is none.", "false_alarm": 1.5, "missed": 0.5, "accuracy": 0 },
+    { "id": "sanguine", "name": "Sanguine", "description": "Expects the best, and is sometimes surprised.", "false_alarm": 0.5, "missed": 1.5, "accuracy": 0 },
+    { "id": "sharp", "name": "Sharp", "description": "Rarely wrong.", "false_alarm": 0.5, "missed": 0.5, "accuracy": 0.1 },
+    { "id": "muddled", "name": "Muddled", "description": "Means well, reads badly.", "false_alarm": 1.5, "missed": 1.5, "accuracy": -0.1 }
+  ],
+  "spouse_traits": { "prudent": "careful", "reckless": "sanguine", "shrewd": "sharp" },
+  "advice": {
+    "enabled": true,
+    "base_error": 0.35,
+    "per_skill": 0.03,
+    "min_error": 0.03,
+    "cooldown_quarters": 4,
+    "routine_quarter": 1,
+    "letters": {
+      "liquidity": {
+        "alarm": "Our cash would not meet one quarter of a panic's withdrawals. I would keep more of it in the strongbox and lend a little less.",
+        "calm": "The books are in order. Our cash would meet a quarter of panic withdrawals, should one come."
+      },
+      "market": {
+        "alarm": "Our friends in Hamburg and London write that paper is refused and coin hoarded. I fear a panic within the year.",
+        "calm": "The letters from abroad are quiet. I see no panic coming this year."
+      },
+      "family": {
+        "alarm": "{heir} is not yet ready to lead the house. Another year of schooling would serve us all.",
+        "calm": "{heir} is ready to lead the house, should it come to that.",
+        "none": "The house has no heir. We must think of marriages and children."
+      }
+    }
+  },
+  "names": {
+    "first": ["Johann", "Friedrich", "Wilhelm", "Carl", "Heinrich", "Georg", "Philipp", "Jacob", "Christian", "Ludwig", "August", "Conrad", "Peter", "Anton", "Moritz", "Gottfried", "Ernst", "Franz", "Valentin", "Nikolaus"],
+    "surnames": ["Becker", "Schaefer", "Hartmann", "Weber", "Kraemer", "Hoffmann", "Bauer", "Lange", "Seidel", "Zimmermann", "Vogt", "Engel", "Fuchs", "Brandt", "Roth", "Wolf", "Keller", "Sommer", "Lorenz", "Pfeiffer"]
+  }
+}

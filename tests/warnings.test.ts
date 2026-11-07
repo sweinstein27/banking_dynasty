@@ -13,8 +13,14 @@ const CALM = 0.999999;
 /** From uneasy, a roll of 0.35 lands in the panic band (after 0.3 to calm, before 0.4). */
 const TO_PANIC = 0.35;
 
+/** A2: a courier stable brings warnings at once; without one they arrive a quarter late (tests/counting-effects.test.ts). */
+function withCourier(s: GameState): GameState {
+  s.counting.facilities.push({ id: "courier_stable", ready_turn: 0 });
+  return s;
+}
+
 function uneasy(): GameState {
-  const s = fresh();
+  const s = withCourier(fresh());
   s.world.sentiment = "uneasy";
   return s;
 }
@@ -123,7 +129,7 @@ describe("events and warnings", () => {
 
 describe("the 1825 crisis in the real data", () => {
   it("warns in 1825 Q3 and Q4 before the panic of 1826 Q1", () => {
-    let s = fresh();
+    let s = withCourier(fresh());
     const seen: Record<string, string[]> = {};
     while (!(s.world.year === 1826 && s.world.quarter === 1)) {
       s = endTurn(s, [], fixedRng(CALM), { ...gameData, tuning: quiet.tuning });

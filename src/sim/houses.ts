@@ -10,6 +10,7 @@ import type { Rng } from "./rng";
 import type { GameData, Tuning } from "./tuning";
 import { freeCash } from "./reserves";
 import { cloneState } from "./state";
+import { houseTerms } from "./systems/counting";
 import type { CourtHouseDecision, GameState, OtherHouse } from "./types";
 
 /** The houses at the start of a game, from data/houses.json. Draws nothing. */
@@ -145,9 +146,14 @@ export function checkCourtHouse(state: GameState, d: CourtHouseDecision, data: G
   if (!h) return `Unknown house "${d.house}"`;
   if (h.failed_turn !== null) return `${h.name} has failed`;
   if (h.opinion >= data.tuning.houses.opinion.max) return `${h.name} could not think better of your house`;
-  const cost = data.tuning.houses.court.cost;
+  const cost = courtCost(state, data);
   if (cost > freeCash(state)) return `Not enough cash above the reserve (cost ${fl(cost)}, free ${fl(freeCash(state))})`;
   return null;
+}
+
+/** What courting costs now: less with a partner (the counting house). */
+export function courtCost(state: GameState, data: GameData): number {
+  return Math.round(data.tuning.houses.court.cost * houseTerms(state, data).cost_factor);
 }
 
 /** Courts a house: one action, the cost in cash, its opinion rises. Returns a new state; the input is not changed. */
@@ -155,7 +161,8 @@ export function courtHouse(state: GameState, d: CourtHouseDecision, data: GameDa
   const reason = checkCourtHouse(state, d, data);
   if (reason) return { ok: false, reason };
   const next = cloneState(state);
-  const { cost, opinion } = data.tuning.houses.court;
+  const cost = courtCost(next, data);
+  const opinion = data.tuning.houses.court.opinion + houseTerms(next, data).court_opinion;
   const h = next.houses.find((x) => x.id === d.house)!;
   next.house.cash -= cost;
   addEntry(next, "cash", "courting", -cost, `Courting ${h.name}`);

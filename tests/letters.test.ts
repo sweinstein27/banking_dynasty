@@ -118,7 +118,7 @@ describe("answering", () => {
 
   it("is allowed with the quarter's actions used up", () => {
     const s = withLetter();
-    s.actions_this_turn = gameData.tuning.actions_per_turn;
+    s.counting.used = { deals: 99, reports: 99, opinions: 99, head: 99 };
     expect(answerLetter(s, answer("quiet"), data).ok).toBe(true);
   });
 

@@ -15,8 +15,10 @@ const { tuning } = gameData;
 /** Plays a whole run (or until bankruptcy) with a strategy. */
 function fullRun(seed: number, strategy = economyDecisions): GameState {
   const rng = createRng(seed);
-  let s = newGame(gameData, rng);
-  while (!runOver(s, tuning)) s = endTurn(s, strategy(s, gameData), rng, gameData);
+  // A2: the quiet counting house (no wages or counting rolls), so the run is the one this test was written for.
+  const data = { ...gameData, counting: quiet.counting };
+  let s = newGame(data, rng);
+  while (!runOver(s, tuning)) s = endTurn(s, strategy(s, data), rng, data);
   return s;
 }
 
