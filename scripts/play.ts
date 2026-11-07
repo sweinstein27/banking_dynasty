@@ -3,12 +3,30 @@ import { createInterface } from "node:readline";
 import { gameData } from "../src/data";
 import { newGame } from "../src/sim/init";
 import { runOver } from "../src/sim/actions";
-import { capacityLeft } from "../src/sim/capacity";
+import { POOL_NAMES, POOLS, poolLeft, poolSize } from "../src/sim/capacity";
 import { bondBook, bondValue, quarterlyCoupon } from "../src/sim/bonds";
 import { bondOffers, lendOffers, ventureOffers } from "../src/sim/offers";
 import { chronicle } from "../src/sim/chronicle";
 import { borrowingRoom, debtBook, inCrisis, lenders, lendingTerms } from "../src/sim/crisis";
-import { houseRanking, opinionWord } from "../src/sim/houses";
+import { courtCost, houseRanking, opinionWord } from "../src/sim/houses";
+import {
+  advisors,
+  ADVISOR_TITLES,
+  buildCost,
+  checkBuild,
+  desksTaken,
+  FACILITY_IDS,
+  hasFacility,
+  nextRoom,
+  roomData,
+  skillOf,
+  STAFF_ROLES,
+  traitOf,
+  upkeepBill,
+  wageBill,
+  warningKnown,
+  type BuildDecision,
+} from "../src/sim/systems/counting";
 import { ageIn, effectiveStat, headOf, heirsOf, investCost, livingSpouse, reputationGain, STATS } from "../src/sim/family";
 import { checkMarriage, marriageable, matchMoney } from "../src/sim/marriages";
 import { traitWords } from "../src/sim/traits";
@@ -66,8 +84,9 @@ function printStatus(s: GameState) {
   console.log(`\n=== ${house.name}, ${house.city}. ${world.year} Q${world.quarter} (turn ${world.turn}) ===`);
   console.log(`Cash ${fl(house.cash)}  Loans ${fl(loanBook(s))}  Bonds ${fl(bondBook(s))}  Ventures ${fl(ventureBook(s))}  Deposits ${fl(house.deposits)}  Borrowings ${fl(debtBook(s))}  Net worth ${fl(netWorth(s))}`);
   console.log(`Reserve ${fl(house.reserve)}  Free cash ${fl(freeCash(s))}  Reputation ${house.reputation}, drawing deposits of ${fl(depositLevel(house.reputation, tuning))}`);
-  console.log(`Sentiment ${world.sentiment}  Base rate ${pct(world.base_rate)}  Actions left ${capacityLeft(s, tuning)}`);
-  if (s.panic_warning) console.log(`WARNING: panic expected in ${s.panic_warning.turns_left} quarter(s).`);
+  console.log(`Sentiment ${world.sentiment}  Base rate ${pct(world.base_rate)}  Wages and upkeep ${fl(wageBill(s, gameData) + upkeepBill(s, gameData))} a quarter`);
+  console.log(`Left this quarter: ${POOLS.map((p) => `${POOL_NAMES[p]} ${poolLeft(s, p, tuning)}/${poolSize(s, p, tuning)}`).join(", ")}`);
+  if (s.panic_warning && warningKnown(s, gameData)) console.log(`WARNING: panic expected in ${s.panic_warning.turns_left} quarter(s).`);
 }
 
 function printHoldings(s: GameState) {
@@ -103,7 +122,9 @@ function printRequests(preview: GameState): ReturnType<typeof lendOffers> {
   if (!offers.length) console.log("No one is asking for a loan this quarter.");
   offers.forEach((o, i) => {
     const est = `quality ${o.estimate.low.toFixed(2)} to ${o.estimate.high.toFixed(2)}${o.reported ? " (report)" : ""}`;
-    console.log(`  ${i + 1}) ${o.name}, ${o.trade}: wants up to ${fl(o.amount)}, pays up to ${pct(o.max_rate)}, ${est}, repaid ${o.repaid}, defaulted ${o.defaulted}`);
+    const op = preview.counting.opinions.find((x) => x.borrower === o.borrower_id);
+    const opinion = op ? `, analyst says ${op.verdict}` : "";
+    console.log(`  ${i + 1}) ${o.name}, ${o.trade}: wants up to ${fl(o.amount)}, pays up to ${pct(o.max_rate)}, ${est}${opinion}, repaid ${o.repaid}, defaulted ${o.defaulted}`);
   });
   return offers;
 }
@@ -284,9 +305,75 @@ async function askHouses(preview: GameState): Promise<Decision | null> {
     console.log(`  [${i + 1}] ${h.name} (${h.temperament}), ${h.head.name} ${ageIn(h.head, preview.world.year)}, reputation ${h.reputation}, opinion ${opinionWord(h.opinion)} (${h.opinion}); ${t.refused ? `would not lend: ${t.refused}` : `would lend at ${pct(t.rate)}, up to ${fl(t.room)}`}`);
   });
   for (const h of preview.houses.filter((x) => x.failed_turn !== null)) console.log(`  ${h.name}: failed`);
-  const pick = (await ask(`Court a house for ${fl(tuning.houses.court.cost)} and one action (1-${trading.length}), or Enter to go back: `))?.trim();
+  const pick = (await ask(`Court a house for ${fl(courtCost(preview, gameData))} and the head's time (1-${trading.length}), or Enter to go back: `))?.trim();
   const h = trading[Number(pick) - 1];
   return h ? { kind: "court_house", house: h.id } : null;
+}
+
+/** The counting house: staff, rooms and facilities, the council, and the choice to hire, dismiss, build or ask an analyst. */
+function printHouse(s: GameState) {
+  const c = s.counting;
+  const turn = s.world.turn;
+  const room = roomData(c.room, gameData);
+  const building = c.room_building ? `, ${roomData(c.room_building.size, gameData).name.toLowerCase()} being built` : "";
+  console.log(`\n--- The counting house ---\n${room.name}: ${desksTaken(s, gameData)} of ${room.desks} desks taken next quarter${building}.`);
+  for (const m of c.staff) {
+    const role = gameData.counting.roles[m.role];
+    const when = m.start_turn > turn ? ", starts next quarter" : m.leaving ? ", leaving at the end of the quarter" : "";
+    console.log(`  #${m.id} ${m.name}, ${role.name.toLowerCase()}, skill ${skillOf(m, turn, gameData)}, ${traitOf(m.trait, gameData)?.name.toLowerCase() ?? m.trait}, ${fl(role.wage)}/qtr${when}`);
+  }
+  if (!c.staff.length) console.log("  No staff.");
+  const facilities = FACILITY_IDS.filter((id) => c.facilities.some((f) => f.id === id)).map((id) => `${gameData.counting.facilities[id].name}${hasFacility(s, id) ? "" : " (being built)"}`);
+  console.log(`Facilities: ${facilities.length ? facilities.join(", ") : "none"}.`);
+  console.log(`Wages ${fl(wageBill(s, gameData))} and upkeep ${fl(upkeepBill(s, gameData))} a quarter.`);
+  const council = advisors(s, gameData);
+  const seats = (Object.keys(ADVISOR_TITLES) as (keyof typeof ADVISOR_TITLES)[]).map((r) => `${ADVISOR_TITLES[r]}: ${council[r]?.name ?? "none"}`);
+  console.log(`The council: ${seats.join("; ")}.`);
+}
+
+async function askHouse(preview: GameState): Promise<Decision | null> {
+  printHouse(preview);
+  const pick = (await ask("[h] Hire  [d] Dismiss  [b] Build  [a] Ask an analyst about a borrower, or Enter to go back: "))?.trim();
+  if (pick === "h") {
+    STAFF_ROLES.forEach((r, i) => {
+      const role = gameData.counting.roles[r];
+      console.log(`  ${i + 1}) ${role.name}, ${fl(role.wage)}/qtr: ${role.description}`);
+    });
+    const role = STAFF_ROLES[Number(await ask(`Post (1-${STAFF_ROLES.length}): `)) - 1];
+    if (!role) return console.log("Unknown post."), null;
+    const list = preview.counting.candidates[role];
+    if (!list.length) return console.log("No one is looking for that post this quarter."), null;
+    list.forEach((c, i) => {
+      const t = traitOf(c.trait, gameData);
+      console.log(`  ${i + 1}) ${c.name}, skill ${c.skill}, ${t ? `${t.name.toLowerCase()}: ${t.description}` : c.trait}`);
+    });
+    const i = Number(await ask(`Candidate (1-${list.length}): `)) - 1;
+    return list[i] ? { kind: "hire", role, candidate: i } : (console.log("Unknown candidate."), null);
+  }
+  if (pick === "d") {
+    const id = Number(await ask("Staff number to dismiss: "));
+    return { kind: "dismiss", staff: id };
+  }
+  if (pick === "b") {
+    const choices: BuildDecision["facility"][] = ["counting_room", ...FACILITY_IDS];
+    choices.forEach((f, i) => {
+      const cost = buildCost(preview, f, gameData);
+      const name = f === "counting_room" ? (nextRoom(preview.counting.room, gameData)?.name ?? "A larger counting room") : gameData.counting.facilities[f].name;
+      const upkeep = f === "counting_room" ? nextRoom(preview.counting.room, gameData)?.upkeep : gameData.counting.facilities[f].upkeep;
+      const what = f === "counting_room" ? `${nextRoom(preview.counting.room, gameData)?.desks ?? "no more"} desks` : gameData.counting.facilities[f].description;
+      const refused = checkBuild(preview, { kind: "build", facility: f }, gameData);
+      console.log(`  ${i + 1}) ${name}: ${cost === null ? "" : `${fl(cost)}, upkeep ${fl(upkeep ?? 0)}/qtr. `}${what}${refused ? `  [${refused}]` : ""}`);
+    });
+    const f = choices[Number(await ask(`Build (1-${choices.length}): `)) - 1];
+    return f ? { kind: "build", facility: f } : (console.log("Unknown facility."), null);
+  }
+  if (pick === "a") {
+    const offers = printRequests(preview);
+    if (!offers.length) return null;
+    const o = offers[Number(await ask(`Borrower (1-${offers.length}): `)) - 1];
+    return o ? { kind: "consult_analyst", borrower: o.borrower_id } : (console.log("Unknown borrower."), null);
+  }
+  return null;
 }
 
 async function main() {
@@ -305,7 +392,7 @@ async function main() {
 
     while (!ended) {
       printStatus(preview);
-      const choice = (await ask("[1] Lend  [2] Report  [3] Buy bonds  [4] Back venture  [5] Set reserve  [6] View holdings  [7] End turn  [8] Crisis measures  [9] Invest in family  [h] Houses  [q] Quit: "))?.trim();
+      const choice = (await ask("[1] Lend  [2] Report  [3] Buy bonds  [4] Back venture  [5] Set reserve  [6] View holdings  [7] End turn  [8] Crisis measures  [9] Invest in family  [h] Houses  [c] Counting house  [q] Quit: "))?.trim();
       if (choice === null || choice === undefined || choice === "q") return;
       if (choice === "1" || choice === "2" || choice === "3" || choice === "4" || choice === "5" || choice === "8" || choice === "9") {
         const askFor = { "1": askLend, "2": askReport, "3": askBond, "4": askVenture, "5": askReserve, "8": askCrisis, "9": askFamily }[choice];
@@ -325,6 +412,23 @@ async function main() {
           else if (d.kind === "designate_heir") console.log("Heir named.");
           else if (d.kind === "arrange_marriage") console.log("The match is made.");
           else console.log("Crisis measure taken.");
+        }
+      } else if (choice === "c") {
+        const d = await askHouse(preview);
+        if (!d) continue;
+        const r = applyDecision(preview, d, gameData);
+        if (!r.ok) console.log(`Refused: ${r.reason}`);
+        else {
+          queued.push(d);
+          preview = r.state;
+          if (d.kind === "consult_analyst") {
+            const op = preview.counting.opinions.at(-1)!;
+            const who = preview.counting.staff.find((m) => m.id === op.analyst)?.name ?? "The analyst";
+            const name = preview.borrowers.find((b) => b.id === op.borrower)?.name ?? "the borrower";
+            console.log(`${who} reads the books of ${name} and calls them ${op.verdict}.`);
+          } else if (d.kind === "hire") console.log("Hired, to start next quarter.");
+          else if (d.kind === "dismiss") console.log("Dismissed.");
+          else console.log("Building begins; it opens next quarter.");
         }
       } else if (choice === "h") {
         const d = await askHouses(preview);
