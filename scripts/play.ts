@@ -7,6 +7,7 @@ import { POOL_NAMES, POOLS, poolLeft, poolSize } from "../src/sim/capacity";
 import { bondBook, bondValue, quarterlyCoupon } from "../src/sim/bonds";
 import { bondOffers, lendOffers, loanSaleOffers, ventureOffers } from "../src/sim/offers";
 import { fileLines, KIND_WORDS, type BookFile } from "../src/sim/systems/credit";
+import { progressLine } from "../src/sim/systems/progress";
 import { chronicle } from "../src/sim/chronicle";
 import { borrowingRoom, debtBook, inCrisis, lenders, lendingTerms } from "../src/sim/crisis";
 import { courtCost, houseRanking, opinionWord } from "../src/sim/houses";
@@ -88,6 +89,7 @@ function printStatus(s: GameState) {
   console.log(`Cash ${fl(house.cash)}  Loans ${fl(loanBook(s))}  Bonds ${fl(bondBook(s))}  Ventures ${fl(ventureBook(s))}  ${marketsLine(s)}  Deposits ${fl(house.deposits)}  Borrowings ${fl(debtBook(s))}  Net worth ${fl(netWorth(s))}`);
   console.log(`Reserve ${fl(house.reserve)}  Free cash ${fl(freeCash(s))}  Reputation ${house.reputation}, drawing deposits of ${fl(depositLevel(house.reputation, tuning))}`);
   console.log(`Sentiment ${world.sentiment}  Base rate ${pct(world.base_rate)}  Wages and upkeep ${fl(wageBill(s, gameData) + upkeepBill(s, gameData))} a quarter`);
+  console.log(progressLine(s, gameData));
   console.log(`Left this quarter: ${POOLS.map((p) => `${POOL_NAMES[p]} ${poolLeft(s, p, tuning)}/${poolSize(s, p, tuning)}`).join(", ")}`);
   if (s.panic_warning && warningKnown(s, gameData)) console.log(`WARNING: panic expected in ${s.panic_warning.turns_left} quarter(s).`);
 }

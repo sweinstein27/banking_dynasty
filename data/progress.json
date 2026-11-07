@@ -1,1 +1,152 @@
-{}
+{
+  "technologies": [
+    {
+      "id": "steam",
+      "name": "Rhine steam",
+      "curve": [
+        { "year": 1827, "quarter": 2, "level": 0.1 },
+        { "year": 1832, "quarter": 1, "level": 0.5 },
+        { "year": 1840, "quarter": 1, "level": 1 }
+      ],
+      "ventures": [],
+      "per_section": 0,
+      "local_cap": 0
+    },
+    {
+      "id": "gas",
+      "name": "Gas lighting",
+      "curve": [
+        { "year": 1828, "quarter": 3, "level": 0.05 },
+        { "year": 1844, "quarter": 1, "level": 0.4 },
+        { "year": 1850, "quarter": 4, "level": 0.7 }
+      ],
+      "ventures": ["gasworks"],
+      "per_section": 0.05,
+      "local_cap": 0.1
+    },
+    {
+      "id": "railway",
+      "name": "Railways",
+      "curve": [
+        { "year": 1835, "quarter": 4, "level": 0.01 },
+        { "year": 1840, "quarter": 1, "level": 0.1 },
+        { "year": 1845, "quarter": 1, "level": 0.35 },
+        { "year": 1850, "quarter": 4, "level": 0.7 }
+      ],
+      "ventures": ["railway", "trunk_railway"],
+      "per_section": 0.02,
+      "local_cap": 0.1
+    },
+    {
+      "id": "telegraph",
+      "name": "Electric telegraph",
+      "curve": [
+        { "year": 1849, "quarter": 1, "level": 1 }
+      ],
+      "ventures": [],
+      "per_section": 0,
+      "local_cap": 0
+    }
+  ],
+  "stages": [
+    {
+      "id": "rhine-steamers-1827",
+      "tech": "steam",
+      "year": 1827,
+      "quarter": 2,
+      "title": "Steamers on the Rhine",
+      "text": "On 1 May the steamer Concordia makes her first run from Mainz to Cologne. Goods and letters move faster on the river, and the towed barges begin to lose their trade."
+    },
+    {
+      "id": "frankfurt-gas-1828",
+      "tech": "gas",
+      "year": 1828,
+      "quarter": 3,
+      "title": "Gas comes to Frankfurt",
+      "text": "Knoblauch und Schiele's new gasworks begins supplying private houses in Frankfurt. Gasworks may now be backed as ventures.",
+      "opens": ["gasworks"]
+    },
+    {
+      "id": "optical-telegraph-1833",
+      "tech": "telegraph",
+      "year": 1833,
+      "quarter": 3,
+      "title": "Prussia's semaphore line",
+      "text": "Prussia's optical telegraph now runs from Berlin to Koblenz. It carries only government messages; merchants' news still comes by courier."
+    },
+    {
+      "id": "first-railway-1835",
+      "tech": "railway",
+      "year": 1835,
+      "quarter": 4
+    },
+    {
+      "id": "railway-companies-1836",
+      "tech": "railway",
+      "year": 1836,
+      "quarter": 1,
+      "title": "Railway companies seek capital",
+      "text": "After the Nuremberg line, railway committees form across the German states. Railways may now be backed as ventures.",
+      "opens": ["railway"]
+    },
+    {
+      "id": "taunus-railway-1839",
+      "tech": "railway",
+      "year": 1839,
+      "quarter": 3,
+      "title": "The Taunus railway opens",
+      "text": "On 26 September the first trains run from Frankfurt to Hoechst. Carters and canal boats on the route begin to lose their trade."
+    },
+    {
+      "id": "trunk-railways-1842",
+      "tech": "railway",
+      "year": 1842,
+      "quarter": 1,
+      "title": "Trunk lines planned",
+      "text": "With the first lines paying, promoters plan long trunk railways between the states. Trunk railways may now be backed as ventures.",
+      "early": { "year": 1840, "quarter": 1, "text": "The house's own line has shown what railways can earn, and promoters come early to plan a trunk line through Frankfurt." },
+      "opens": ["trunk_railway"]
+    },
+    {
+      "id": "obermain-gasworks-1844",
+      "tech": "gas",
+      "year": 1844,
+      "quarter": 1,
+      "title": "A London gas company in Frankfurt",
+      "text": "The Imperial Continental Gas Association completes its gasworks on the Obermainstrasse. Gas lamps spread through the city's streets."
+    },
+    {
+      "id": "main-neckar-1846",
+      "tech": "railway",
+      "year": 1846,
+      "quarter": 3,
+      "title": "Through trains to Heidelberg",
+      "text": "The Main-Neckar line now runs from Frankfurt to Heidelberg. River freight on the Main and Neckar feels the loss."
+    },
+    {
+      "id": "electric-telegraph-1849",
+      "tech": "telegraph",
+      "year": 1849,
+      "quarter": 1,
+      "title": "The telegraph reaches Frankfurt",
+      "text": "Siemens and Halske's electric line from Berlin to the National Assembly in Frankfurt is open. News from Berlin now arrives the same day."
+    }
+  ],
+  "sectors": [
+    { "tech": "steam", "sector": "shipping", "at_full": 1.15 },
+    { "tech": "gas", "sector": "utility", "at_full": 1.1 },
+    { "tech": "railway", "sector": "railway", "at_full": 1.15 },
+    { "tech": "railway", "sector": "industry", "at_full": 1.1 },
+    { "tech": "railway", "sector": "canal", "at_full": 0.6 },
+    { "tech": "railway", "sector": "shipping", "at_full": 0.85 }
+  ],
+  "trades": [
+    { "tech": "railway", "trade": "river freight", "quality_at_full": -0.2, "turnover_at_full": 0.7 },
+    { "tech": "railway", "trade": "ironmonger", "quality_at_full": 0.05, "turnover_at_full": 1.15 },
+    { "tech": "railway", "trade": "timber", "quality_at_full": 0.03, "turnover_at_full": 1.1 }
+  ],
+  "quality_bounds": { "min": 0.05, "max": 0.98 },
+  "telegraph_lines": [
+    { "place": "berlin", "year": 1849, "quarter": 1 }
+  ]
+}

@@ -4,6 +4,7 @@ import { company, earningsEstimateFor, goodsValue, holdingValue, shareCost, shar
 import { dividendPerShare, harvestIndex, outcome } from "../src/sim/markets/prices";
 import { freeCash } from "../src/sim/reserves";
 import { marketsBook } from "../src/sim/systems/markets";
+import { ventureBlocked } from "../src/sim/systems/progress";
 import type { Decision, GameState } from "../src/sim/types";
 import { firstCall, nextCall, quartersLeft, remainingCommitment, stakeSalePrice, ventureType } from "../src/sim/ventures";
 
@@ -61,7 +62,8 @@ export function marketsLine(s: GameState): string {
 export async function askVentureCommit(preview: GameState, ask: Ask): Promise<Decision | null> {
   console.log("Ventures (you commit an amount; it is called in instalments while the venture is built):");
   gameData.ventures.forEach((t, i) => {
-    const locked = preview.world.year < t.unlock_year ? `  [from ${t.unlock_year}]` : "";
+    const blocked = ventureBlocked(preview, t, gameData);
+    const locked = blocked ? `  [${blocked.toLowerCase()}]` : "";
     const years = (t.term_quarters / 4).toFixed(1);
     const what = t.tier === "short" ? `pays back +${pct(t.expected_return)} when built` : `earns about ${pct(t.expected_return)} a year once running${t.sections > 1 ? ` (in ${t.sections} sections)` : ""}, floats as ${t.company_name}`;
     console.log(`  ${i + 1}) ${t.name}, ${t.tier}: ${years} years to build, ${t.calls} calls every ${t.call_every} qtr, ${what}, fails ${pct(t.failure_risk)} over the build when calm${locked}`);
