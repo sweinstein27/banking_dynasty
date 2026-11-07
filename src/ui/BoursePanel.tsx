@@ -1,48 +1,48 @@
-// The Bourse: who wants money and what is for sale. Merchants asking for loans (and every borrower
-// the house knows), the states selling bonds, and the ventures open to backing. Each page has the
-// decision that acts on it; the dialogs are the Desk's own. Companies join in a later milestone.
+// The Bourse: who wants money and what is for sale. Merchants asking for loans, each with the
+// house's file on their books and the analyst's word; the loans the house holds, which another
+// house would buy at a discount; and the states selling bonds. Ventures and shares are in Markets.
 import { Tabs } from "radix-ui";
 import { useState } from "react";
 import { gameData } from "../data";
-import { fileLines, KIND_WORDS } from "../sim/systems/credit";
 import { capacityLeft } from "../sim/capacity";
-import { headStat } from "../sim/family";
-import { bondOffers, lendOffers, ventureOffers } from "../sim/offers";
+import { bondOffers } from "../sim/offers";
 import { bondValue } from "../sim/bonds";
+import { KIND_WORDS } from "../sim/systems/credit";
+import { freeCash } from "../sim/reserves";
 import type { Decision, GameState } from "../sim/types";
-import { venturePayout, quartersLeft } from "../sim/ventures";
 import { DECISION_LABELS, DecisionDialog, type DecisionKind } from "./DecisionDialogs";
-import { fl, keepUnits, pct } from "./format";
+import { fl, keepUnits, parseAmount, pct } from "./format";
+import { loansHeld, merchantRows, salePriceSection, type FileDoc, type MerchantRow } from "./model/credit";
 import { PageTurner, usePages } from "./Pager";
+import { ActButton, ActionDialog, Refused, SumCard, Sums, useRun } from "./ScreenKit";
 import { Term } from "./Term";
 
 const PER_PAGE = 4;
 
-export function BoursePanel({ state, onDecide }: { state: GameState; onDecide?: (d: Decision) => string | null }) {
+type Decide = (d: Decision) => string | null;
+
+export function BoursePanel({ state, onDecide }: { state: GameState; onDecide?: Decide }) {
   const [open, setOpen] = useState<DecisionKind | null>(null);
   const can = onDecide !== undefined && capacityLeft(state, gameData.tuning) > 0;
-  const act = (k: DecisionKind) => (
-    <button key={k} className="primary" disabled={!can} onClick={() => setOpen(k)}>{DECISION_LABELS[k]}</button>
-  );
   return (
     <div className="doc bourse">
       <Tabs.Root defaultValue="borrowers" className="doc-tabs">
         <Tabs.List className="ribbons" aria-label="The bourse">
           <Tabs.Trigger value="borrowers" className="ribbon">Merchants</Tabs.Trigger>
+          <Tabs.Trigger value="loans" className="ribbon">Loans held</Tabs.Trigger>
           <Tabs.Trigger value="states" className="ribbon">States</Tabs.Trigger>
-          <Tabs.Trigger value="ventures" className="ribbon">Ventures</Tabs.Trigger>
         </Tabs.List>
         <Tabs.Content value="borrowers" className="doc-page">
-          <Borrowers state={state} />
-          <div className="row page-actions">{act("lend")}{act("report")}</div>
+          <Merchants state={state} onDecide={onDecide} />
+        </Tabs.Content>
+        <Tabs.Content value="loans" className="doc-page">
+          <LoansHeld state={state} onDecide={onDecide} />
         </Tabs.Content>
         <Tabs.Content value="states" className="doc-page">
           <States state={state} />
-          <div className="row page-actions">{act("buy_bond")}</div>
-        </Tabs.Content>
-        <Tabs.Content value="ventures" className="doc-page">
-          <Ventures state={state} />
-          <div className="row page-actions">{act("invest_venture")}</div>
+          <div className="row page-actions">
+            <button className="primary" disabled={!can} onClick={() => setOpen("buy_bond")}>{DECISION_LABELS.buy_bond}</button>
+          </div>
         </Tabs.Content>
       </Tabs.Root>
       {onDecide && <DecisionDialog kind={open} state={state} onClose={() => setOpen(null)} onSubmit={onDecide} />}
@@ -50,55 +50,181 @@ export function BoursePanel({ state, onDecide }: { state: GameState; onDecide?: 
   );
 }
 
-function Borrowers({ state }: { state: GameState }) {
-  const offers = lendOffers(state, gameData);
-  const asking = new Set(offers.map((o) => o.borrower_id));
-  const prudence = headStat(state, "prudence", gameData);
-  const known = state.borrowers.filter((b) => !asking.has(b.id) && (b.repaid > 0 || b.defaulted > 0 || state.loans.some((l) => l.borrower_id === b.id)));
-  const rows = [
-    ...offers.map((o) => ({
-      key: `o${o.borrower_id}`,
-      head: `${o.name}, ${o.trade}`,
-      tag: "Asking",
-      lines: [
-        `A ${KIND_WORDS[o.kind]} for ${o.term_quarters} quarters: up to ${fl(o.amount)} at up to ${pct(o.max_rate)} a year. ${o.years_in_trade} years in trade.`,
-        o.talk_text,
-        ...fileLines(o.file, state.world.turn, gameData),
-        o.repaid === 0 && o.defaulted === 0 ? "No history with the house." : `With the house: repaid ${o.repaid}, defaulted ${o.defaulted}.`,
-      ],
-    })),
-    ...known.map((b) => {
-      const lent = state.loans.filter((l) => l.borrower_id === b.id && l.status === "active").reduce((n, l) => n + l.principal, 0);
-      const away = b.away_until !== null && b.away_until > state.world.turn;
-      return {
-        key: `b${b.id}`,
-        head: `${b.name}, ${b.trade}`,
-        tag: lent > 0 ? "Borrowing" : away ? "Away" : "Known",
-        lines: [
-          lent > 0 ? `Owes the house ${fl(lent)}` : away ? `Asks for nothing for ${b.away_until! - state.world.turn} more quarters.` : "Not asking this quarter.",
-          ...fileLines(b.file, state.world.turn, gameData),
-          `With the house: repaid ${b.repaid}, defaulted ${b.defaulted}.`,
-        ],
-      };
-    }),
-  ];
+/** What the house knows of a merchant, as chips: its file and the analyst's word. */
+function Chips({ r }: { r: MerchantRow }) {
+  return (
+    <span className="chips">
+      {r.doc ? <span className={`chip ${r.doc.stale ? "chip-away" : "chip-borrowing"}`}>{r.doc.title === "Full inquiry" ? "Inquiry" : "Report"}, {r.doc.age.replace("bought ", "")}</span> : <span className="chip">No file</span>}
+      {r.opinion && <span className={`chip chip-${r.opinion.verdict}`}>Analyst: {r.opinion.verdict}</span>}
+    </span>
+  );
+}
+
+function Merchants({ state, onDecide }: { state: GameState; onDecide?: Decide }) {
+  const rows = merchantRows(state, gameData);
   const pages = usePages(rows, PER_PAGE);
+  const [openId, setOpenId] = useState<number | null>(null);
+  const chosen = rows.find((r) => r.offer.borrower_id === openId) ?? null;
   return (
     <>
       <p className="small muted">
-        Merchants who ask for a <Term id="loans">loan</Term> this quarter, then others the house knows. You never see their true soundness: read their <Term id="books">books</Term>.
+        Merchants asking for a <Term id="loans">loan</Term> this quarter. You never see their true soundness: read their <Term id="books">books</Term>, or ask an <Term id="analyst_opinion">analyst</Term>.
       </p>
       {rows.length === 0 ? <p className="muted">No one is asking for a loan this quarter.</p> : (
         <ul className="rows">
           {pages.items.map((r) => (
-            <li key={r.key} className="row-card">
-              <p className="row-head"><strong>{r.head}</strong> <span className={`chip chip-${r.tag.toLowerCase()}`}>{r.tag}</span></p>
-              {r.lines.map((l, i) => <p key={i} className="small">{keepUnits(l)}</p>)}
+            <li key={r.offer.borrower_id} className="row-card merchant">
+              <div className="merchant-text">
+                <p className="row-head"><strong>{r.offer.name}, {r.offer.trade}</strong> <Chips r={r} /></p>
+                <p className="small">{keepUnits(`${r.request}: up to ${fl(r.offer.amount)} at up to ${pct(r.offer.max_rate)} a year.`)}</p>
+                <p className="small talk">{r.offer.talk_text}</p>
+              </div>
+              <button className="secondary" onClick={() => setOpenId(r.offer.borrower_id)}>Open the file</button>
             </li>
           ))}
         </ul>
       )}
       <PageTurner pages={pages} />
+      <ActionDialog open={chosen !== null} title={chosen ? `${chosen.offer.name}, ${chosen.offer.trade}` : ""} onClose={() => setOpenId(null)} className="merchant-dialog">
+        {chosen && <MerchantFile r={chosen} state={state} onDecide={onDecide} />}
+      </ActionDialog>
+    </>
+  );
+}
+
+/** A report or inquiry as a document on paper, with its age. */
+function FileDocument({ doc }: { doc: FileDoc }) {
+  return (
+    <article className="file-doc">
+      <header>
+        <h3><Term id={doc.title === "Full inquiry" ? "inquiry" : "report"}>{doc.title}</Term></h3>
+        <span className={doc.stale ? "file-age stale" : "file-age"}>{doc.age}{doc.stale ? ", worth renewing" : ""}</span>
+      </header>
+      <dl className="bd-lines">
+        {doc.lines.map((l) => (
+          <div key={l.label} className="contents">
+            <dt>{l.term ? <Term id={l.term}>{l.label}</Term> : l.label}</dt>
+            <dd>{keepUnits(l.value)}</dd>
+          </div>
+        ))}
+      </dl>
+      {doc.remark && <p className="remark">{doc.remark}</p>}
+    </article>
+  );
+}
+
+function MerchantFile({ r, state, onDecide }: { r: MerchantRow; state: GameState; onDecide?: Decide }) {
+  const o = r.offer;
+  const { error, run } = useRun(onDecide);
+  const [lending, setLending] = useState(false);
+  const act = (kind: "report" | "inquire" | "consult_analyst") => () => run({ kind, borrower: o.borrower_id } as Decision);
+  const action = (k: MerchantRow["actions"][number]["kind"]) => r.actions.find((a) => a.kind === k)!;
+  return (
+    <div className="merchant-file">
+      <section className="merchant-facts">
+        <h3>The request</h3>
+        <dl className="house-facts">
+          <dt>Kind</dt><dd><Term id={o.kind === "commercial" ? "loans" : o.kind}>{KIND_WORDS[o.kind]}</Term></dd>
+          <dt>Term</dt><dd>{o.term_quarters} quarters</dd>
+          <dt>Amount</dt><dd>{keepUnits(`up to ${fl(o.amount)}`)}</dd>
+          <dt>Rate</dt><dd>up to {pct(o.max_rate)} a year</dd>
+          <dt>In trade</dt><dd>{o.years_in_trade} years</dd>
+          <dt>With the house</dt><dd>{o.repaid === 0 && o.defaulted === 0 ? "no history" : `repaid ${o.repaid}, defaulted ${o.defaulted}`}</dd>
+        </dl>
+        <h3><Term id="talk">Bourse talk</Term></h3>
+        <p className="talk">{o.talk_text}</p>
+        <h3><Term id="analyst_opinion">The analyst</Term></h3>
+        {r.opinion ? <p className="opinion-note"><strong>{r.opinion.analyst}:</strong> {r.opinion.words}</p> : <p className="muted">No opinion asked for this quarter.</p>}
+      </section>
+      <section className="merchant-books">
+        {r.doc ? <FileDocument doc={r.doc} /> : <p className="muted file-none">The house has no report on these books. A report shows them as kept; an inquiry finds the truth beneath.</p>}
+      </section>
+      {onDecide && (
+        lending ? (
+          <LendFields r={r} state={state} onDecide={onDecide} onDone={() => setLending(false)} />
+        ) : (
+          <div className="act-row">
+            <ActButton primary label="Lend" blocked={action("lend").blocked} onClick={() => setLending(true)} />
+            <ActButton label={action("report").label} blocked={action("report").blocked} onClick={act("report")} />
+            <ActButton label={action("inquire").label} blocked={action("inquire").blocked} onClick={act("inquire")} />
+            <ActButton label={action("consult_analyst").label} blocked={action("consult_analyst").blocked} onClick={act("consult_analyst")} />
+          </div>
+        )
+      )}
+      {!lending && <Refused error={error} />}
+    </div>
+  );
+}
+
+function LendFields({ r, state, onDecide, onDone }: { r: MerchantRow; state: GameState; onDecide: Decide; onDone: () => void }) {
+  const o = r.offer;
+  const { error, run } = useRun(onDecide);
+  const most = Math.min(o.amount, Math.floor(freeCash(state) / 100) * 100);
+  const [amount, setAmount] = useState(String(Math.max(0, most)));
+  const [rate, setRate] = useState(String(+(o.max_rate * 100).toFixed(2)));
+  const quick = [0.25, 0.5, 1].map((f) => Math.floor((most * f) / 100) * 100);
+  return (
+    <div className="lend-fields">
+      <label className="field-inline">
+        <span>Amount (fl.)</span>
+        <input inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value)} />
+      </label>
+      {quick.map((n, i) => <button key={i} type="button" className="secondary" onClick={() => setAmount(String(n))}>{keepUnits(fl(n))}</button>)}
+      <label className="field-inline">
+        <span>Rate (% a year)</span>
+        <input inputMode="decimal" value={rate} onChange={(e) => setRate(e.target.value)} />
+      </label>
+      <button className="secondary" onClick={onDone}>Back</button>
+      <button className="primary" onClick={() => run({ kind: "lend", borrower: o.borrower_id, amount: parseAmount(amount), rate: Number(rate) / 100 }) && onDone()}>Lend</button>
+      <Refused error={error} />
+    </div>
+  );
+}
+
+function LoansHeld({ state, onDecide }: { state: GameState; onDecide?: Decide }) {
+  const loans = loansHeld(state, gameData);
+  const pages = usePages(loans, PER_PAGE + 1);
+  const [selling, setSelling] = useState<number | null>(null);
+  const chosen = loans.find((l) => l.loan_id === selling) ?? null;
+  const { error, run, clear } = useRun(onDecide);
+  return (
+    <>
+      <p className="small muted">
+        Loans the house holds. Another house will buy one today for less than it is owed (<Term id="sell_loan">selling a loan</Term>). Click a price to see the discount.
+      </p>
+      {loans.length === 0 ? <p className="muted">The house holds no loans.</p> : (
+        <ul className="rows">
+          {pages.items.map((l) => (
+            <li key={l.loan_id} className="row-card merchant">
+              <div className="merchant-text">
+                <p className="row-head"><strong>{l.name}</strong> <span className="chip chip-borrowing">{KIND_WORDS[l.kind]}</span></p>
+                <p className="small">{keepUnits(`${fl(l.principal)} at ${pct(l.rate)} a year, ${l.quarters_left} quarter${l.quarters_left === 1 ? "" : "s"} left.`)}</p>
+                <p className="small">
+                  Sale price{" "}
+                  <SumCard title={`Selling the loan to ${l.name}`} summary={`Another house pays ${fl(l.price)} today, ${pct(l.share)} below what is owed.`} term="sell_loan" sections={[salePriceSection(state, l, gameData)]}>
+                    {keepUnits(`${fl(l.price)}, ${fl(l.discount)} off (${pct(l.share)})`)}
+                  </SumCard>
+                </p>
+              </div>
+              {onDecide && <button className="secondary" disabled={l.blocked !== null} onClick={() => { clear(); setSelling(l.loan_id); }}>Sell</button>}
+            </li>
+          ))}
+        </ul>
+      )}
+      <PageTurner pages={pages} />
+      <ActionDialog open={chosen !== null} title={chosen ? `Sell the loan to ${chosen.name}` : ""} onClose={() => setSelling(null)} className="narrow-dialog">
+        {chosen && (
+          <>
+            <Sums sections={[salePriceSection(state, chosen, gameData)]} />
+            <p className="small">The buyer takes the loan as it stands: its interest and its risk. Uses a clerk's time.</p>
+            <Refused error={error} />
+            <div className="row dialog-buttons">
+              <button className="secondary" onClick={() => setSelling(null)}>Cancel</button>
+              <button className="primary" onClick={() => run({ kind: "sell_loan", loan: chosen.loan_id }) && setSelling(null)}>{keepUnits(`Sell for ${fl(chosen.price)}`)}</button>
+            </div>
+          </>
+        )}
+      </ActionDialog>
     </>
   );
 }
@@ -129,40 +255,3 @@ function States({ state }: { state: GameState }) {
   );
 }
 
-function Ventures({ state }: { state: GameState }) {
-  const offers = ventureOffers(state, gameData);
-  const active = state.ventures.filter((v) => v.status === "active");
-  const rows = [
-    ...active.map((v) => ({
-      key: `v${v.id}`, blocked: false, tag: "Backed",
-      head: gameData.ventures.find((x) => x.id === v.type)?.name ?? v.type,
-      lines: [`${fl(v.invested)} locked; pays ${fl(venturePayout(v))} in ${quartersLeft(state, v)} quarters if it succeeds.`],
-    })),
-    ...offers.map((o) => ({
-      key: `o${o.id}`, blocked: o.blocked !== null, tag: o.blocked ? "Closed" : "Open",
-      head: o.name,
-      lines: [
-        `Locked for ${o.term_quarters} quarters. Returns ${pct(o.expected_return)} on success.`,
-        `Fails ${pct(o.failure_chance)} of the time if it ended in today's market.`,
-        ...(o.blocked ? [o.blocked] : []),
-      ],
-    })),
-  ];
-  const pages = usePages(rows, PER_PAGE);
-  return (
-    <>
-      <p className="small muted">
-        <Term id="ventures">Ventures</Term> the house has backed, then those open to backing. The head's <Term id="acumen">acumen</Term> lowers the chance of failure.
-      </p>
-      <ul className="rows">
-        {pages.items.map((r) => (
-          <li key={r.key} className={`row-card ${r.blocked ? "blocked" : ""}`}>
-            <p className="row-head"><strong>{r.head}</strong> <span className={`chip chip-${r.tag === "Closed" ? "away" : r.tag === "Backed" ? "borrowing" : "asking"}`}>{r.tag}</span></p>
-            {r.lines.map((l, i) => <p key={i} className="small">{keepUnits(l)}</p>)}
-          </li>
-        ))}
-      </ul>
-      <PageTurner pages={pages} />
-    </>
-  );
-}

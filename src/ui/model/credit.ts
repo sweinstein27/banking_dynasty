@@ -115,7 +115,7 @@ export function salePriceSection(state: GameState, sale: LoanSaleOffer, data: Ga
   const parts: [string, number][] = [
     ["Any buyer's margin", c.base],
     ["The bourse's doubts about the borrower", c.per_risk * (1 - mq)],
-    [`${years} years left to run`, c.per_year_left * years],
+    [`${sale.quarters_left} quarter${sale.quarters_left === 1 ? "" : "s"} left to run`, c.per_year_left * years],
     ["The market's mood", c.mood[state.world.sentiment]],
   ];
   const discount = saleDiscount(loan, state, data);

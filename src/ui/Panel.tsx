@@ -2,15 +2,19 @@
 import type { ReactNode } from "react";
 import { Icon, type IconName } from "./icons";
 
-export type PanelId = "gazette" | "ledger" | "bourse" | "houses" | "family" | "counting" | "letters";
+export type PanelId = "gazette" | "ledger" | "bourse" | "markets" | "houses" | "family" | "counting" | "letters";
+
+/** Panels that take the Desk's room too while open: the House and the Markets need the width. */
+export const WIDE_PANELS: PanelId[] = ["counting", "markets"];
 
 export const PANELS: { id: PanelId; title: string; short: string; icon: IconName }[] = [
   { id: "gazette", title: "The Bourse Gazette", short: "Gazette", icon: "gazette" },
   { id: "ledger", title: "The Ledger", short: "Ledger", icon: "ledger" },
   { id: "bourse", title: "The Bourse", short: "Bourse", icon: "bourse" },
+  { id: "markets", title: "The Markets", short: "Markets", icon: "markets" },
   { id: "houses", title: "The Houses of Frankfurt", short: "Houses", icon: "houses" },
   { id: "family", title: "The Family", short: "Family", icon: "family" },
-  { id: "counting", title: "The Counting House", short: "Counting", icon: "counting" },
+  { id: "counting", title: "The House", short: "House", icon: "counting" },
   { id: "letters", title: "Letters", short: "Letters", icon: "letters" },
 ];
 

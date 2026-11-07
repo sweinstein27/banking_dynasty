@@ -202,7 +202,7 @@ export interface VentureRow {
   /** Earnings on the house's stake over the last four quarters. */
   earnings: number;
   /** The company it floated as, with its price and the house's shares. */
-  listing: { company: string; price: number; held: number; value: number } | null;
+  listing: { company: string; price: number; held: number; value: number; failed: boolean } | null;
   /** Running: quarters it must prove itself before it may float. */
   proveLeft: number | null;
   sale: { price: number; blocked: string | null } | null;
@@ -234,7 +234,7 @@ export function ventureRows(state: GameState, data: GameData): VentureRow[] {
         buildLeft: running ? 0 : Math.max(0, quartersLeft(state, v)),
         sections: { open: v.sections_open, of: t.sections },
         earnings: v.earnings.reduce((s, x) => s + x, 0),
-        listing: c ? { company: c.name, price: c.price, held: sharesHeld(state, c.id), value: holdingValue(state, c.id) } : null,
+        listing: c ? { company: c.name, price: c.price, held: sharesHeld(state, c.id), value: holdingValue(state, c.id), failed: c.status === "failed" } : null,
         proveLeft: running && v.status === "active" && t.tier !== "short" ? Math.max(0, t.prove_quarters - ranFor) : null,
         sale: v.status === "active" ? { price: stakeSalePrice(v.invested, data.tuning), blocked: checkSellVenture(state, { kind: "sell_venture", venture: v.id }, data) } : null,
       };
