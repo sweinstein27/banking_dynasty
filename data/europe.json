@@ -1,1 +1,116 @@
-{}
+{
+  "home": "frankfurt",
+  "quarter_days": 91,
+  "currencies": [
+    { "id": "gulden", "name": "gulden", "par": 1, "noise": 0, "band": 0 },
+    { "id": "pound", "name": "pound sterling", "par": 11.9, "noise": 0.006, "band": 0.02 },
+    { "id": "franc", "name": "franc", "par": 0.47, "noise": 0.006, "band": 0.02 },
+    { "id": "thaler", "name": "Prussian thaler", "par": 1.75, "noise": 0.005, "band": 0.02, "fixed_from": { "year": 1839, "quarter": 1, "band": 0.002 } },
+    { "id": "cgulden", "name": "Convention gulden", "par": 1.2, "noise": 0.012, "band": 0.04 },
+    { "id": "ducat", "name": "Neapolitan ducat", "par": 2.0, "noise": 0.008, "band": 0.03 },
+    { "id": "dguilder", "name": "Dutch guilder", "par": 1.0, "noise": 0.005, "band": 0.02 },
+    { "id": "mark_banco", "name": "mark banco", "par": 0.88, "noise": 0.005, "band": 0.02 }
+  ],
+  "cities": [
+    { "id": "frankfurt", "name": "Frankfurt", "lat": 50.11, "lon": 8.68, "currency": "gulden", "state": null, "rate": 0.05, "volatility": 0, "unrest_chance": 0, "opens": { "year": 9999, "quarter": 1 }, "min_reputation": 0, "setup": 0, "upkeep": 0 },
+    { "id": "london", "name": "London", "lat": 51.51, "lon": -0.13, "currency": "pound", "state": null, "rate": 0.04, "volatility": 1.0, "unrest_chance": 0.002, "opens": { "year": 1815, "quarter": 1 }, "min_reputation": 55, "setup": 2500, "upkeep": 100 },
+    { "id": "amsterdam", "name": "Amsterdam", "lat": 52.37, "lon": 4.9, "currency": "dguilder", "state": null, "rate": 0.04, "volatility": 0.8, "unrest_chance": 0.005, "opens": { "year": 1815, "quarter": 1 }, "min_reputation": 45, "setup": 1500, "upkeep": 60 },
+    { "id": "hamburg", "name": "Hamburg", "lat": 53.55, "lon": 9.99, "currency": "mark_banco", "state": null, "rate": 0.045, "volatility": 0.8, "unrest_chance": 0.005, "opens": { "year": 1815, "quarter": 1 }, "min_reputation": 40, "setup": 1500, "upkeep": 60 },
+    { "id": "paris", "name": "Paris", "lat": 48.86, "lon": 2.35, "currency": "franc", "state": "france", "rate": 0.05, "volatility": 1.2, "unrest_chance": 0.012, "opens": { "year": 1815, "quarter": 1 }, "min_reputation": 50, "setup": 2000, "upkeep": 80 },
+    { "id": "berlin", "name": "Berlin", "lat": 52.52, "lon": 13.4, "currency": "thaler", "state": "prussia", "rate": 0.05, "volatility": 0.9, "unrest_chance": 0.005, "opens": { "year": 1815, "quarter": 1 }, "min_reputation": 45, "setup": 1500, "upkeep": 60 },
+    { "id": "vienna", "name": "Vienna", "lat": 48.21, "lon": 16.37, "currency": "cgulden", "state": "austria", "rate": 0.06, "volatility": 1.0, "unrest_chance": 0.006, "opens": { "year": 1815, "quarter": 1 }, "min_reputation": 45, "setup": 1500, "upkeep": 60 },
+    { "id": "naples", "name": "Naples", "lat": 40.85, "lon": 14.27, "currency": "ducat", "state": "naples", "rate": 0.07, "volatility": 1.5, "unrest_chance": 0.012, "opens": { "year": 1821, "quarter": 2 }, "min_reputation": 30, "setup": 1000, "upkeep": 40 }
+  ],
+  "links": [
+    { "from": "frankfurt", "to": "paris", "days": 5 },
+    { "from": "frankfurt", "to": "amsterdam", "days": 4 },
+    { "from": "frankfurt", "to": "hamburg", "days": 5 },
+    { "from": "frankfurt", "to": "berlin", "days": 5 },
+    { "from": "frankfurt", "to": "vienna", "days": 8 },
+    { "from": "paris", "to": "london", "days": 3 },
+    { "from": "amsterdam", "to": "london", "days": 4 },
+    { "from": "hamburg", "to": "london", "days": 5 },
+    { "from": "hamburg", "to": "berlin", "days": 3 },
+    { "from": "berlin", "to": "vienna", "days": 7 },
+    { "from": "vienna", "to": "naples", "days": 12 },
+    { "from": "paris", "to": "naples", "days": 16 }
+  ],
+  "delay": { "courier_stable": 0.5, "branch": 0.6, "per_correspondent": 0.1, "max_correspondent_cut": 0.3 },
+  "moods": {
+    "transitions": {
+      "calm": { "uneasy": 0.05 },
+      "uneasy": { "calm": 0.35, "panic": 0.07 },
+      "panic": { "uneasy": 0.5 }
+    },
+    "unrest_ends": 0.5,
+    "war_ends": 0.4
+  },
+  "rates": { "revert": 0.6, "panic": { "low": 0.05, "high": 0.1 }, "unrest": 0.03, "war": 0.08, "suspension": 0.12, "fade": 0.5 },
+  "branch": {
+    "min_capital": 5000,
+    "deposit_multiple": 0.8,
+    "deposit_catch_up": 0.25,
+    "lend_share": 0.75,
+    "loan_margin": 0.02,
+    "deposit_margin": 0.01,
+    "bill_yield": 0.008,
+    "defaults": { "calm": 0.003, "uneasy": 0.008, "panic": 0.03 },
+    "war_defaults": 2,
+    "panic_withdrawal": 0.2,
+    "transfer_spread": 0.005,
+    "close": { "war": 0.2, "unrest": 0.08, "panic": 0.04 },
+    "close_loss": { "war": 0.3, "unrest": 0.15, "panic": 0.15 },
+    "headless": { "bills": 0.5, "defaults": 2 },
+    "traits": {
+      "reckless": { "lend_share": 0.9, "defaults": 1.4 },
+      "prudent": { "defaults": 0.8, "close": 0.8 },
+      "shrewd": { "bills": 1.3 },
+      "gambler": { "bills": 1.2, "defaults": 1.2 },
+      "well_connected": { "deposits": 1.25 },
+      "aloof": { "deposits": 0.85 },
+      "charismatic": { "deposits": 1.15 },
+      "spendthrift": { "bills": 0.9 },
+      "frugal": { "bills": 1.05 }
+    }
+  },
+  "bills": {
+    "spread": 0.005,
+    "defaults": { "calm": 0.005, "uneasy": 0.02, "panic": 0.08 },
+    "recovery": 0.4,
+    "limit": 2000
+  },
+  "history": [
+    { "id": "naples-revolution-1820", "city": "naples", "year": 1820, "quarter": 3, "kind": "unrest", "quarters": 3, "title": "Revolt in Naples", "text": "The Carbonari and the army rise in Naples, and the king grants a constitution. The courts of Europe are alarmed." },
+    { "id": "naples-austrians-1821", "city": "naples", "year": 1821, "quarter": 1, "kind": "war", "quarters": 1, "title": "Austrian troops march on Naples", "text": "An Austrian army marches south to put down the Neapolitan constitution. Trade in Naples stops while the armies meet." },
+    { "id": "naples-restored-1821", "city": "naples", "year": 1821, "quarter": 2, "kind": "peace", "title": "Order restored in Naples", "text": "The Austrians hold Naples and the king rules as before. The new government will need money." },
+    { "id": "london-panic-1825", "city": "london", "year": 1825, "quarter": 4, "kind": "panic", "quarters": 2, "shock": 0.03, "title": "Panic in London", "text": "London banks close their doors one after another, and the Bank of England's gold runs low. Bills on London are refused." },
+    { "id": "paris-july-1830", "city": "paris", "year": 1830, "quarter": 3, "kind": "unrest", "quarters": 1, "title": "Revolution in Paris", "text": "Three days of fighting in the streets of Paris, and Charles X is gone. Louis-Philippe takes the throne." },
+    { "id": "brussels-revolt-1830", "city": "amsterdam", "year": 1830, "quarter": 3, "kind": "unrest", "quarters": 3, "title": "The Belgian provinces revolt", "text": "Brussels rises against the Dutch king. Amsterdam's merchants fear for the southern trade." },
+    { "id": "ten-days-1831", "city": "amsterdam", "year": 1831, "quarter": 3, "kind": "war", "quarters": 1, "title": "The Dutch march into Belgium", "text": "The Dutch army invades Belgium, and the French march to meet it." },
+    { "id": "cholera-berlin-1831", "city": "berlin", "year": 1831, "quarter": 3, "kind": "disaster", "loss": 0.03, "title": "Cholera in Berlin", "text": "The cholera has reached Berlin. Those who can leave the city do." },
+    { "id": "cholera-vienna-1831", "city": "vienna", "year": 1831, "quarter": 3, "kind": "disaster", "loss": 0.03, "title": "Cholera in Vienna", "text": "The cholera has reached Vienna. Shops close and the court leaves for the country." },
+    { "id": "cholera-hamburg-1831", "city": "hamburg", "year": 1831, "quarter": 4, "kind": "disaster", "loss": 0.03, "title": "Cholera in Hamburg", "text": "The cholera has reached Hamburg, and the port is under quarantine." },
+    { "id": "cholera-london-1832", "city": "london", "year": 1832, "quarter": 1, "kind": "disaster", "loss": 0.02, "title": "Cholera in London", "text": "The cholera has reached London." },
+    { "id": "cholera-paris-1832", "city": "paris", "year": 1832, "quarter": 1, "kind": "disaster", "loss": 0.03, "title": "Cholera in Paris", "text": "The cholera has reached Paris, and the city fears the spring." },
+    { "id": "london-uneasy-1836", "city": "london", "year": 1836, "quarter": 4, "kind": "uneasy", "title": "Money is tight in London", "text": "The Bank of England raises its rate and refuses American paper. London houses with American business are watched closely." },
+    { "id": "london-panic-1837", "city": "london", "year": 1837, "quarter": 2, "kind": "panic", "quarters": 1, "title": "The American houses fail", "text": "The great London houses in the American trade stop payment. Bills on America and on London lose their credit." },
+    { "id": "hamburg-fire-1842", "city": "hamburg", "year": 1842, "quarter": 2, "kind": "disaster", "loss": 0.1, "title": "Hamburg burns", "text": "A great fire burns for four days and destroys a third of Hamburg's old town. Warehouses and counting houses are lost." },
+    { "id": "london-crisis-1847", "city": "london", "year": 1847, "quarter": 4, "kind": "panic", "quarters": 1, "shock": 0.02, "title": "Commercial crisis in London", "text": "Corn houses and railway speculators fail in London. The government lets the Bank of England break its own rules to stop the panic." },
+    { "id": "naples-1848", "city": "naples", "year": 1848, "quarter": 1, "kind": "unrest", "quarters": 4, "title": "Sicily rises, Naples gets a constitution", "text": "Palermo rises against the king, and in Naples he grants a constitution to keep his throne." },
+    { "id": "paris-february-1848", "city": "paris", "year": 1848, "quarter": 1, "kind": "unrest", "quarters": 2, "shock": 0.04, "title": "Revolution in Paris", "text": "Louis-Philippe flees, and France is a republic again. The Paris bourse closes and paper is refused." },
+    { "id": "paris-panic-1848", "city": "paris", "year": 1848, "quarter": 1, "kind": "panic", "title": "Run on the Paris banks", "text": "Depositors besiege the Paris banks, and the Banque de France stops paying in coin." },
+    { "id": "vienna-march-1848", "city": "vienna", "year": 1848, "quarter": 1, "kind": "unrest", "quarters": 2, "title": "Revolution in Vienna", "text": "Students and workers fill the streets of Vienna, and Metternich flees." },
+    { "id": "berlin-march-1848", "city": "berlin", "year": 1848, "quarter": 1, "kind": "unrest", "quarters": 2, "title": "Barricades in Berlin", "text": "Fighting on the barricades of Berlin, until the king withdraws his troops from the city." },
+    { "id": "vienna-suspension-1848", "city": "vienna", "year": 1848, "quarter": 2, "kind": "suspension", "title": "Vienna stops paying in silver", "text": "The Austrian National Bank no longer pays its notes in silver. Austrian paper falls on every exchange." },
+    { "id": "paris-june-1848", "city": "paris", "year": 1848, "quarter": 2, "kind": "war", "quarters": 1, "title": "The June Days", "text": "The workers of Paris rise against the republic, and the army crushes them in four days of fighting." },
+    { "id": "vienna-october-1848", "city": "vienna", "year": 1848, "quarter": 4, "kind": "war", "quarters": 1, "title": "Vienna besieged", "text": "Vienna rises again, and the imperial army besieges and storms the city." }
+  ],
+  "texts": {
+    "uneasy": { "title": "Unease in {city}", "text": "Letters from {city} speak of tight money and nervous merchants." },
+    "panic": { "title": "Panic in {city}", "text": "Panic in {city}: houses stop payment and depositors crowd the banks." },
+    "calm": { "title": "{city} is calm again", "text": "Business in {city} has returned to its ordinary course." },
+    "unrest": { "title": "Unrest in {city}", "text": "Crowds in the streets of {city}, and soldiers in the squares." },
+    "war": { "title": "War reaches {city}", "text": "Soldiers fight in and around {city}. Trade has stopped." },
+    "peace": { "title": "Order returns to {city}", "text": "The streets of {city} are quiet again." }
+  }
+}

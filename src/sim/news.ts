@@ -191,3 +191,6 @@ export function quarterNews(before: GameState, after: GameState, data: GameData)
   }
   return news;
 }
+
+/** Days for news from a foreign city to reach Frankfurt (Europe, C1). C4's telegraph wraps it. */
+export { newsDelay } from "./systems/europe";

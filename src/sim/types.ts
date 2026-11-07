@@ -250,7 +250,8 @@ export type NewsKind =
   | "crisis"
   | "family"
   | "houses"
-  | "markets";
+  | "markets"
+  | "europe";
 
 /** One message for the News panel, written when a quarter resolves. */
 export interface NewsItem {

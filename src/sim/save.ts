@@ -1,4 +1,5 @@
 // Save files: one JSON document per game. Pure string in, string out; the caller does the file I/O.
+import { billsBook, branchesBook } from "./europe/branches";
 import { bondBook } from "./bonds";
 import { debtBook } from "./crisis";
 import { applyDecisions } from "./decisions";
@@ -85,6 +86,8 @@ export function parseSave(text: string, data: GameData): ParseResult {
     borrowings: debtBook(state),
     shares: sharesBook(state),
     commodities: commoditiesBook(state),
+    branches: branchesBook(state),
+    bills: billsBook(state),
   };
   for (const [account, balance] of Object.entries(books) as [LedgerAccount, number][]) {
     if (accountBalance(state, account) !== balance)
