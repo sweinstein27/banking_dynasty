@@ -95,8 +95,7 @@ describe("quarter news", () => {
     ]);
   });
 
-  // Wave 1 tuning: the panic seed is re-picked and these are re-recorded once the 1,000-seed confirmation finishes.
-  it.skip("keeps every quarter's news, and is the same on a replay", () => {
+  it("keeps every quarter's news, and is the same on a replay", () => {
     // The panic seed is chosen with the real data (scripts/find-panic-seed.ts), so play it with the same.
     const a = play(aggressiveDecisions, PANIC_SEED, 20, gameData).state;
     const b = play(aggressiveDecisions, PANIC_SEED, 20, gameData).state;

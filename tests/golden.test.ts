@@ -71,8 +71,7 @@ describe("golden run: full economy", () => {
     expect(state.ventures.length).toBeGreaterThan(0);
   });
 
-  // Wave 1 tuning: the panic seed is re-picked and these are re-recorded once the 1,000-seed confirmation finishes.
-  it.skip("matches the recorded result", () => {
+  it("matches the recorded result", () => {
     const { state, netWorthByTurn, sentimentByTurn } = play(economyDecisions);
     const tally = (items: { status: string }[]) =>
       items.reduce<Record<string, number>>((acc, i) => ((acc[i.status] = (acc[i.status] ?? 0) + 1), acc), {});
@@ -115,15 +114,13 @@ describe("golden run: panic", () => {
     expect(accountBalance(state, "deposits")).toBe(state.house.deposits);
   });
 
-  // Wave 1 tuning: the panic seed is re-picked and these are re-recorded once the 1,000-seed confirmation finishes.
-  it.skip("still covers what it was chosen for: panic, a run, forced sales, a default, survival", () => {
+  it("still covers what it was chosen for: panic, a run, forced sales, a default, survival", () => {
     expect(panicCoverage(run(), TURNS).checks).toEqual({
       panic: true, run: true, bond_sales: true, loan_sales: true, state_default: true, survives: true,
     });
   });
 
-  // Wave 1 tuning: the panic seed is re-picked and these are re-recorded once the 1,000-seed confirmation finishes.
-  it.skip("matches the recorded result", () => {
+  it("matches the recorded result", () => {
     const { state, netWorthByTurn, sentimentByTurn } = run();
     const tally = (items: { status: string }[]) =>
       items.reduce<Record<string, number>>((acc, i) => ((acc[i.status] = (acc[i.status] ?? 0) + 1), acc), {});
