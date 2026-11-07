@@ -3,6 +3,7 @@
 import { Dialog, ToggleGroup } from "radix-ui";
 import { useState, type ReactNode } from "react";
 import { gameData } from "../data";
+import { POOL_NAMES, poolFor } from "../sim/capacity";
 import { bondCost } from "../sim/bonds";
 import { callRecovery, debtInterest, lenders } from "../sim/crisis";
 import { opinionWord } from "../sim/houses";
@@ -35,6 +36,12 @@ export const DECISION_LABELS: Record<DecisionKind, string> = {
 /** Decisions only open during a crisis: shown in their own section of the Decisions panel. */
 export const CRISIS_KINDS: DecisionKind[] = ["borrow", "pay_slowly", "suspend", "call_loan"];
 
+/** Which capacity a decision draws on, in a sentence. */
+function usesLine(kind: DecisionKind): string {
+  const pool = poolFor(kind);
+  return pool ? `Uses ${POOL_NAMES[pool]}.` : "Uses no capacity.";
+}
+
 export function DecisionDialog({ kind, state, onClose, onSubmit }: {
   kind: DecisionKind | null;
   state: GameState;
@@ -50,7 +57,7 @@ export function DecisionDialog({ kind, state, onClose, onSubmit }: {
           {kind && (
             <>
               <Dialog.Title>{DECISION_LABELS[kind]}</Dialog.Title>
-              <p className="muted">Uses 1 action. Free cash above the reserve: {fl(freeCash(state))}</p>
+              <p className="muted">{usesLine(kind)} Free cash above the reserve: {fl(freeCash(state))}</p>
               {kind === "lend" && <LendForm state={state} onSubmit={onSubmit} onDone={onClose} />}
               {kind === "report" && <ReportForm state={state} onSubmit={onSubmit} onDone={onClose} />}
               {kind === "buy_bond" && <BondForm state={state} onSubmit={onSubmit} onDone={onClose} />}

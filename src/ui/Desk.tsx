@@ -1,4 +1,4 @@
-// The desk: this quarter's decisions as cards on a blotter, the actions left as coins, and the
+// The desk: this quarter's decisions as cards on a blotter, capacity left as coins, and the
 // quarter's orders on a sheet, waiting to go out when the quarter ends.
 import { Tabs } from "radix-ui";
 import { useState } from "react";
@@ -11,6 +11,7 @@ import type { CoreDecision, Decision, GameState } from "../sim/types";
 import { CRISIS_KINDS, DECISION_LABELS, DecisionDialog, type DecisionKind } from "./DecisionDialogs";
 import { fl, pct } from "./format";
 import { LetterStack } from "./Letters";
+import { Term } from "./Term";
 import type { Game, GameApi } from "./useGame";
 
 const BUSINESS: DecisionKind[] = ["lend", "report", "buy_bond", "invest_venture", "set_reserve", "invest_family"];
@@ -58,11 +59,11 @@ export function Desk({ api, game }: { api: GameApi; game: Game }) {
       <header className="desk-head">
         <h2>The Desk</h2>
         <LetterStack state={game.preview} onSubmit={api.queue} />
-        <div className="coins" aria-label={`${left} of ${total} actions left this quarter`}>
+        <div className="coins" aria-label={`${left} of ${total} of capacity left this quarter`}>
           {Array.from({ length: total }, (_, i) => (
             <span key={i} className={i < left ? "coin" : "coin spent"} />
           ))}
-          <span className="coins-label">{left} of {total} actions left</span>
+          <span className="coins-label">{left} of {total} <Term id="actions">capacity</Term> left</span>
         </div>
       </header>
 
@@ -80,7 +81,7 @@ export function Desk({ api, game }: { api: GameApi; game: Game }) {
       <div className="doc orders">
         <h3>Orders for this quarter</h3>
         {game.queued.length === 0 ? (
-          <p className="muted">{left === 0 ? "No actions left. End the quarter." : "Nothing ordered yet. Orders go out when the quarter ends, and show in the books at once."}</p>
+          <p className="muted">{left === 0 ? "No capacity left. End the quarter, or hire staff." : "Nothing ordered yet. Orders go out when the quarter ends, and show in the books at once."}</p>
         ) : (
           <>
             <ol className="letter-list">

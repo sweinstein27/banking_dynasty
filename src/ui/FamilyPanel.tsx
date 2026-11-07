@@ -113,7 +113,7 @@ function PersonSheet({ p, state, onClose, onDecide, onMarry }: {
               )}
               {canName && state.house.designated_heir !== p.id && (
                 <p className="small muted">
-                  Naming an heir uses one of the quarter's actions.
+                  Naming an heir costs nothing.
                   {eldest && eldest.id !== p.id && ` Passing over the elder ${eldest.name} will cost ${gameData.tuning.family.succession.passed_over_reputation} reputation when ${p.name} takes over.`}
                 </p>
               )}

@@ -58,7 +58,7 @@ export function LetterDialog({ state, open, onClose, onSubmit }: {
             <>
               <Dialog.Title>{event.title}</Dialog.Title>
               <p className="muted small">
-                Letter {index} of {total}. Answering uses none of the quarter's actions. Certain costs show in the books at once; chances are settled when the quarter ends.
+                Letter {index} of {total}. Answering uses no capacity. Certain costs show in the books at once; chances are settled when the quarter ends.
               </p>
               <p className="letter-text">{event.text}</p>
               <ul className="choices responses">

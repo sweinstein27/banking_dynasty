@@ -49,7 +49,7 @@ export function MarriageDialog({ member, state, onClose, onSubmit }: {
             <>
               <Dialog.Title>A match for {member.name}</Dialog.Title>
               <p className="small muted">
-                Uses one action. A son or daughter of a house who marries in brings a dowry and makes the houses allies (it needs the house's
+                Takes the head's time. A son or daughter of a house who marries in brings a dowry and makes the houses allies (it needs the house's
                 opinion of +{m.in.min_opinion} and a name no more than {m.in.reputation_gap} below theirs). Marrying out costs a dowry and the heir
                 leaves your line, but ties the houses closer. Children need a married couple.
               </p>

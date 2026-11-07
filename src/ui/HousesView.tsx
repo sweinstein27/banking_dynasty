@@ -1,7 +1,7 @@
 // The houses of Frankfurt: a panel opened from the side menu. The bourse's standing (every
 // house and yours, by wealth) and one card per house: its head and heir, wealth, reputation, its
 // opinion of your house and what that opinion means for borrowing. A card's sheet explains more,
-// and Court spends one of the quarter's actions to win the house's favour.
+// and Court spends some of the head's time to win the house's favour.
 import { Dialog, Tabs } from "radix-ui";
 import { useState } from "react";
 import { gameData } from "../data";
@@ -77,7 +77,7 @@ export function HousesView({ state, onCourt }: { state: GameState; onCourt?: (ho
         </Tabs.Content>
         <Tabs.Content value="houses" className="doc-page">
           <p className="small">
-            Courting a house costs {keepUnits(fl(court.cost))} and one action ({left} left this quarter), and raises its <Term id="opinion">opinion</Term> by {court.opinion}.
+            Courting a house costs {keepUnits(fl(court.cost))} and some of the head's time, and raises its <Term id="opinion">opinion</Term> by {court.opinion}.
           </p>
           <div className="house-grid">
             {pages.items.map((h) => (

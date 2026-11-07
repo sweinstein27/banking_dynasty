@@ -97,15 +97,15 @@ export const GLOSSARY: Record<string, GlossaryCard> = {
   upkeep: {
     title: "Upkeep a quarter",
     body: () =>
-      "What the house's obligations cost each quarter at today's balances: [[deposit_interest]] and interest on [[borrowings]]. Wages for staff and the upkeep of rooms will join it with the [[counting_house]].",
+      "What the house's obligations cost each quarter at today's balances: [[deposit_interest]] and interest on [[borrowings]]. It also includes the wages and the upkeep of the rooms of the [[counting_house]].",
   },
   counting_house: {
     title: "The counting house",
-    body: () => "The house's staff and rooms: clerks, correspondents, tellers, a strongroom. Coming soon, it will set how much the house can do each quarter in place of the three [[actions]].",
+    body: () => "The house's staff and rooms: clerks, correspondents, analysts, tellers and perhaps a partner, in a counting room with a strongroom, an archive, a courier stable, reception rooms or a warehouse. Staff draw wages and rooms cost upkeep each quarter. Together they set the house's [[actions|capacity]].",
   },
   actions: {
-    title: "Actions",
-    body: (d) => `The house can take ${d.tuning.actions_per_turn} actions a quarter: each loan, bond, venture, reserve change, family investment, courtship or marriage uses one. Answering [[letters]] uses none.`,
+    title: "Capacity",
+    body: (d) => `How much the house can do in a quarter. There is no fixed number of actions: each kind of work draws on a pool. Each clerk writes up ${d.tuning.capacity.per_clerk} deal a quarter (loans, bonds, ventures, calling a loan in); each correspondent ${d.tuning.capacity.per_correspondent} reports; each analyst ${d.tuning.capacity.per_analyst} opinions. The head's own time (${d.tuning.capacity.head} a quarter, ${d.tuning.capacity.partner} more with a partner) goes on courting, marriages, the family and borrowing, and covers deals and reports when the staff are busy. Changing the reserve, naming an heir, answering [[letters]] and hiring use none.`,
   },
   reputation: {
     title: "Reputation",

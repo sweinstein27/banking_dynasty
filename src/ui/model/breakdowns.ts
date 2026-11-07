@@ -2,6 +2,7 @@
 // the ledger and the sim's own functions, so a breakdown can never disagree with the books.
 // No React and no DOM here: tests/ui-breakdowns.test.ts checks every sum against the sim.
 import { bondBook, bondValue, reputationGate } from "../../sim/bonds";
+import { upkeepBill, wageBill } from "../../sim/systems/counting";
 import { dateOfTurn } from "../../sim/chronicle";
 import { debtBook, debtInterest } from "../../sim/crisis";
 import { depositInflow, depositInterest, depositLevel } from "../../sim/deposits";
@@ -130,7 +131,7 @@ function lastQuarterName(base: GameState, data: GameData): string {
   return t === 0 ? "The opening books" : `Last quarter, ${season(dateOfTurn(t, data.tuning))}`;
 }
 
-/** Upkeep a quarter: what the house's obligations cost it each quarter at today's balances. */
+/** Upkeep a quarter: what the house's obligations, staff and rooms cost it each quarter at today's balances. */
 export function upkeepLines(state: GameState, data: GameData): Line[] {
   const lines: Line[] = [
     { label: "Interest owed to depositors", value: fl(depositInterest(state.house.deposits, data.tuning)), amount: depositInterest(state.house.deposits, data.tuning), term: "deposit_interest" },
@@ -139,6 +140,10 @@ export function upkeepLines(state: GameState, data: GameData): Line[] {
     const n = debtInterest(d);
     lines.push({ label: `Interest to ${d.lender}`, value: fl(n), amount: n, term: "borrowings" });
   }
+  const wages = wageBill(state, data);
+  if (wages > 0) lines.push({ label: "Wages for the staff", value: fl(wages), amount: wages, term: "counting_house" });
+  const rooms = upkeepBill(state, data);
+  if (rooms > 0) lines.push({ label: "Upkeep of the rooms", value: fl(rooms), amount: rooms, term: "counting_house" });
   return lines;
 }
 
