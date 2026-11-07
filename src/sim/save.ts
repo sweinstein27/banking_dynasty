@@ -9,7 +9,7 @@ import type { Decision, GameState, LedgerAccount } from "./types";
 import { ventureBook } from "./ventures";
 import { commoditiesBook, sharesBook } from "./systems/markets";
 
-export const SAVE_VERSION = 13;
+export const SAVE_VERSION = 14;
 
 export interface SaveFile {
   version: number;

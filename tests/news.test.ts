@@ -94,10 +94,10 @@ describe("quarter news", () => {
     ]);
   });
 
-  // Wave 1 changed the panic seed's run; the integrator re-picks the seed and re-enables this.
-  it.skip("keeps every quarter's news, and is the same on a replay", () => {
-    const a = play(aggressiveDecisions, PANIC_SEED, 20, quietHouse).state;
-    const b = play(aggressiveDecisions, PANIC_SEED, 20, quietHouse).state;
+  it("keeps every quarter's news, and is the same on a replay", () => {
+    // The panic seed is chosen with the real data (scripts/find-panic-seed.ts), so play it with the same.
+    const a = play(aggressiveDecisions, PANIC_SEED, 20, gameData).state;
+    const b = play(aggressiveDecisions, PANIC_SEED, 20, gameData).state;
     expect(a.news).toEqual(b.news);
     const seen = new Set<NewsKind>(kinds(a));
     for (const k of ["withdrawal", "forced_sale", "bond_default", "mood"] as const) expect(seen).toContain(k);

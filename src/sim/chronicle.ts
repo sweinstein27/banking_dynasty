@@ -15,6 +15,7 @@ export function dateOfTurn(turn: number, tuning: Tuning): { year: number; quarte
   return { year: Math.floor(index / 4), quarter: ((index % 4) + 1) as Quarter };
 }
 
+const capitalise = (w: string) => w.charAt(0).toUpperCase() + w.slice(1);
 const COUNTS = ["none", "one", "two", "three", "four", "five", "six", "seven"];
 const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh"];
 
@@ -85,7 +86,7 @@ export function chronicle(state: GameState, data: GameData): string[] {
       return `${when} married ${spouse ? `${spouse.name.split(" ")[0]}, ` : ""}of a merchant family.`;
     });
     const grandchildren = people.filter((p) => p.parents.length && p.parents.some((id) => people.find((x) => x.id === id)?.parents.length)).length;
-    if (grandchildren) lines.push(`${grandchildren === 1 ? "One grandchild was" : `${COUNTS[grandchildren] ?? grandchildren} grandchildren were`} born to the house.`);
+    if (grandchildren) lines.push(`${grandchildren === 1 ? "One grandchild was" : `${capitalise(String(COUNTS[grandchildren] ?? grandchildren))} grandchildren were`} born to the house.`);
     paragraphs.push(lines.join(" "));
   }
 
