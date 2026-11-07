@@ -176,7 +176,8 @@ function payCall(state: GameState, v: Venture, t: VentureType, data: GameData, r
     v.committed += extra;
     v.calls += t.overrun.extra_calls;
     v.term_quarters += t.overrun.extra_calls * t.call_every;
-    news(state, `Venture #${v.id} (${t.name}) is over budget: the house's commitment rises by ${fl(extra)} and the build by ${t.overrun.extra_calls * t.call_every} quarters.`);
+    const q = t.overrun.extra_calls * t.call_every;
+    news(state, `Venture #${v.id} (${t.name}) is over budget: the house's commitment rises by ${fl(extra)} and the build by ${q} ${q === 1 ? "quarter" : "quarters"}.`);
   }
   const call = nextCall(v);
   if (call <= 0) return;
