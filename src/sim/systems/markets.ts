@@ -43,6 +43,7 @@ import {
   trailingEarnings,
 } from "../markets/prices";
 import { withMarketsRng } from "../markets/stream";
+import { sectorFactor } from "./progress";
 import { MARKETS_KINDS, type MarketsDecision, type MarketsState } from "../markets/types";
 
 export type { MarketsAccount, MarketsCategory, MarketsData, MarketsDecision, MarketsState } from "../markets/types";
@@ -89,7 +90,7 @@ export function stepMarkets(state: GameState, rng: Rng, data: GameData): void {
   for (const c of state.markets.companies) {
     if (c.status !== "listed") continue;
     const sector = sectorOf(m, c.sector);
-    const e = quarterEarnings(earningCapital(c), c.base_yield, sector, sentiment, driverFactor(sector, state.markets, m), growthFactor(c, state.world.turn, sector), spread(rng));
+    const e = quarterEarnings(earningCapital(c), c.base_yield, sector, sentiment, driverFactor(sector, state.markets, m) * sectorFactor(state, sector.id, data), growthFactor(c, state.world.turn, sector), spread(rng));
     c.earnings = [...c.earnings, e].slice(-4);
 
     const failure = sector.failure * (trailingEarnings(c) < 0 ? 1 : m.prices.sound_failure) * data.tuning.sentiment_multiplier[sentiment];

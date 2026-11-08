@@ -15,6 +15,7 @@ import type { GameData, Tuning, VentureType } from "./tuning";
 import type { GameState, InvestVentureDecision, Sentiment, Venture } from "./types";
 import { driverFactor, fairValue, quarterEarnings, sectorOf, spread } from "./markets/prices";
 import { withMarketsRng } from "./markets/stream";
+import { sectorFactor, ventureBlocked } from "./systems/progress";
 import type { Company, SellVentureDecision } from "./markets/types";
 
 const sum = (xs: number[]) => xs.reduce((s, x) => s + x, 0);
@@ -83,7 +84,8 @@ export function checkInvestVenture(state: GameState, d: InvestVentureDecision, d
   if (!type) return `Unknown venture "${d.venture}"`;
   const noAction = checkCapacity(state, "invest_venture", t);
   if (noAction) return noAction;
-  if (state.world.year < type.unlock_year) return `${type.name} ventures cannot be backed before ${type.unlock_year}`;
+  const blocked = ventureBlocked(state, type, data);
+  if (blocked) return `${type.name} ventures cannot be backed yet (${blocked.toLowerCase()})`;
   if (!Number.isInteger(d.amount)) return "Amount must be whole gulden";
   if (d.amount < t.ventures.min_amount) return `Amount must be at least ${fl(t.ventures.min_amount)}`;
   const first = firstCall(type, d.amount);
@@ -332,7 +334,7 @@ export function stepVentures(state: GameState, rng: Rng, data: GameData): void {
     if (v.sections_open > 0) {
       if (v.run_start_turn === null) v.run_start_turn = state.world.turn;
       const capital = Math.min(v.invested, Math.round((finalStake(v) * v.sections_open) / t.sections));
-      const e = quarterEarnings(capital, t.expected_return, sector, state.world.sentiment, driverFactor(sector, state.markets, data.markets), 1, spread(rng));
+      const e = quarterEarnings(capital, t.expected_return, sector, state.world.sentiment, driverFactor(sector, state.markets, data.markets) * sectorFactor(state, sector.id, data), 1, spread(rng));
       v.earnings = [...v.earnings, e].slice(-4);
     }
     if (built && v.phase === "building") {

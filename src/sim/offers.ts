@@ -5,6 +5,7 @@ import { fileStale, quartersLeft, salePrice, yearsInTrade, type Band, type BookF
 import type { GameData } from "./tuning";
 import type { GameState, LoanKind } from "./types";
 import { ventureFailureChance } from "./ventures";
+import { ventureBlocked } from "./systems/progress";
 
 /**
  * A loan request as the player may see it: no true quality and no verdict, only what is public,
@@ -131,6 +132,6 @@ export function ventureOffers(state: GameState, data: GameData): VentureOffer[] 
     expected_return: v.expected_return,
     failure_chance: ventureFailureChance(v.failure_risk, state.world.sentiment, data.tuning, headStat(state, "acumen", data), headEffects(state, data).venture_failure),
     unlock_year: v.unlock_year,
-    blocked: state.world.year < v.unlock_year ? `Not before ${v.unlock_year}` : null,
+    blocked: ventureBlocked(state, v, data),
   }));
 }
