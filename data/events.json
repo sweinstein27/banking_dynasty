@@ -509,5 +509,284 @@
     "weight": 1,
     "conditions": { "holds_bonds_of": "austria" },
     "effects": [{ "kind": "state_risk", "state": "austria", "delta": 0.05 }]
+  },
+  {
+    "id": "politics-hep-hep",
+    "title": "Riots against the Jews",
+    "text": "Crowds in the streets of Frankfurt attack Jewish homes and shops to the cry of \"Hep! Hep!\", as they have in Würzburg. The guard is called out. Jewish houses on the bourse watch to see who will stand with them.",
+    "historical": false,
+    "follow_up": true,
+    "conditions": {},
+    "effects": [],
+    "options": [
+      {
+        "id": "stand",
+        "label": "Stand with them openly",
+        "text": "The head of the house walks out with the guard and says on the bourse that an attack on any house is an attack on all. Some of the guilds will not forget it.",
+        "effects": [
+          {
+            "kind": "reputation",
+            "delta": 2
+          }
+        ]
+      },
+      {
+        "id": "aid",
+        "label": "Help quietly",
+        "text": "The house quietly carries the bills of Jewish correspondents whose shops were wrecked, and says nothing.",
+        "effects": [
+          {
+            "kind": "cash",
+            "amount": -500
+          },
+          {
+            "kind": "reputation",
+            "delta": 1
+          }
+        ]
+      },
+      {
+        "id": "aloof",
+        "label": "Keep out of it",
+        "text": "The house keeps its shutters closed and its opinions to itself.",
+        "effects": []
+      }
+    ],
+    "default_option": "aloof"
+  },
+  {
+    "id": "politics-carlsbad",
+    "title": "The Diet's decrees in the Senate",
+    "text": "The Federal Diet has adopted the decrees agreed at Carlsbad: watch over the universities, censorship of the press, a commission at Mainz to hunt for conspiracies. The Senate must decide how strictly the city will enforce them, and the house has a vote.",
+    "historical": false,
+    "follow_up": true,
+    "conditions": {},
+    "effects": [],
+    "options": [
+      {
+        "id": "enforce",
+        "label": "Vote to enforce them strictly",
+        "text": "The house votes with the Diet. Vienna and Berlin take note of a sound man; the coffee houses take note too.",
+        "effects": [
+          {
+            "kind": "reputation",
+            "delta": -1
+          }
+        ]
+      },
+      {
+        "id": "object",
+        "label": "Speak for the city's own press",
+        "text": "The house speaks for the city's printers and booksellers. The merchants approve; the Diet's envoys do not.",
+        "effects": [
+          {
+            "kind": "reputation",
+            "delta": 1
+          }
+        ]
+      },
+      {
+        "id": "abstain",
+        "label": "Abstain",
+        "text": "The house's senator is unwell on the day of the vote.",
+        "effects": []
+      }
+    ],
+    "default_option": "abstain"
+  },
+  {
+    "id": "politics-rights-1824",
+    "title": "The rights of the Jewish community",
+    "text": "The Senate is to settle the civil rights of the city's Jews, left in doubt since 1816. A new law would restore many of their rights, with limits. The house's senator must vote.",
+    "historical": false,
+    "follow_up": true,
+    "conditions": {},
+    "effects": [],
+    "options": [
+      {
+        "id": "support",
+        "label": "Vote for the new law",
+        "text": "The house votes to restore the rights. Its Jewish correspondents are grateful; some Christian merchants are not.",
+        "effects": [
+          {
+            "kind": "reputation",
+            "delta": 2
+          }
+        ]
+      },
+      {
+        "id": "oppose",
+        "label": "Vote against it",
+        "text": "The house votes with those who would keep the old limits. The guilds approve.",
+        "effects": [
+          {
+            "kind": "reputation",
+            "delta": -1
+          }
+        ]
+      },
+      {
+        "id": "abstain",
+        "label": "Abstain",
+        "text": "The house's senator abstains, and the law is decided without him.",
+        "effects": []
+      }
+    ],
+    "default_option": "abstain"
+  },
+  {
+    "id": "politics-garrison",
+    "title": "Soldiers for the city",
+    "text": "Students have stormed the guardhouses in the hope of seizing the Confederation's treasury, and been beaten off. The Diet means to station Austrian and Prussian troops in the city, and the Senate is asked to agree.",
+    "historical": false,
+    "follow_up": true,
+    "conditions": {},
+    "effects": [],
+    "options": [
+      {
+        "id": "welcome",
+        "label": "Welcome the troops",
+        "text": "The house votes for order. The courts of Vienna and Berlin remember their friends.",
+        "effects": [
+          {
+            "kind": "reputation",
+            "delta": -1
+          }
+        ]
+      },
+      {
+        "id": "protest",
+        "label": "Speak for the city's freedom",
+        "text": "The house reminds the Senate that Frankfurt is a free city. It is outvoted, but the citizens remember.",
+        "effects": [
+          {
+            "kind": "reputation",
+            "delta": 2
+          }
+        ]
+      },
+      {
+        "id": "abstain",
+        "label": "Abstain",
+        "text": "The house says nothing, and the troops come all the same.",
+        "effects": []
+      }
+    ],
+    "default_option": "abstain"
+  },
+  {
+    "id": "politics-march-1848",
+    "title": "The March demands",
+    "text": "Crowds fill the squares asking for a free press, a citizen guard and equal rights for all. The Senate must answer them, and the house's senator has a vote.",
+    "historical": false,
+    "follow_up": true,
+    "conditions": {},
+    "effects": [],
+    "options": [
+      {
+        "id": "reform",
+        "label": "Vote for the reforms",
+        "text": "The house votes to grant what is asked. The crowd cheers its name; old friends in the Senate do not.",
+        "effects": [
+          {
+            "kind": "reputation",
+            "delta": 3
+          }
+        ]
+      },
+      {
+        "id": "resist",
+        "label": "Vote to hold firm",
+        "text": "The house votes against the demands. The old order is grateful, while it lasts.",
+        "effects": [
+          {
+            "kind": "reputation",
+            "delta": -3
+          }
+        ]
+      },
+      {
+        "id": "abstain",
+        "label": "Abstain",
+        "text": "The house waits to see which way the wind blows.",
+        "effects": []
+      }
+    ],
+    "default_option": "abstain"
+  },
+  {
+    "id": "politics-september-1848",
+    "title": "Barricades in Frankfurt",
+    "text": "The National Assembly has accepted the armistice with Denmark, and the streets have risen against it. Barricades stand near the Paulskirche. The Senate must decide whether to ask for troops from the fortress at Mainz.",
+    "historical": false,
+    "follow_up": true,
+    "conditions": {},
+    "effects": [],
+    "options": [
+      {
+        "id": "troops",
+        "label": "Call for the troops",
+        "text": "The house votes for the troops from Mainz. Order returns within days, and the house is counted among its friends.",
+        "effects": [
+          {
+            "kind": "reputation",
+            "delta": -1
+          }
+        ]
+      },
+      {
+        "id": "talks",
+        "label": "Urge talks with the crowd",
+        "text": "The house argues for patience. It is outvoted, and the crowd does not thank it either.",
+        "effects": [],
+        "chance": {
+          "p": 0.25,
+          "effects": [
+            {
+              "kind": "cash",
+              "amount": -1000
+            }
+          ],
+          "text": "In the fighting a warehouse holding the house's goods is broken open.",
+          "miss_text": "The house's warehouses come through untouched."
+        }
+      },
+      {
+        "id": "abstain",
+        "label": "Abstain",
+        "text": "The house keeps its head down until the shooting stops.",
+        "effects": []
+      }
+    ],
+    "default_option": "abstain"
+  },
+  {
+    "id": "politics-imperial-loan",
+    "title": "Money for the imperial army",
+    "text": "The imperial army has taken Vienna back from the rising, and marches next against Hungary. The court needs money to pay its soldiers, and asks the house for 20,000 fl. at 6%.",
+    "historical": false,
+    "follow_up": true,
+    "conditions": {},
+    "effects": [],
+    "options": [
+      {
+        "id": "lend",
+        "label": "Lend the money",
+        "text": "The house lends. Vienna will remember the favour, and so will those who fought on the barricades.",
+        "effects": [
+          {
+            "kind": "reputation",
+            "delta": -3
+          }
+        ]
+      },
+      {
+        "id": "refuse",
+        "label": "Refuse politely",
+        "text": "The house regrets that its funds are committed elsewhere. Vienna notes the answer.",
+        "effects": []
+      }
+    ],
+    "default_option": "refuse"
   }
 ]
