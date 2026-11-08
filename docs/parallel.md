@@ -28,6 +28,20 @@ Wave 1 is merged into `main` and tuned (2026-11-07). Wave 2 adds four new system
 
 The map of Europe, and screens for wave 2's systems, come in wave 3 on the shell.
 
+## Who owns what (wave 3)
+
+Wave 2 is merged into `main` and tuned (2026-11-08). Wave 3 adds four systems through the same seams (`src/sim/systems/rivals.ts`, `legacy.ts`, `politics.ts`, `war.ts`, each with a data file, an End Turn hook, a `xBook` counted in net worth, decision routing and harness makers already wired; state slots `rivals`, `legacy`, `politics`, `war`) and builds wave 2's screens. End Turn order: `resolveWar` just before `resolveEurope`; `resolvePolitics` then `resolveRivals` just after `resolveHouses`; `resolveLegacy` last, after the markets are marked, so it scores the finished quarter. A session that needs its hook elsewhere says so in its notes; the integrator moves it.
+
+| Session | Milestone | Owns (may change freely) | May touch lightly |
+| --- | --- | --- | --- |
+| Screens | Wave 2's screens in the shell: high finance, people (agendas, letters, study), progress, and the clickable SVG map of Europe (cities, news delay, branches, bills) | Everything in `src/ui/` and `index.html` | Nothing in `src/sim/`; read sim functions, never change them. Sim helpers a screen needs go in `src/ui/model/` |
+| Rivals | B1 | `src/sim/systems/rivals.ts`, `data/rivals.json`, `src/harness/systems/rivals.ts`, new `tests/rivals*.test.ts` | `src/sim/houses.ts` (what houses do each quarter); `src/sim/systems/finance.ts` (rival bids on contracts); `src/sim/systems/counting.ts` (poaching staff); the sold-loan path in `src/sim/systems/credit.ts`; `data/events.json` for letters with ids starting `rivals-` |
+| Legacy | B3 (simulation only; the family tree view comes in wave 4) | `src/sim/systems/legacy.ts`, `data/legacy.json`, `src/harness/systems/legacy.ts`, new `tests/legacy*.test.ts` | Nothing else: prestige reads other systems' state through their exported functions. Propose prestige-based balance targets in notes; `targets.ts` stays the integrator's |
+| Politics | C2 | `src/sim/systems/politics.ts`, `data/politics.json`, `src/harness/systems/politics.ts`, new `tests/politics*.test.ts` | `data/events.json` for letters with ids starting `politics-`; `src/sim/news.ts` for its own news. Effects on other systems (contracts opened by influence, softer crises) are exported from `politics.ts` as functions defaulting to no change; the integrator wires them in after merging |
+| War | C3 | `src/sim/systems/war.ts`, `data/war.json`, `src/harness/systems/war.ts`, new `tests/war*.test.ts` | City status in `src/sim/europe/world.ts` and the `history` list in `data/europe.json` (extend, don't replace C1's); `data/states.json` (war loan demand); `data/events.json` for events with ids starting `war-`; `src/sim/news.ts` for its own news |
+
+Historical dates and facts (Senate and Diet rules, titles, wars, the 1830, 1833 and 1848 risings) are checked against `docs/research/` or a source, or flagged in the session's notes. Rivals and politics both change what other houses do: rivals owns their actions, politics only their opinion through `changeOpinion`.
+
 ## Rules for every session
 
 1. **Plan first.** Post the milestone's detailed plan and wait for Scott's approval in your own session.

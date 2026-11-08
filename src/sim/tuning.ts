@@ -4,6 +4,10 @@ import type { FinanceData } from "./systems/finance";
 import type { PeopleData } from "./systems/people";
 import type { EuropeData } from "./systems/europe";
 import type { ProgressData } from "./systems/progress";
+import type { RivalsData } from "./systems/rivals";
+import type { LegacyData } from "./systems/legacy";
+import type { PoliticsData } from "./systems/politics";
+import type { WarData } from "./systems/war";
 import type { MarketsData } from "./systems/markets";
 import type { LoanKind, Quarter, Sentiment } from "./types";
 
@@ -244,6 +248,10 @@ export interface GameData {
   people: PeopleData;
   europe: EuropeData;
   progress: ProgressData;
+  rivals: RivalsData;
+  legacy: LegacyData;
+  politics: PoliticsData;
+  war: WarData;
 }
 
 export type Temperament = "cautious" | "bold";

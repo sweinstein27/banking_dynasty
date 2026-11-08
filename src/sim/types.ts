@@ -6,6 +6,10 @@ import type { FinanceCategory, FinanceDecision, FinanceState, FinanceAccount } f
 import type { PeopleCategory, PeopleDecision, PeopleState } from "./systems/people";
 import type { EuropeCategory, EuropeDecision, EuropeState, EuropeAccount } from "./systems/europe";
 import type { ProgressCategory, ProgressDecision, ProgressState } from "./systems/progress";
+import type { RivalsAccount, RivalsCategory, RivalsDecision, RivalsState } from "./systems/rivals";
+import type { LegacyAccount, LegacyCategory, LegacyDecision, LegacyState } from "./systems/legacy";
+import type { PoliticsAccount, PoliticsCategory, PoliticsDecision, PoliticsState } from "./systems/politics";
+import type { WarAccount, WarCategory, WarDecision, WarState } from "./systems/war";
 
 export type Sentiment = "calm" | "uneasy" | "panic";
 export type Quarter = 1 | 2 | 3 | 4;
@@ -145,10 +149,10 @@ export interface Loan {
 }
 
 /** Which balance an entry moves. Summing entries per account reproduces that balance. */
-export type LedgerAccount = "cash" | "loans" | "bonds" | "ventures" | "deposits" | "borrowings" | MarketsAccount | FinanceAccount | EuropeAccount;
+export type LedgerAccount = "cash" | "loans" | "bonds" | "ventures" | "deposits" | "borrowings" | MarketsAccount | FinanceAccount | EuropeAccount | RivalsAccount | LegacyAccount | PoliticsAccount | WarAccount;
 
 /** Ledger categories: the core ones, then each system's own. */
-export type LedgerCategory = CoreCategory | CreditCategory | CountingCategory | MarketsCategory | FinanceCategory | PeopleCategory | EuropeCategory | ProgressCategory;
+export type LedgerCategory = CoreCategory | CreditCategory | CountingCategory | MarketsCategory | FinanceCategory | PeopleCategory | EuropeCategory | ProgressCategory | RivalsCategory | LegacyCategory | PoliticsCategory | WarCategory;
 
 export type CoreCategory = "deposit_inflow" | "deposit_interest" | "event" | "courting" | "dowry" | "report" | "family" | "borrowing" | "debt_interest" | "debt_repayment" | "loan_called" | "opening" | "loan_out" | "interest" | "default" | "repayment"
   | "withdrawal"
@@ -383,6 +387,10 @@ export interface GameState {
   agendas: PeopleState;
   europe: EuropeState;
   progress: ProgressState;
+  rivals: RivalsState;
+  legacy: LegacyState;
+  politics: PoliticsState;
+  war: WarState;
   /** Marriages arranged, oldest first. A house with any marriage tie is an ally. */
   marriages: Marriage[];
   /** The other Frankfurt houses, failed ones included. */
@@ -513,4 +521,4 @@ export type CrisisDecision = BorrowDecision | PaySlowlyDecision | SuspendDecisio
 export type CoreDecision = LendDecision | ReportDecision | SetReserveDecision | BuyBondDecision | InvestVentureDecision | InvestFamilyDecision | DesignateHeirDecision | AnswerLetterDecision | CourtHouseDecision | ArrangeMarriageDecision | CrisisDecision;
 
 /** Every decision: the core ones, then each system's own (src/sim/systems/). */
-export type Decision = CoreDecision | CreditDecision | CountingDecision | MarketsDecision | FinanceDecision | PeopleDecision | EuropeDecision | ProgressDecision;
+export type Decision = CoreDecision | CreditDecision | CountingDecision | MarketsDecision | FinanceDecision | PeopleDecision | EuropeDecision | ProgressDecision | RivalsDecision | LegacyDecision | PoliticsDecision | WarDecision;

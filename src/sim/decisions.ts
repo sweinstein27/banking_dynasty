@@ -16,6 +16,10 @@ import { applyFinanceDecision, describeFinanceDecision, isFinanceDecision } from
 import { applyPeopleDecision, describePeopleDecision, isPeopleDecision } from "./systems/people";
 import { applyEuropeDecision, describeEuropeDecision, isEuropeDecision } from "./systems/europe";
 import { applyProgressDecision, describeProgressDecision, isProgressDecision } from "./systems/progress";
+import { applyRivalsDecision, describeRivalsDecision, isRivalsDecision } from "./systems/rivals";
+import { applyLegacyDecision, describeLegacyDecision, isLegacyDecision } from "./systems/legacy";
+import { applyPoliticsDecision, describePoliticsDecision, isPoliticsDecision } from "./systems/politics";
+import { applyWarDecision, describeWarDecision, isWarDecision } from "./systems/war";
 import { applyMarketsDecision, describeMarketsDecision, isMarketsDecision } from "./systems/markets";
 import type { CoreDecision, Decision, GameState } from "./types";
 
@@ -28,6 +32,10 @@ export function applyDecision(state: GameState, d: Decision, data: GameData): De
   if (isPeopleDecision(d)) return applyPeopleDecision(state, d, data);
   if (isEuropeDecision(d)) return applyEuropeDecision(state, d, data);
   if (isProgressDecision(d)) return applyProgressDecision(state, d, data);
+  if (isRivalsDecision(d)) return applyRivalsDecision(state, d, data);
+  if (isLegacyDecision(d)) return applyLegacyDecision(state, d, data);
+  if (isPoliticsDecision(d)) return applyPoliticsDecision(state, d, data);
+  if (isWarDecision(d)) return applyWarDecision(state, d, data);
   return applyCoreDecision(state, d, data);
 }
 
@@ -40,6 +48,10 @@ export function describeSystemDecision(d: Decision, state: GameState, data: Game
   if (isPeopleDecision(d)) return describePeopleDecision(d, state, data);
   if (isEuropeDecision(d)) return describeEuropeDecision(d, state, data);
   if (isProgressDecision(d)) return describeProgressDecision(d, state, data);
+  if (isRivalsDecision(d)) return describeRivalsDecision(d, state, data);
+  if (isLegacyDecision(d)) return describeLegacyDecision(d, state, data);
+  if (isPoliticsDecision(d)) return describePoliticsDecision(d, state, data);
+  if (isWarDecision(d)) return describeWarDecision(d, state, data);
   return null;
 }
 

@@ -24,11 +24,15 @@ import { financeBook, resolveFinance } from "./systems/finance";
 import { markMarkets, marketsBook, resolveMarkets } from "./systems/markets";
 import { resolvePeople } from "./systems/people";
 import { resolveProgress } from "./systems/progress";
+import { rivalsBook, resolveRivals } from "./systems/rivals";
+import { legacyBook, resolveLegacy } from "./systems/legacy";
+import { politicsBook, resolvePolitics } from "./systems/politics";
+import { warBook, resolveWar } from "./systems/war";
 import { resolveVentures, ventureBook } from "./ventures";
 
 /** NetWorth = Cash + Loans + Bonds + Ventures + market holdings - Deposits - Borrowings. Ventures count at cost until they resolve. */
 export function netWorth(state: GameState): number {
-  return state.house.cash + loanBook(state) + bondBook(state) + ventureBook(state) + marketsBook(state) + financeBook(state) + europeBook(state) - state.house.deposits - debtBook(state);
+  return state.house.cash + loanBook(state) + bondBook(state) + ventureBook(state) + marketsBook(state) + financeBook(state) + europeBook(state) + rivalsBook(state) + politicsBook(state) + warBook(state) + legacyBook(state) - state.house.deposits - debtBook(state);
 }
 
 export function loanBook(state: GameState): number {
@@ -73,12 +77,15 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
   resolveVentures(next, rng, data);
   resolveMarkets(next, rng, data);
   resolveFinance(next, rng, data);
+  resolveWar(next, rng, data);
   resolveEurope(next, rng, data);
   serviceDebts(next, data.tuning);
   resolveCounting(next, rng, data);
   resolveWithdrawals(next, data.tuning, headEffects(next, data).withdrawals * withdrawalFactor(next, data));
   resolveDeposits(next, data.tuning);
   resolveHouses(next, rng, data);
+  resolvePolitics(next, rng, data);
+  resolveRivals(next, rng, data);
   const rolled = nextSentiment(world.sentiment, rng.next(), data.tuning);
   world.sentiment = moodWithWarnings(next, rolled, rng, data.tuning);
   resolveEvents(next, rng, data);
@@ -87,6 +94,7 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
   resolvePeople(next, rng, data);
   markBonds(next, data);
   markMarkets(next, data);
+  resolveLegacy(next, rng, data);
   next.requests = drawRequests(next, data, rng);
   next.news.push(...quarterNews(state, next, data));
 
