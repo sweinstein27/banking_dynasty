@@ -33,13 +33,13 @@ Decisions from milestone B1, in the style of docs/decisions.md, newest first. Fo
 
 ## Harness (300 seeds, before and after B1)
 
-All seven targets pass both before and after.
+All seven targets pass both before and after. "After" is the final run, with the aggressive fix below.
 
 | Strategy | Bankrupt | Median | p90 | Strong |
 | --- | --- | --- | --- | --- |
 | idle | 0.0% to 0.0% | 32,851 to 33,080 | 38,667 to 39,250 | 0% to 0% |
 | cautious | 3.3% to 3.3% | 64,276 to 50,055 | 216,079 to 177,921 | 25.3% to 18.0% |
-| aggressive | 31.7% to 41.0% | 232,812 to 160,183 | 1,145,917 to 882,152 | 59.7% to 51.3% |
+| aggressive | 31.7% to 34.0% | 232,812 to 183,834 | 1,145,917 to 939,283 | 59.7% to 53.0% |
 | bond_heavy | 20.3% to 18.3% | 81,125 to 70,053 | 269,957 to 282,215 | 31.0% to 29.0% |
 | venture_heavy | 7.3% to 11.0% | 95,450 to 93,213 | 240,119 to 246,283 | 27.3% to 29.3% |
 | investor | 4.0% to 5.0% | 72,954 to 71,810 | 212,980 to 204,176 | 20.7% to 19.3% |
@@ -48,7 +48,7 @@ All seven targets pass both before and after.
 Rivals make the game harder for everyone but idle. The biggest moves:
 
 - **Cautious** loses about a fifth of its median. It pays to counter plots and to match wages, and its head's time goes on counters.
-- **Aggressive** goes bust more often (31.7% to 41.0%), within T6's 30 to 60%. Likely cause, not yet isolated: its yearly rumours against the most hostile house are found out about 3 times in 10, costing 4 reputation and 5 opinion with every other house, which can leave no house willing to lend in a panic (lending needs opinion -20 or better). Its large loans at the borrower's top rate are also the ones rivals take.
+- **Aggressive** goes bust a little more often (31.7% to 34.0%) and its median falls about a fifth, mostly from rivals taking its large loans at the borrower's top rate (loans alone: median 235k to 165k on the same seeds). A first run showed 41.0% bankrupt; the cause was the harness maker, not the sim: the yearly rumours scheme ran last in the quarter and spent the 800 fl. left after aggressive had lent, bought and invested, so End Turn forced sales at a discount. An inert scheme (never works, never found) gave the same 43.7%; at no cost, 30.7%. Opinion and reputation were ruled out (found-out schemes costing no reputation: still 41.0%). The maker now schemes only with free cash of 10 times the cost; what is left over (34.0% against 30.7% with no scheme) matches the scheme's real cost to reputation (43.0 against 45.2 going into 1825).
 - **Venture-heavy** busts rise from 7.3% to 11.0%; it never counters plots, so rumour withdrawals land in panics.
 
 Balance is the integrator's after merging; the levers are all in data/rivals.json.
