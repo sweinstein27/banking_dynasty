@@ -94,8 +94,8 @@ function succeedHouse(state: GameState, h: OtherHouse, data: GameData): void {
   h.opinion = clampOpinion(h.opinion + (h.baseline - h.opinion) * data.tuning.houses.opinion.succession_reset, data.tuning);
 }
 
-/** A house closes its doors. Some of its depositors bring their money to the player, more for a good name. */
-function failHouse(state: GameState, h: OtherHouse, data: GameData): void {
+/** A house closes its doors. Some of its depositors bring their money to the player, more for a good name. Also called by rivals (B1) when presented paper breaks a house. */
+export function failHouse(state: GameState, h: OtherHouse, data: GameData): void {
   const tuning = data.tuning;
   h.failed_turn = state.world.turn;
   if (state.house.status === "bankrupt") return;

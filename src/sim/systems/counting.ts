@@ -143,6 +143,8 @@ export interface Staff extends Candidate {
   start_turn: number;
   /** Dismissed: works out this quarter and leaves at End Turn. */
   leaving: boolean;
+  /** Added to the role's wage after matching a rival's offer (B1). */
+  raise?: number;
 }
 
 export interface Facility {
@@ -308,7 +310,20 @@ function ownsFacility(state: GameState, id: FacilityId): boolean {
 
 /** Wages due this quarter, in whole gulden. */
 export function wageBill(state: GameState, data: GameData): number {
-  return working(state).reduce((sum, m) => sum + data.counting.roles[m.role].wage, 0);
+  return working(state).reduce((sum, m) => sum + data.counting.roles[m.role].wage + (m.raise ?? 0), 0);
+}
+
+/** Desks free next quarter (B1: a lured clerk needs one). */
+export function freeDesks(state: GameState, data: GameData): number {
+  return Math.max(0, desksNextQuarter(state, data) - desksTaken(state, data));
+}
+
+/** Someone joins the staff from another house (B1), working from next quarter. Mutates `state`. */
+export function joinStaff(state: GameState, who: Candidate, role: StaffRole): Staff {
+  const c = state.counting;
+  const m: Staff = { ...who, id: c.next_staff_id++, role, hired_turn: state.world.turn, start_turn: state.world.turn + 1, leaving: false };
+  c.staff.push(m);
+  return m;
 }
 
 /** Upkeep due this quarter: the room and every working facility. */
@@ -659,7 +674,7 @@ export function resolveCounting(state: GameState, rng: Rng, data: GameData): voi
   }
   for (const role of STAFF_ROLES) {
     const n = working(state, role).length;
-    const pay = n * data.counting.roles[role].wage;
+    const pay = working(state, role).reduce((sum, m) => sum + data.counting.roles[role].wage + (m.raise ?? 0), 0);
     if (pay === 0) continue;
     house.cash -= pay;
     const name = data.counting.roles[role].name.toLowerCase();

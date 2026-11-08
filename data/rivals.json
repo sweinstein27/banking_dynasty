@@ -1,1 +1,80 @@
-{}
+{
+  "contracts": {
+    "spite_opinion": -40,
+    "spite_chance": 0.5,
+    "step": 0.0025,
+    "min_commission": 0.0025
+  },
+  "loans": {
+    "large_from": 20000,
+    "wealth_cover": 10,
+    "undercut": { "cautious": 0.005, "bold": 0.01 },
+    "spite_opinion": -40,
+    "spite_undercut": 0.005,
+    "min_rate": 0.03,
+    "steal": { "base": 0.3, "per_point": 0.2, "max": 0.8 }
+  },
+  "sales": {
+    "wealth_cover": 5,
+    "opinion_premium": 0.02,
+    "opinion": 1,
+    "fallback_buyer": "a house in Amsterdam"
+  },
+  "poach": {
+    "chance": { "cautious": 0.005, "bold": 0.01 },
+    "hostile_opinion": -20,
+    "hostile_factor": 2,
+    "min_wealth": 100000,
+    "min_skill": 5,
+    "premium": [0.3, 0.6],
+    "round_to": 5,
+    "per_quarter": 1
+  },
+  "plots": {
+    "from_opinion": -20,
+    "chance": { "cautious": 0.015, "bold": 0.03 },
+    "opinion_scale": 50,
+    "debt_share": 0.5,
+    "hear": { "base": 0.3, "per_correspondent": 0.1, "per_connection": 0.03, "max": 0.9 },
+    "counter_cost": { "rumours": 500, "buy_debt": 1000 },
+    "rumours": { "reputation": [1, 1], "deposit_share": 0.03 },
+    "per_quarter": 1
+  },
+  "schemes": {
+    "rumours": {
+      "cost": 800,
+      "success": 0.6,
+      "per_connection": 0.03,
+      "per_reputation": -0.005,
+      "reputation": 8,
+      "wealth_share": 0.02
+    },
+    "lure_clerk": {
+      "cost": 600,
+      "success": 0.5,
+      "per_connection": 0.03,
+      "per_reputation": 0,
+      "skill": [5, 7],
+      "short_quarters": 4
+    },
+    "discovery": { "base": 0.3, "per_connection": -0.02, "min": 0.05, "max": 0.6 },
+    "found_out": {
+      "rumours": { "reputation": -4, "opinion": -30, "others": -5 },
+      "lure_clerk": { "reputation": 0, "opinion": -20, "others": 0 }
+    },
+    "chance_min": 0.1,
+    "chance_max": 0.9
+  },
+  "paper": {
+    "discount": 0.03,
+    "rate": 0.05,
+    "quarters": 4,
+    "step": 1000,
+    "min_amount": 5000,
+    "max_share": 0.05,
+    "present_drain": 0.2,
+    "present_opinion": -5,
+    "fail_below": 0.4,
+    "recovery": { "calm": 0.3, "uneasy": 0.3, "panic": 0.2 }
+  }
+}

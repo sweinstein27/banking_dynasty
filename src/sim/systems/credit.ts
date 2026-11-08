@@ -9,6 +9,7 @@
 import type { DecisionResult } from "../actions";
 import { checkCapacity, useCapacity } from "../capacity";
 import { paymentRecordQuarters, reportCostFactor } from "./counting";
+import { loanBuyer, recordLoanSale } from "./rivals";
 import { fl } from "../format";
 import { addEntry } from "../ledger";
 import { freeCash } from "../reserves";
@@ -250,9 +251,9 @@ export function saleDiscount(loan: Loan, state: GameState, data: GameData): numb
   return Math.min(c.max, c.base + c.per_risk * (1 - mq) + c.per_year_left * years + c.mood[state.world.sentiment]);
 }
 
-/** What another house pays for a loan today, in whole gulden. */
+/** What another house pays for a loan today, in whole gulden: the best bid among the houses (B1). */
 export function salePrice(loan: Loan, state: GameState, data: GameData): number {
-  return Math.round(loan.principal * (1 - saleDiscount(loan, state, data)));
+  return loanBuyer(state, loan.principal, saleDiscount(loan, state, data), data).price;
 }
 
 export function checkSellLoan(state: GameState, d: SellLoanDecision, data: GameData): string | null {
@@ -270,8 +271,10 @@ export function sellLoan(state: GameState, d: SellLoanDecision, data: GameData):
   if (reason) return { ok: false, reason };
   const next = cloneState(state);
   const loan = next.loans.find((l) => l.id === d.loan)!;
-  const price = salePrice(loan, next, data);
-  const note = `Loan #${loan.id} (${loan.borrower_name}) sold to another house for ${fl(price)}`;
+  const buyer = loanBuyer(next, loan.principal, saleDiscount(loan, next, data), data);
+  const price = buyer.price;
+  const note = `Loan #${loan.id} (${loan.borrower_name}) sold to ${buyer.name} for ${fl(price)}`;
+  recordLoanSale(next, buyer, loan.principal, data);
   addEntry(next, "cash", "loan_sale", price, note);
   addEntry(next, "loans", "loan_sale", -loan.principal, note);
   next.house.cash += price;

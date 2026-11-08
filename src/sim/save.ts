@@ -10,6 +10,7 @@ import type { Decision, GameState, LedgerAccount } from "./types";
 import { ventureBook } from "./ventures";
 import { commoditiesBook, sharesBook } from "./systems/markets";
 import { financeAccounts } from "./systems/finance";
+import { rivalsAccounts } from "./systems/rivals";
 
 export const SAVE_VERSION = 17;
 
@@ -88,6 +89,7 @@ export function parseSave(text: string, data: GameData): ParseResult {
     shares: sharesBook(state),
     commodities: commoditiesBook(state),
     ...financeAccounts(state),
+    ...rivalsAccounts(state),
     branches: branchesBook(state),
     bills: billsBook(state),
   };
