@@ -11,6 +11,12 @@ import { bondOffers } from "../../sim/offers";
 import { freeCash } from "../../sim/reserves";
 import { withdrawalDemand } from "../../sim/sentiment";
 import { marketsBook } from "../../sim/systems/markets";
+import { europeBook } from "../../sim/systems/europe";
+import { financeBook } from "../../sim/systems/finance";
+import { legacyBook } from "../../sim/systems/legacy";
+import { politicsBook } from "../../sim/systems/politics";
+import { rivalsBook } from "../../sim/systems/rivals";
+import { warBook } from "../../sim/systems/war";
 import type { GameData } from "../../sim/tuning";
 import { loanBook, netWorth } from "../../sim/turn";
 import type { GameState, LedgerAccount, LedgerEntry, Quarter, Sentiment } from "../../sim/types";
@@ -194,6 +200,16 @@ export function breakdown(id: BreakdownId, base: GameState, preview: GameState, 
       ];
       const market = marketsBook(preview);
       if (market !== 0) parts.push({ label: "Market holdings", value: fl(market), amount: market });
+      // Wave 2 and 3 books: shown when they hold anything, so the lines always add up to net worth.
+      const books: [string, number, string?][] = [
+        ["High finance: credit to houses, assets, caution money", financeBook(preview), "high_finance"],
+        ["Branches and bills abroad", europeBook(preview), "branch"],
+        ["Rivals", rivalsBook(preview)],
+        ["Politics", politicsBook(preview)],
+        ["War", warBook(preview)],
+        ["Legacy", legacyBook(preview)],
+      ];
+      for (const [label, n, term] of books) if (n !== 0) parts.push(term ? { label, value: fl(n), amount: n, term } : { label, value: fl(n), amount: n });
       parts.push(
         { label: "Less deposits owed", value: fl(-preview.house.deposits || 0), amount: -preview.house.deposits || 0, term: "deposits" },
         { label: "Less borrowings", value: fl(-debtBook(preview) || 0), amount: -debtBook(preview) || 0, term: "borrowings" },

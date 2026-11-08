@@ -295,6 +295,110 @@ export const GLOSSARY: Record<string, GlossaryCard> = {
     title: "Listing",
     body: (d) => `A medium or great venture that has run for a while and earned at least ${pct(d.tuning.ventures.float.min_yield)} a year on its stake floats on the bourse: the stake becomes [[shares]] of ${fl(d.tuning.ventures.float.par)} each, which can be sold at the bourse price instead of privately at a discount.`,
   },
+  // ---------------------------------------------------------------- wave 2's systems
+  high_finance: {
+    title: "High finance",
+    body: () =>
+      "Business beyond merchants' loans: placing a [[state_loan]], [[house_credit|lending to other houses]], buying at [[auction]], and [[insurance|insuring]] ships and warehouses. Each takes a clerk's time, like any deal.",
+  },
+  state_loan: {
+    title: "State loans",
+    body: (d) => {
+      const c = d.finance.contracts;
+      return `A state announces a loan a quarter before it takes bids. Houses bid the [[commission]] they ask; the state takes the lowest, but counts a better [[reputation|name]] as worth ${pct(c.prestige_weight)} of commission for every 100 points above 50. The winner pays [[caution_money]], [[placement|places]] the bonds with investors over ${c.placement.quarters} quarters, and buys what is left at the close: a firm contract. Those bonds are redeemed at par when the term ends.`;
+    },
+  },
+  caution_money: {
+    title: "Caution money",
+    body: (d) => `${pct(d.finance.contracts.caution)} of a state loan, paid to the state at the award as a pledge, and returned when placing ends. If the state defaults first, it is lost. It must come from [[free_cash]].`,
+  },
+  placement: {
+    title: "Placing a loan",
+    body: (d) => {
+      const p = d.finance.contracts.placement;
+      return `Each quarter investors take a share of the bonds still unplaced, at the issue price, and the house keeps its [[commission]] on what they take. The share is larger in a calm [[market_mood|market]], for a house of good [[reputation]], for a safer state, and with each correspondent (${pct(p.per_correspondent)} each), up to ${pct(p.max)}. A loan well placed raises the house's name; one that sticks lowers it.`;
+    },
+  },
+  house_credit: {
+    title: "Credit to houses",
+    body: (d) => {
+      const h = d.finance.house_loans;
+      return `In an uneasy or panicking market a Frankfurt house in trouble may ask, quietly, for a year's credit. Ask no more than ${pct(h.gratitude[0]!.up_to)} and it is grateful (opinion +${h.gratitude[0]!.opinion}); ask near its limit and it resents it. While it owes the house it is less likely to fail in a [[panic]]. If it fails anyway, its estate pays back only part.`;
+    },
+  },
+  auction: {
+    title: "Auctions",
+    body: (d) => `When a house fails, or a borrower defaults on a secured loan, the receivers sell its warehouse, ships, broker's place or shares the next quarter. Bid a share of the appraisal; the highest bid wins, a tie goes to you. Bought assets count at their [[appraisal]], earn rent, freight or brokerage, and may be lost to fire or the river. Sold privately they fetch ${pct(d.finance.auctions.sale_discount)} less than the appraisal.`,
+  },
+  appraisal: {
+    title: "Appraisal",
+    body: () => "What the receivers value a lot at. An asset the house owns counts at its appraisal in [[net_worth]].",
+  },
+  insurance: {
+    title: "Insurance",
+    body: (d) => {
+      const i = d.finance.insurance;
+      return `Merchants ask for cover on a voyage or on a warehouse for a year. Take a line (${i.lines.map(pct).join(", ")} of the value): the premium comes in at once, and if the ship is lost or the warehouse burns, the house pays its share, less any salvage. Ships are lost more often in winter, and far more in a great storm. [[exposure|Exposure]] is what the house would pay if all were lost.`;
+    },
+  },
+  exposure: {
+    title: "Exposure",
+    body: () => "The house's share of the value of every ship and warehouse it insures now: the most it could have to pay.",
+  },
+  loyalty: {
+    title: "Loyalty",
+    body: (d) => {
+      const l = d.people.loyalty;
+      return `How much each member of the family (and the head's spouse) holds to the house, 0 to 100. Loyal at ${l.loyal} or more, disloyal at ${l.disloyal} or less. Granting what they ask raises it by ${l.grant}; refusing lowers it by ${l.refuse}; it drifts toward ${l.drift_to} each year. A loyal heir passed over accepts it; a disloyal one may lay a [[claim]] or leave to found a house of their own.`;
+    },
+  },
+  family_letter: {
+    title: "Family letters",
+    body: () => "Members of the family write with requests, threats to leave, [[claim|claims]] and terms to end a [[feud]]. Answer by End Turn; a letter left unanswered takes the answer marked as the default. Answers cost no one's time, except a match, which takes the head's.",
+  },
+  claim: {
+    title: "Claims",
+    body: (d) => {
+      const c = d.people.claims;
+      return `After a succession, a passed-over or disloyal member may claim a share of the house: up to ${pct(c.share)} of it, at most ${fl(c.max)}. Pay it, go to law (${fl(c.law_cost)}, and a ${pct(c.law_win)} chance the court finds for the house), or refuse and start a [[feud]].`;
+    },
+  },
+  feud: {
+    title: "Feuds",
+    body: (d) => `A refused claimant feuds with the head: the house loses ${d.people.feuds.reputation_per_quarter} [[reputation]] a quarter while it lasts. It ends with that head, after ${d.people.feuds.max_quarters} quarters, or when the house accepts the claimant's terms.`,
+  },
+  study: {
+    title: "Education",
+    body: () => "Send an heir of the right age away to study: university, an apprenticeship abroad, a commission, or a desk in the counting house. It is paid at once and takes the head's time; the heir comes back later with better stats, maybe a [[traits|trait]], and sometimes a friend in another house. Each path is taken once.",
+  },
+  news_delay: {
+    title: "News delay",
+    body: (d) => `News from abroad comes by the post: the days along the shortest road to Frankfurt, halved by a courier stable, cut by ${pct(1 - d.europe.delay.branch)} from a city where the house has a [[branch]], and by each correspondent. A city's dispatch is written on a random day of the quarter; if it cannot arrive before the quarter ends, Frankfurt hears a quarter late. The map shows each city as last heard, not as it is.`,
+  },
+  branch: {
+    title: "Branches",
+    body: (d) => {
+      const b = d.europe.branch;
+      return `A branch abroad is run by a member of the family. It takes deposits, lends at the local rate, trades bills and pays its upkeep in the city's currency; its book is counted in gulden at the Frankfurt [[exchange_quote|quote]]. It needs at least ${fl(b.min_capital)} of capital. War, unrest or panic in its city may force it shut at a loss; a prudent head makes that less likely. Without a head it earns less and loses more.`;
+    },
+  },
+  bill_on_city: {
+    title: "Bills on a city",
+    body: (d) => `A 3-month bill of exchange payable in another city, bought at a discount (a quarter of the city's rate plus ${pct(d.europe.bills.spread)}) and paid home at the Frankfurt [[exchange_quote|quote]] when due. If the payer fails, only ${pct(d.europe.bills.recovery)} comes back. The house may hold ${fl(d.europe.bills.limit)} of bills on any one city, plus its branch's book there.`,
+  },
+  exchange_quote: {
+    title: "The Frankfurt quote",
+    body: () => "Gulden for one unit of a foreign currency on the Frankfurt exchange: its par (metal content), the day's deviation, which every post carries, and any shock from trouble in the city, as far as news of it has reached Frankfurt.",
+  },
+  adoption: {
+    title: "Adoption",
+    body: () => "How far a technology has spread, 0 to 100%, on a dated curve, plus a push from the house's own [[ventures]] of that kind once it has arrived. Adoption moves sector earnings: railways lift industry and hurt canals; steam lifts shipping.",
+  },
+  tech_stage: {
+    title: "Stages",
+    body: () => "Dated steps in a technology's arrival. Some open new kinds of venture; one can come early if the house already backs the technology.",
+  },
+
 };
 
 /** One piece of a card's text: plain words, or a link to another card. */
