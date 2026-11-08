@@ -2,16 +2,19 @@
 import type { ReactNode } from "react";
 import { Icon, type IconName } from "./icons";
 
-export type PanelId = "gazette" | "ledger" | "bourse" | "markets" | "houses" | "family" | "counting" | "letters";
+export type PanelId = "gazette" | "ledger" | "bourse" | "markets" | "houses" | "family" | "counting" | "letters" | "finance" | "europe" | "progress";
 
-/** Panels that take the Desk's room too while open: the House and the Markets need the width. */
-export const WIDE_PANELS: PanelId[] = ["counting", "markets"];
+/** Panels that take the Desk's room too while open: the House, the Markets, High Finance, the map and Progress need the width. */
+export const WIDE_PANELS: PanelId[] = ["counting", "markets", "finance", "europe", "progress"];
 
 export const PANELS: { id: PanelId; title: string; short: string; icon: IconName }[] = [
   { id: "gazette", title: "The Bourse Gazette", short: "Gazette", icon: "gazette" },
   { id: "ledger", title: "The Ledger", short: "Ledger", icon: "ledger" },
   { id: "bourse", title: "The Bourse", short: "Bourse", icon: "bourse" },
   { id: "markets", title: "The Markets", short: "Markets", icon: "markets" },
+  { id: "finance", title: "High Finance", short: "Finance", icon: "finance" },
+  { id: "europe", title: "Europe", short: "Europe", icon: "europe" },
+  { id: "progress", title: "Progress", short: "Progress", icon: "progress" },
   { id: "houses", title: "The Houses of Frankfurt", short: "Houses", icon: "houses" },
   { id: "family", title: "The Family", short: "Family", icon: "family" },
   { id: "counting", title: "The House", short: "House", icon: "counting" },

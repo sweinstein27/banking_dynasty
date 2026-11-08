@@ -61,7 +61,8 @@ export function loyaltyView(state: GameState, p: Person, data: GameData): Loyalt
         heading: "What it does",
         lines: [
           { label: "A loyal heir passed over accepts it", value: "no reputation lost" },
-          { label: "A disloyal member may", value: "lay claims or leave" },
+          { label: "A grown heir not loyal at a succession", value: "may lay a claim" },
+          { label: "A disloyal or feuding member", value: "may ask to leave" },
         ],
       },
     ],

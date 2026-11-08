@@ -16,7 +16,6 @@ import { financeBook } from "../../sim/systems/finance";
 import type { BondIssuer, GameData } from "../../sim/tuning";
 import type { GameState } from "../../sim/types";
 import type { Line, Section } from "./breakdowns";
-import { capacityNote } from "./capacity";
 
 const issuerOf = (data: GameData, id: string): BondIssuer | undefined => data.states.find((s) => s.id === id);
 const houseName = (state: GameState, id: string) => state.houses.find((h) => h.id === id)?.name ?? id;
@@ -132,7 +131,7 @@ export function commissionChoices(state: GameState, c: Contract, data: GameData)
     label: pct(commission),
     notes: [
       `About ${fl(Math.round(c.size * price * commission))} if every bond is placed`,
-      `Counts as ${pct(bidScore(commission, state.house.reputation, data))} against other houses' bids`,
+      `Weighed as ${pct(bidScore(commission, state.house.reputation, data))} once your name is counted`,
     ],
     blocked: checkBidContract(state, { kind: "bid_contract", contract: c.id, commission }, data),
   }));
@@ -152,7 +151,7 @@ export function contractTerms(state: GameState, c: Contract, data: GameData): Se
       { label: "Free cash now", value: fl(freeCash(state)) },
       { label: "Placing takes", value: `${t.placement.quarters} quarters` },
       { label: "What investors will not take, the house buys", value: "at the issue price less its commission" },
-      { label: "Time", value: capacityNote(state, "bid_contract", data) },
+      { label: "A state weighs a better name as commission given up", value: `${pct(t.prestige_weight)} per 100 reputation above 50` },
     ],
   };
 }
@@ -188,12 +187,19 @@ export function requestRows(state: GameState, data: GameData): RequestRow[] {
   }));
 }
 
-/** Rates the house may ask, from the floor to the house's top rate in half points, each with the opinion it earns. */
+/**
+ * Rates the house may ask: from the floor to the house's top rate in about five even steps (whole
+ * half points), plus the top of each gratitude band, each with the opinion it earns.
+ */
 export function rateChoices(state: GameState, r: HouseRequest, data: GameData): Choice[] {
-  const lo = data.finance.house_loans.min_rate;
-  const rates: number[] = [];
-  for (let x = lo; x < r.max_rate - 1e-9; x = Math.round((x + 0.005) * 10000) / 10000) rates.push(x);
-  rates.push(r.max_rate);
+  const t = data.finance.house_loans;
+  const lo = t.min_rate;
+  const step = Math.max(0.005, Math.ceil((r.max_rate - lo) / 5 / 0.005) * 0.005);
+  const set = new Set<number>();
+  for (let x = lo; x < r.max_rate - 1e-9; x = Math.round((x + step) * 10000) / 10000) set.add(x);
+  for (const g of t.gratitude) if (g.up_to > lo && g.up_to < r.max_rate - 1e-9) set.add(g.up_to);
+  set.add(r.max_rate);
+  const rates = [...set].sort((a, b) => a - b);
   return rates.map((rate) => {
     const g = gratitude(rate, data);
     return {

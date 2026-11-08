@@ -98,7 +98,10 @@ function checkScreens(s: GameState): Decision[] {
     expect(pin.known).toEqual(cs.known);
     const min = gameData.europe.branch.min_capital;
     if (!pin.branch) {
-      for (const c of openCandidates(s, pin.city.id, min, gameData)) expect(c.blocked === null, `${pin.city.id} ${c.person.name}: ${c.blocked}`).toBe(accepts(s, { kind: "open_branch", city: pin.city.id, head: c.person.id, capital: min }));
+      for (const c of openCandidates(s, pin.city.id, min, gameData)) {
+        expect(c.blocked === null, `${pin.city.id} ${c.person.name}: ${c.blocked}`).toBe(accepts(s, { kind: "open_branch", city: pin.city.id, head: c.person.id, capital: min }));
+        if (c.who !== null) expect(c.blocked).not.toBeNull();
+      }
       const ok = openCandidates(s, pin.city.id, min, gameData).find((c) => c.blocked === null);
       if (ok && !take.some((d) => d.kind === "open_branch")) take.push({ kind: "open_branch", city: pin.city.id, head: ok.person.id, capital: min });
     } else {

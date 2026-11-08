@@ -5,6 +5,11 @@ import { capacityLeft, POOLS, poolLeft, type Pool } from "../sim/capacity";
 import { inCrisis } from "../sim/crisis";
 import { ageIn, headEffects, headOf, heirsOf, isTrained, successor, yearlyDeathChance } from "../sim/family";
 import { unansweredLetters } from "../sim/letters";
+import { openLots } from "../sim/finance/auctions";
+import { openContracts } from "../sim/finance/contracts";
+import { openHouseRequests } from "../sim/finance/houseLoans";
+import { openCoverRequests } from "../sim/finance/insurance";
+import { unansweredFamilyLetters } from "./model/people";
 import { freeCash } from "../sim/reserves";
 import { quartersLeft } from "../sim/ventures";
 import { fl, keepUnits } from "./format";
@@ -29,6 +34,20 @@ export function alertsFor(game: Game): Alert[] {
   const out: Alert[] = [];
   const letters = unansweredLetters(s).length;
   if (letters) out.push({ key: "letters", tone: "warn", text: `${letters} letter${letters === 1 ? " awaits" : "s await"} your answer`, panel: "letters" });
+  const family = unansweredFamilyLetters(s);
+  if (family) out.push({ key: "family", tone: "warn", text: `${family} family letter${family === 1 ? " awaits" : "s await"} your answer`, panel: "family" });
+  const contracts = openContracts(s).filter((c) => c.player_bid === null).length;
+  if (contracts) out.push({ key: "contracts", tone: "info", text: `${contracts} state loan${contracts === 1 ? " is" : "s are"} open for bids`, panel: "finance" });
+  const credit = openHouseRequests(s).length;
+  if (credit) out.push({ key: "credit", tone: "info", text: `${credit === 1 ? "A house asks" : `${credit} houses ask`} for credit`, panel: "finance" });
+  const lots = openLots(s).filter((l) => l.player_bid === null).length + openCoverRequests(s).length;
+  if (lots) out.push({ key: "lots", tone: "info", text: `${lots} lot${lots === 1 ? "" : "s"} at auction or request${lots === 1 ? "" : "s"} for cover`, panel: "finance" });
+  for (const b of s.europe.branches) {
+    const c = s.europe.cities.find((x) => x.id === b.city);
+    if (!c || (c.known.status === "peace" && c.known.mood !== "panic")) continue;
+    const name = gameData.europe.cities.find((x) => x.id === b.city)?.name ?? b.city;
+    out.push({ key: `branch${b.city}`, tone: "bad", text: `Your branch in ${name}: the city is ${c.known.status === "peace" ? "in panic" : c.known.status === "war" ? "at war" : "in unrest"}`, panel: "europe" });
+  }
   if (s.panic_warning) {
     const n = s.panic_warning.turns_left;
     out.push({ key: "panic", tone: "bad", text: `Panic ${n === 1 ? "next quarter" : `in ${n} quarters`}: raise the reserve`, panel: "gazette" });

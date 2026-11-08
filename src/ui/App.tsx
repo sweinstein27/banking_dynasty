@@ -8,7 +8,10 @@ import { Alerts } from "./Alerts";
 import { BoursePanel } from "./BoursePanel";
 import { LettersPanel } from "./LettersPanel";
 import { Desk } from "./Desk";
+import { EuropePanel } from "./EuropePanel";
 import { FamilyPanel } from "./FamilyPanel";
+import { FinancePanel } from "./FinancePanel";
+import { ProgressPanel } from "./ProgressPanel";
 import { downloadText, pickTextFile } from "./files";
 import { Gazette } from "./Gazette";
 import { GameMenu } from "./GameMenu";
@@ -85,6 +88,9 @@ export function App() {
           {panel === "markets" && <MarketsPanel state={preview} onDecide={decide} />}
           {panel === "counting" && <HouseView state={preview} onDecide={decide} />}
           {panel === "letters" && <LettersPanel state={preview} onDecide={decide} />}
+          {panel === "finance" && <FinancePanel state={preview} onDecide={decide} />}
+          {panel === "europe" && <EuropePanel state={preview} onDecide={decide} />}
+          {panel === "progress" && <ProgressPanel state={preview} onOpen={setPanel} />}
         </PanelFrame>
         {WIDE_PANELS.includes(panel) && !over ? null : over ? (
           <GameOver state={base} reason={over} seed={game.seed} onNewGame={() => setOnStartScreen(true)} onSave={save} />

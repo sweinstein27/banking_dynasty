@@ -3,7 +3,7 @@
 // sums behind every number and the sim's verdict on every decision. Built from C1's own functions
 // (src/sim/europe/*); tests/ui-wave3-screens.test.ts checks them against the sim.
 import { workingCount } from "../../sim/capacity";
-import { billDiscount, billFace, billRoom, branchCandidates, branchHead, branchIn, branchQuarter, checkAppointHead, checkBuyBill, checkCloseBranch, checkFundBranch, checkOpenBranch, closeChance, closeLoss } from "../../sim/europe/branches";
+import { billDiscount, billFace, billRoom, branchHead, headProblem, branchIn, branchQuarter, checkAppointHead, checkBuyBill, checkCloseBranch, checkFundBranch, checkOpenBranch, closeChance, closeLoss } from "../../sim/europe/branches";
 import type { Branch, CityData, CityStatus, CityView } from "../../sim/europe/types";
 import { cityState, currencyData, isFixed, newsDelay, onOrAfter, quote, roadDays } from "../../sim/europe/world";
 import { fl } from "../../sim/format";
@@ -203,13 +203,16 @@ export function branchView(state: GameState, cityId: string, data: GameData): Br
   };
 }
 
-/** Who could open a branch in a city, each with the sim's verdict at the smallest capital. */
-export function openCandidates(state: GameState, cityId: string, capital: number, data: GameData): { person: Person; blocked: string | null }[] {
+/**
+ * Grown members of the line who might open a branch in a city: `who` is why this person cannot
+ * head one (too young, already running another), `blocked` the sim's whole verdict at this capital.
+ */
+export function openCandidates(state: GameState, cityId: string, capital: number, data: GameData): { person: Person; who: string | null; blocked: string | null }[] {
   const people = state.people.filter((p) => p.death_year === null && p.role === "line" && !p.is_head);
-  const ok = new Set(branchCandidates(state, data).map((p) => p.id));
   return people.map((person) => ({
     person,
-    blocked: checkOpenBranch(state, { kind: "open_branch", city: cityId, head: person.id, capital }, data) ?? (ok.has(person.id) ? null : "Cannot head a branch"),
+    who: headProblem(state, person, data),
+    blocked: checkOpenBranch(state, { kind: "open_branch", city: cityId, head: person.id, capital }, data),
   }));
 }
 

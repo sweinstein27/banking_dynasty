@@ -714,3 +714,129 @@ button.room.room-building { border-style: dashed; border-color: var(--amber); }
 .call.overrun.paid { background: #c0705f; }
 .calls .small { margin-left: 0.4rem; }
 .cell-why { display: block; white-space: normal; text-align: right; max-width: 22rem; margin-left: auto; }
+
+/* ---------- Wave 2's systems: shared ---------- */
+
+.pick-list { margin: 0.4rem 0; }
+.pick-list .choice { min-height: max(56px, 3.4rem); }
+.choice .act-why { white-space: normal; }
+button.link-button {
+  display: inline; min-height: 0; padding: 0; margin: 0; border: none; background: none; box-shadow: none;
+  font: inherit; color: var(--oxblood); text-decoration: underline; cursor: pointer; position: relative;
+}
+button.link-button::after { content: ""; position: absolute; left: -2px; right: -2px; top: 50%; height: 44px; transform: translateY(-50%); }
+.finance-summary, .europe-summary { margin: 0; }
+
+/* ---------- People ---------- */
+
+button.sum-trigger.loyalty-chip { font-size: 0.78rem; font-style: italic; margin-left: 0.35rem; white-space: nowrap; }
+.loyalty-chip.tone-good { color: var(--bottle); }
+.loyalty-chip.tone-warn { color: var(--amber); }
+.loyalty-chip.tone-bad { color: var(--oxblood); }
+.family-letters { display: flex; flex-direction: column; gap: 0.4rem; list-style: none; padding: 0; }
+.family-letter { background: linear-gradient(170deg, #fbf5e6, #efe2c4); border-left-color: var(--oxblood); }
+.family-letter .letter-text { font-size: 1rem; margin: 0.2rem 0 0.35rem; }
+.study-paths { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0.4rem 0.8rem; }
+.study-path { display: flex; flex-direction: column; gap: 0.15rem; }
+.study-path .act { max-width: none; }
+.study-path .act button { width: 100%; }
+
+/* ---------- Progress ---------- */
+
+.tech-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.4rem; }
+.tech .row-head strong { font-family: var(--display); font-size: 1.1rem; }
+.tech-gauge { display: block; width: 100%; height: 0.6rem; margin: 0.1rem 0 0.2rem; }
+.stages { list-style: none; padding: 0; margin: 0.1rem 0; display: flex; flex-direction: column; gap: 0.1rem; font-size: 0.86rem; }
+.stage { display: grid; grid-template-columns: 4.6rem minmax(0, 1fr); gap: 0.3rem; line-height: 1.25; }
+.stage-date { font-variant-numeric: tabular-nums; color: var(--muted); }
+.stage.reached .stage-date { color: var(--bottle); font-weight: 700; }
+.progress .sheet-columns { margin-top: auto; }
+
+/* ---------- Europe ---------- */
+
+.europe-layout { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(19rem, 26rem); gap: 0.8rem; }
+.map-column { min-height: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+.europe-map { flex: 1; min-height: 0; width: 100%; border: 1px solid #9c8660; background: #b9cdd2; }
+.europe-map .sea { fill: #b9cdd2; }
+.europe-map .land { fill: #eadcb9; stroke: #9c8660; stroke-width: 2; }
+.europe-map .road line { stroke: #7a5a3a; stroke-width: 2.5; stroke-dasharray: 8 6; }
+.europe-map .road text { font-size: 17px; fill: #5a4630; text-anchor: middle; paint-order: stroke; stroke: #eadcb9; stroke-width: 5px; }
+.europe-map .city { cursor: pointer; }
+.europe-map .city .hit { fill: transparent; }
+.europe-map .city:focus-visible { outline: none; }
+.europe-map .city:focus-visible .hit { stroke: var(--brass); stroke-width: 4; }
+.europe-map .pin { stroke: var(--ink); stroke-width: 2.5; }
+.europe-map .pick-ring { fill: none; stroke: var(--ink); stroke-width: 4; }
+.europe-map .status-ring { fill: none; stroke: var(--oxblood); stroke-width: 4; }
+.europe-map .flag { fill: var(--oxblood); stroke: var(--ink); stroke-width: 2; }
+.europe-map .city-name { font-family: var(--display); font-size: 24px; fill: var(--ink); text-anchor: middle; paint-order: stroke; stroke: #f3e9d2; stroke-width: 6px; }
+.europe-map .city-note { font-size: 17px; fill: #4a3a28; text-anchor: middle; paint-order: stroke; stroke: #f3e9d2; stroke-width: 5px; }
+.europe-map .city.on .city-name { text-decoration: underline; }
+.mood-calm { fill: #4f8a5b; background: #4f8a5b; }
+.mood-uneasy { fill: #d39b2a; background: #d39b2a; }
+.mood-panic { fill: #b03030; background: #b03030; }
+.mood-home { fill: var(--brass); }
+.mood-dot { display: inline-block; width: 0.75rem; height: 0.75rem; border-radius: 50%; border: 1px solid var(--ink); margin: 0 0.25rem 0 0.1rem; vertical-align: -0.05rem; }
+.mood-chip-calm { background: var(--bottle); }
+.mood-chip-uneasy { background: var(--amber); }
+.mood-chip-panic { background: var(--oxblood); }
+.city-buttons { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.city-buttons button { padding: 0.2rem 0.6rem; }
+.city-buttons button.on { border-color: var(--ink); box-shadow: inset 0 -3px 0 var(--oxblood); font-weight: 700; }
+.map-key { margin: 0; }
+.city-sheet { min-height: 0; display: flex; flex-direction: column; gap: 0.25rem; border-left: 1px solid var(--rule); padding-left: 0.8rem; }
+.city-sheet h3 { font-size: 1.4rem; margin: 0; }
+.city-block { border-top: 1px solid var(--rule); padding-top: 0.25rem; }
+.city-block h4 { margin: 0 0 0.1rem; font-size: 1.02rem; }
+.city-block .role-picks { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 0.3rem; }
+.city-block .field-inline { flex-direction: row; flex-wrap: wrap; align-items: flex-end; gap: 0.4rem; }
+.city-block .field-inline label { display: flex; flex-direction: column; }
+
+@media (max-width: 760px) {
+  .europe-layout { grid-template-columns: minmax(0, 1fr); }
+  .city-sheet { border-left: none; padding-left: 0; }
+  .map-column, .city-sheet, .city-sheet .doc-tabs { min-height: auto; }
+  .person-body { min-width: 0; }
+  .stat-list li { flex-wrap: wrap; }
+  .pips { flex-wrap: wrap; }
+  .family .choices, .city-sheet .role-picks { grid-template-columns: minmax(0, 1fr); }
+  .progress .sheet-columns { grid-template-columns: minmax(0, 1fr); }
+  .finance .ribbons, .family .ribbons, .city-sheet .ribbons { flex-wrap: wrap; row-gap: 0.25rem; }
+  .finance .market-table, .finance .market-table tbody { max-width: 100%; }
+}
+.finance-columns { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.8rem; }
+.finance-columns > section { min-height: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+.finance-columns > section > .page-turner { margin-top: auto; }
+@media (max-width: 1100px) { .finance-columns { grid-template-columns: minmax(0, 1fr); } }
+.loans-columns { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
+ul.choices { list-style: none; padding: 0; }
+.study-heir .study-paths { grid-template-columns: minmax(0, 1fr); gap: 0.25rem; }
+.study-path { display: grid; grid-template-columns: minmax(9rem, 13rem) minmax(0, 1fr); align-items: center; gap: 0.5rem; }
+.study-path .small { line-height: 1.2; }
+.tech-effects { gap: 0; margin-top: 0.15rem; }
+.sheet-tabs { margin-top: 0.2rem; }
+.sheet-tabs .ribbon { font-size: 0.92rem; padding: 0.2rem 0.6rem; }
+.city-block { border-top: none; padding-top: 0; }
+.ribbon { min-width: 44px; }
+
+/* Narrow windows (a tablet held upright, a phone): wave 2's pages stack their columns and, where a
+   page still cannot fit, scroll inside the document rather than clip. Desktop sizes never scroll. */
+@media (max-width: 900px) {
+  .finance .doc-page, .family .doc-page, .progress, .europe .europe-layout, .city-sheet .doc-page { overflow-y: auto; }
+  .finance-columns, .loans-columns { grid-template-columns: minmax(0, 1fr); }
+  .tech-list { grid-template-columns: minmax(0, 1fr); }
+  .study-path { grid-template-columns: minmax(0, 1fr); }
+  .person-name { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem; }
+  .market-table { display: block; overflow-x: auto; }
+  .europe-layout { grid-template-columns: minmax(0, 1fr); }
+  .europe-map { flex: none; height: auto; }
+  .city-sheet { border-left: none; padding-left: 0; }
+  .map-column, .city-sheet, .city-sheet .doc-tabs { min-height: auto; }
+  .person-body { min-width: 0; }
+  .stat-list li { flex-wrap: wrap; }
+  .pips { flex-wrap: wrap; }
+  .family .choices, .city-sheet .role-picks { grid-template-columns: minmax(0, 1fr); }
+  .progress .sheet-columns { grid-template-columns: minmax(0, 1fr); }
+  .finance .ribbons, .family .ribbons, .city-sheet .ribbons { flex-wrap: wrap; row-gap: 0.25rem; }
+  .finance .market-table, .finance .market-table tbody { max-width: 100%; }
+}

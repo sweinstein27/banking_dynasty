@@ -349,7 +349,7 @@ export const GLOSSARY: Record<string, GlossaryCard> = {
     title: "Loyalty",
     body: (d) => {
       const l = d.people.loyalty;
-      return `How much each member of the family (and the head's spouse) holds to the house, 0 to 100. Loyal at ${l.loyal} or more, disloyal at ${l.disloyal} or less. Granting what they ask raises it by ${l.grant}; refusing lowers it by ${l.refuse}; it drifts toward ${l.drift_to} each year. A loyal heir passed over accepts it; a disloyal one may lay a [[claim]] or leave to found a house of their own.`;
+      return `How much each member of the family (and the head's spouse) holds to the house, 0 to 100. Loyal at ${l.loyal} or more, disloyal at ${l.disloyal} or less. Granting what they ask raises it by ${l.grant}; refusing lowers it by ${l.refuse}; it drifts toward ${l.drift_to} each year. A loyal heir passed over accepts it. A grown heir who is not loyal may lay a [[claim]] after a succession; a disloyal one may leave to found a house of their own.`;
     },
   },
   family_letter: {
@@ -360,7 +360,7 @@ export const GLOSSARY: Record<string, GlossaryCard> = {
     title: "Claims",
     body: (d) => {
       const c = d.people.claims;
-      return `After a succession, a passed-over or disloyal member may claim a share of the house: up to ${pct(c.share)} of it, at most ${fl(c.max)}. Pay it, go to law (${fl(c.law_cost)}, and a ${pct(c.law_win)} chance the court finds for the house), or refuse and start a [[feud]].`;
+      return `After a succession, each grown heir who is not [[loyalty|loyal]] may claim a share of the house: up to ${pct(c.share)} of it, at most ${fl(c.max)}. Pay it, go to law (${fl(c.law_cost)}, and a ${pct(c.law_win)} chance the court finds for the house), or refuse and start a [[feud]].`;
     },
   },
   feud: {

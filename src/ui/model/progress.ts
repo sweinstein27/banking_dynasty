@@ -73,7 +73,7 @@ function stageView(state: GameState, s: Stage, data: GameData): StageView {
   const reached = state.progress.stages?.includes(s.id) ?? false;
   return {
     stage: s,
-    title: s.title ?? (s.opens?.length ? `${s.opens.map((id) => data.ventures.find((v) => v.id === id)?.name ?? id).join(", ")} open` : "A step forward"),
+    title: s.title ?? `The first ${data.progress.technologies.find((t) => t.id === s.tech)?.name.toLowerCase() ?? s.tech} in the German lands`,
     date: dateWords(s),
     reached,
     opens: (s.opens ?? []).map((id) => {
