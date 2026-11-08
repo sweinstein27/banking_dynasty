@@ -1,1 +1,222 @@
-{}
+{
+  "borrowers": [
+    { "id": "central_power", "name": "The Provisional Central Power", "min_reputation": 35 }
+  ],
+  "campaigns": [
+    {
+      "id": "hundred-days-1815",
+      "name": "Hundred Days",
+      "states": ["prussia", "austria", "bavaria", "france"],
+      "timeline": [
+        { "year": 1815, "quarter": 1, "stage": "mobilizing", "title": "Napoleon has left Elba", "text": "On 1 March Napoleon landed in the south of France, and the army goes over to him. The powers at Vienna declare him an outlaw and call up their armies again." },
+        { "year": 1815, "quarter": 2, "stage": "fighting", "title": "The armies march", "text": "Prussian and British armies gather in Belgium, the Austrians and Bavarians on the upper Rhine. Everyone expects a battle by midsummer." },
+        { "year": 1815, "quarter": 3, "stage": "settling", "title": "The allies in Paris", "text": "The allied armies entered Paris on 7 July. The diplomats now argue over what France must pay." },
+        { "year": 1815, "quarter": 4, "stage": "peace", "title": "The armies go home", "text": "With a treaty signed, most of the allied regiments march home. An army of occupation stays in France." }
+      ],
+      "risk": { "mobilizing": 0.05, "fighting": 0.08, "settling": 0.03 },
+      "trade": { "mobilizing": 1.05, "fighting": 1.1 },
+      "shocks": { "fighting": { "shares": 0.95, "commodities": { "grain": 1.08 } } },
+      "offers": [
+        { "id": "prussia-1815", "borrower": "prussia", "phases": ["mobilizing", "fighting"], "rate": 0.07, "term_quarters": 8, "max": 40000, "default_chance": 0.03, "recovery": 0.5, "text": "Prussia needs money to put its army in the field once more." },
+        { "id": "austria-1815", "borrower": "austria", "phases": ["mobilizing", "fighting"], "rate": 0.075, "term_quarters": 8, "max": 30000, "default_chance": 0.05, "recovery": 0.5, "text": "Austria asks the Frankfurt houses for an advance to march on the Rhine." }
+      ]
+    },
+    {
+      "id": "naples-1821",
+      "name": "Neapolitan campaign",
+      "states": ["austria", "naples"],
+      "timeline": [
+        { "year": 1820, "quarter": 4, "stage": "mobilizing", "title": "The powers meet at Troppau", "text": "Austria, Prussia and Russia meet at Troppau to decide what to do about the revolution in Naples. Austria gathers troops in Lombardy." },
+        { "year": 1821, "quarter": 1, "stage": "fighting", "title": "Austria marches on Naples", "text": "The congress, moved to Laibach, gives Austria leave to end the Neapolitan constitution. An Austrian army crosses the Po heading south." },
+        { "year": 1821, "quarter": 2, "stage": "settling", "title": "Naples occupied", "text": "The Neapolitans were beaten at Rieti on 7 March, and the Austrians entered Naples on 24 March. Naples must now pay for the army that occupies it." },
+        { "year": 1822, "quarter": 1, "stage": "peace", "title": "Quiet in the south", "text": "The king rules Naples as before, with Austrian soldiers in his garrisons." }
+      ],
+      "risk": { "mobilizing": 0.04, "fighting": 0.08, "settling": 0.03 },
+      "shocks": { "fighting": { "shares": 0.98 } },
+      "offers": [
+        { "id": "austria-1821", "borrower": "austria", "phases": ["mobilizing", "fighting"], "rate": 0.065, "term_quarters": 8, "max": 30000, "default_chance": 0.04, "recovery": 0.5, "repression": 2, "text": "Austria borrows to march on Naples and end its constitution. Liberal Frankfurt will not thank the house for it." },
+        { "id": "naples-1821", "borrower": "naples", "phases": ["settling"], "rate": 0.09, "term_quarters": 12, "max": 20000, "default_chance": 0.12, "recovery": 0.4, "repression": 1, "text": "The restored king of Naples borrows to pay the Austrian army of occupation." }
+      ]
+    },
+    {
+      "id": "spain-1823",
+      "name": "Spanish expedition",
+      "states": ["france"],
+      "timeline": [
+        { "year": 1823, "quarter": 1, "stage": "mobilizing", "title": "France arms against Spain", "text": "The French chambers vote 100 million francs for an army to restore the king of Spain's full power. Troops gather at the Pyrenees." },
+        { "year": 1823, "quarter": 2, "stage": "fighting", "title": "The French cross into Spain", "text": "On 7 April the French army crossed the Bidasoa. The Spanish liberals fall back on Cadiz with their captive king." },
+        { "year": 1823, "quarter": 4, "stage": "settling", "title": "Cadiz falls", "text": "The French took the Trocadero on 31 August, and on 23 September Cadiz gave up the king. Ferdinand VII rules as he pleases again." },
+        { "year": 1824, "quarter": 1, "stage": "peace", "title": "The expedition ends", "text": "Most of the French army comes home from Spain. French credit has come through the war well." }
+      ],
+      "risk": { "mobilizing": 0.04, "fighting": 0.06, "settling": 0.02 },
+      "offers": [
+        { "id": "france-1823", "borrower": "france", "phases": ["mobilizing", "fighting"], "rate": 0.065, "term_quarters": 8, "max": 30000, "default_chance": 0.03, "recovery": 0.5, "repression": 2, "text": "France borrows for its army in Spain, sent to put a king back above his constitution." }
+      ]
+    },
+    {
+      "id": "russo-turkish-1828",
+      "name": "Russo-Turkish War",
+      "states": [],
+      "timeline": [
+        { "year": 1828, "quarter": 2, "stage": "fighting", "title": "Russia goes to war with the Sultan", "text": "Russia has declared war on the Ottoman Empire. Grain from Odessa may not come through the Straits this year." },
+        { "year": 1829, "quarter": 4, "stage": "peace", "title": "Peace at Adrianople", "text": "The Sultan made peace at Adrianople on 14 September and opens the Straits to merchant ships." }
+      ],
+      "risk": {},
+      "shocks": { "fighting": { "commodities": { "grain": 1.05 } } },
+      "offers": []
+    },
+    {
+      "id": "war-scare-1830",
+      "name": "war scare of 1830",
+      "states": ["prussia", "france"],
+      "timeline": [
+        { "year": 1830, "quarter": 4, "stage": "mobilizing", "title": "Europe arms", "text": "Belgium has broken from the Dutch king, and on 29 November Warsaw rose against the Tsar. Prussia gathers an army of observation on its Polish border, and France arms too." },
+        { "year": 1831, "quarter": 3, "stage": "fighting", "title": "The Dutch march into Belgium", "text": "On 2 August the Dutch invaded Belgium, and a French army marches to meet them. In Poland the Russians close on Warsaw." },
+        { "year": 1831, "quarter": 4, "stage": "settling", "title": "Warsaw has fallen", "text": "Warsaw fell to the Russians on 8 September and the Polish army has laid down its arms. The Dutch went home before the French. The danger of a general war is passing." },
+        { "year": 1832, "quarter": 1, "stage": "peace", "title": "The armies stand down", "text": "Prussia sends its reserves home. The bourse breathes again." }
+      ],
+      "risk": { "mobilizing": 0.04, "fighting": 0.05, "settling": 0.02 },
+      "trade": { "mobilizing": 1.05, "fighting": 1.08 },
+      "shocks": { "mobilizing": { "shares": 0.95 } },
+      "offers": [
+        { "id": "prussia-1830", "borrower": "prussia", "phases": ["mobilizing"], "rate": 0.06, "term_quarters": 8, "max": 40000, "default_chance": 0.02, "recovery": 0.6, "text": "Prussia borrows to keep its army of observation on the Polish border." },
+        { "id": "france-1831", "borrower": "france", "phases": ["mobilizing"], "rate": 0.06, "term_quarters": 8, "max": 30000, "default_chance": 0.03, "recovery": 0.5, "text": "France raises a loan of 120 million francs for its army, and offers the Frankfurt houses a share." }
+      ]
+    },
+    {
+      "id": "rhine-crisis-1840",
+      "name": "Rhine crisis",
+      "states": ["france", "prussia", "bavaria"],
+      "timeline": [
+        { "year": 1840, "quarter": 3, "stage": "mobilizing", "title": "Paris talks of the Rhine", "text": "The powers settled the Eastern Question without France on 15 July. Paris is furious, and its newspapers demand the left bank of the Rhine. The German states look to their fortresses." },
+        { "year": 1840, "quarter": 4, "stage": "settling", "title": "Thiers falls", "text": "The king of the French dismissed his warlike minister on 29 October. The danger of war on the Rhine recedes, though the songs go on." },
+        { "year": 1841, "quarter": 2, "stage": "peace", "title": "Fortresses on the Rhine", "text": "On 26 March the Federal Diet in Frankfurt decided to build federal fortresses at Ulm and Rastatt. The scare is over." }
+      ],
+      "risk": { "mobilizing": 0.05, "settling": 0.02 },
+      "trade": { "mobilizing": 1.03 },
+      "shocks": { "mobilizing": { "shares": 0.93 } },
+      "offers": [
+        { "id": "bavaria-1840", "borrower": "bavaria", "phases": ["mobilizing"], "rate": 0.055, "term_quarters": 8, "max": 20000, "default_chance": 0.02, "recovery": 0.6, "text": "Bavaria borrows to put its army on a war footing along the Rhine." }
+      ]
+    },
+    {
+      "id": "schleswig-1848",
+      "name": "Schleswig war",
+      "states": ["prussia"],
+      "timeline": [
+        { "year": 1848, "quarter": 1, "stage": "mobilizing", "title": "Schleswig-Holstein rises", "text": "On 24 March the duchies rose against the Danish king. Prussian and federal troops are ordered north to help them." },
+        { "year": 1848, "quarter": 2, "stage": "fighting", "title": "War with Denmark", "text": "Prussian troops march into Schleswig, and Danish ships put to sea to blockade the German ports." },
+        { "year": 1848, "quarter": 3, "stage": "settling", "title": "Armistice talks", "text": "Under pressure from Britain and Russia, Prussia talks of an armistice with Denmark. The blockade still holds." },
+        { "year": 1849, "quarter": 2, "stage": "fighting", "title": "The Danish war resumes", "text": "The armistice signed at Malmoe ran out, and on 3 April the fighting began again. The Danes blockade the ports once more." },
+        { "year": 1849, "quarter": 3, "stage": "settling", "title": "A truce with Denmark", "text": "Prussia and Denmark agreed a truce on 10 July. The duchies are left to fend for themselves." },
+        { "year": 1850, "quarter": 3, "stage": "peace", "title": "Peace with Denmark", "text": "Prussia made peace with Denmark at Berlin on 2 July. The Schleswig-Holsteiners fight on alone." }
+      ],
+      "risk": { "mobilizing": 0.03, "fighting": 0.06, "settling": 0.02 },
+      "trade": { "fighting": 1.08 },
+      "shocks": { "fighting": { "commodities": { "colonial": 1.08 } } },
+      "offers": [
+        { "id": "prussia-1848", "borrower": "prussia", "phases": ["mobilizing", "fighting"], "rate": 0.06, "term_quarters": 8, "max": 40000, "default_chance": 0.03, "recovery": 0.6, "text": "Prussia raises a voluntary loan of 15 million thaler, and its agents call on the Frankfurt houses." },
+        { "id": "central-power-1848", "borrower": "central_power", "phases": ["fighting", "settling"], "rate": 0.07, "term_quarters": 8, "max": 25000, "default_chance": 0.45, "recovery": 0.2, "text": "The parliament in the Paulskirche has voted 6 million thaler for a German fleet, but the states are slow to pay their shares. The Central Power asks the Frankfurt houses for an advance." }
+      ]
+    },
+    {
+      "id": "austria-1848",
+      "name": "Austria's wars",
+      "states": ["austria"],
+      "timeline": [
+        { "year": 1848, "quarter": 1, "stage": "mobilizing", "title": "Lombardy rises", "text": "Milan has driven out the Austrian garrison, and on 23 March the king of Sardinia declared war on Austria. Radetzky falls back on his fortresses." },
+        { "year": 1848, "quarter": 2, "stage": "fighting", "title": "War in Italy", "text": "Sardinian and Austrian armies fight across Lombardy. Vienna can barely pay its soldiers." },
+        { "year": 1848, "quarter": 4, "stage": "fighting", "title": "War in Hungary", "text": "Radetzky won at Custoza in July and Sardinia asked for an armistice. But on 11 September Jelacic crossed the Drava against the Hungarians, and the empire fights on another front." },
+        { "year": 1849, "quarter": 3, "stage": "fighting", "title": "The Tsar's army in Hungary", "text": "Sardinia was crushed at Novara in March. In June a Russian army entered Hungary to help Austria finish the war." },
+        { "year": 1849, "quarter": 4, "stage": "settling", "title": "Hungary surrenders", "text": "The Hungarian army laid down its arms at Vilagos on 13 August, and peace with Sardinia was signed at Milan. Austria counts the cost." },
+        { "year": 1850, "quarter": 2, "stage": "peace", "title": "The empire at peace", "text": "Austria's armies are on a peace footing again, though its paper money is not." }
+      ],
+      "risk": { "mobilizing": 0.04, "fighting": 0.07, "settling": 0.03 },
+      "trade": { "fighting": 1.03 },
+      "offers": [
+        { "id": "austria-1848", "borrower": "austria", "phases": ["fighting"], "rate": 0.07, "term_quarters": 8, "max": 40000, "default_chance": 0.06, "recovery": 0.5, "repression": 3, "text": "Austria borrows to put down Hungary and keep Lombardy. Frankfurt's democrats call it blood money." }
+      ]
+    },
+    {
+      "id": "baden-1849",
+      "name": "Baden campaign",
+      "states": ["prussia", "bavaria"],
+      "timeline": [
+        { "year": 1849, "quarter": 2, "stage": "fighting", "title": "Baden and the Palatinate rise", "text": "The garrison of Rastatt mutinied on 9 May and the grand duke of Baden has fled. The Bavarian Palatinate has risen too. Prussian troops march south, a few days from Frankfurt." },
+        { "year": 1849, "quarter": 3, "stage": "settling", "title": "Rastatt besieged", "text": "The Prussians beat the Baden army at Waghaeusel on 21 June and have shut its last soldiers up in Rastatt." },
+        { "year": 1849, "quarter": 4, "stage": "peace", "title": "Rastatt surrenders", "text": "Rastatt surrendered on 23 July. The courts-martial at Rastatt and Freiburg are at work." }
+      ],
+      "risk": { "fighting": 0.03, "settling": 0.01 },
+      "trade": { "fighting": 1.06 },
+      "shocks": { "fighting": { "shares": 0.96 } },
+      "offers": [
+        { "id": "prussia-1849", "borrower": "prussia", "phases": ["fighting"], "rate": 0.06, "term_quarters": 6, "max": 30000, "default_chance": 0.02, "recovery": 0.6, "repression": 3, "text": "Prussia borrows to send an army into Baden and the Palatinate and end their risings." }
+      ]
+    },
+    {
+      "id": "hesse-1850",
+      "name": "Hessian crisis",
+      "states": ["prussia", "austria", "bavaria"],
+      "timeline": [
+        { "year": 1850, "quarter": 4, "stage": "mobilizing", "title": "Prussia and Austria face each other in Hesse", "text": "The Federal Diet has sent Bavarian and Austrian troops into Hesse-Kassel, and Prussia mobilizes against them. Hanau and Fulda are a day's ride from Frankfurt." }
+      ],
+      "risk": { "mobilizing": 0.05 },
+      "trade": { "mobilizing": 1.05 },
+      "shocks": { "mobilizing": { "shares": 0.94 } },
+      "offers": []
+    }
+  ],
+  "fortune": { "swing": 0.02, "bad": 0.4, "cap": 3, "default_weight": 0.5 },
+  "pressure": {
+    "curve": [
+      { "year": 1815, "level": 25 },
+      { "year": 1817, "level": 45 },
+      { "year": 1819, "level": 40 },
+      { "year": 1822, "level": 25 },
+      { "year": 1828, "level": 25 },
+      { "year": 1830, "level": 55 },
+      { "year": 1831, "level": 50 },
+      { "year": 1833, "level": 40 },
+      { "year": 1836, "level": 25 },
+      { "year": 1845, "level": 30 },
+      { "year": 1847, "level": 60 },
+      { "year": 1848, "level": 80 },
+      { "year": 1849, "level": 55 },
+      { "year": 1850, "level": 35 }
+    ],
+    "scale": { "paris": 1.2, "naples": 1.2, "london": 0.7, "amsterdam": 0.8, "hamburg": 0.8, "frankfurt": 0.9 },
+    "speed": 0.35,
+    "noise": 4,
+    "grain": 30,
+    "panic": 10,
+    "release": 15,
+    "warn": [50, 75],
+    "unrest_scale": 50,
+    "state_risk": 0.05,
+    "home": { "from": 60, "chance": 0.08 }
+  },
+  "home_trade": { "unrest": 1.03, "war": 1.1 },
+  "hooks": {
+    "contract_factor": { "mobilizing": 3, "fighting": 2, "settling": 1.5 },
+    "bond_discount": { "mobilizing": 0.03, "fighting": 0.06, "settling": 0.02 }
+  },
+  "home": [
+    { "id": "hep-hep-1819", "year": 1819, "quarter": 3, "kind": "unrest", "quarters": 1, "release": 10, "title": "Riots in Frankfurt", "text": "From 8 August crowds attacked Jewish houses and shops in Frankfurt for days, and gathered outside the Rothschild house. The Senate called out the militia." },
+    { "id": "wachensturm-1833", "year": 1833, "quarter": 2, "kind": "unrest", "quarters": 1, "release": 25, "title": "The guardhouses stormed", "text": "On 3 April some fifty students stormed the Hauptwache and the Konstablerwache, hoping to seize the Confederation's treasury and start a rising. They were betrayed and beaten within the hour." },
+    { "id": "garrison-1833", "year": 1833, "quarter": 3, "kind": "news", "release": 10, "title": "Federal troops in Frankfurt", "text": "Some 2,500 Austrian and Prussian soldiers are stationed in the city to keep order. The Senate grumbles; the bourse is calmer for it." },
+    { "id": "march-1848", "year": 1848, "quarter": 1, "kind": "unrest", "quarters": 1, "title": "Black, red and gold in Frankfurt", "text": "On 9 March the black, red and gold flag went up over the Federal Diet's palace. Crowds fill the Roemerberg, and a pre-parliament is called to the Paulskirche." },
+    { "id": "parliament-1848", "year": 1848, "quarter": 2, "kind": "news", "release": 10, "title": "A parliament for Germany", "text": "The German National Assembly opened in the Paulskirche on 18 May. Deputies, journalists and petitioners fill the inns, and Frankfurt is the capital of a Germany that does not yet exist." },
+    { "id": "september-1848", "year": 1848, "quarter": 3, "kind": "war", "quarters": 1, "release": 30, "title": "Barricades in Frankfurt", "text": "The parliament has accepted the armistice with Denmark, and on 18 September the streets rose against it. Two deputies were murdered and barricades went up before troops from Mainz cleared them." },
+    { "id": "rump-1849", "year": 1849, "quarter": 2, "kind": "news", "title": "The parliament breaks up", "text": "Prussia and Austria have refused the constitution and called their deputies home. What is left of the parliament leaves Frankfurt for Stuttgart at the end of May." }
+  ],
+  "texts": {
+    "warn": [
+      { "title": "Discontent in {city}", "text": "Letters from {city} speak of dear bread, banned meetings and pamphlets passed from hand to hand." },
+      { "title": "{city} is restless", "text": "Crowds gather in the squares of {city} and the police are jeered. Merchants there say something must give." }
+    ],
+    "home_unrest": { "title": "Trouble in the streets", "text": "Journeymen and day labourers riot in the old town over the price of bread. The militia is called out." },
+    "home_peace": { "title": "Frankfurt is quiet", "text": "The streets of Frankfurt are quiet again, and the shutters come down off the counting houses." },
+    "fortune_good": "Reports are good for {states}.",
+    "fortune_bad": "Reports are bad for {states}."
+  }
+}

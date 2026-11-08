@@ -10,6 +10,7 @@ import type { Decision, GameState, LedgerAccount } from "./types";
 import { ventureBook } from "./ventures";
 import { commoditiesBook, sharesBook } from "./systems/markets";
 import { financeAccounts } from "./systems/finance";
+import { warLoansBook } from "./systems/war";
 
 export const SAVE_VERSION = 17;
 
@@ -90,6 +91,7 @@ export function parseSave(text: string, data: GameData): ParseResult {
     ...financeAccounts(state),
     branches: branchesBook(state),
     bills: billsBook(state),
+    war_loans: warLoansBook(state),
   };
   for (const [account, balance] of Object.entries(books) as [LedgerAccount, number][]) {
     if (accountBalance(state, account) !== balance)

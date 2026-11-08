@@ -509,5 +509,61 @@
     "weight": 1,
     "conditions": { "holds_bonds_of": "austria" },
     "effects": [{ "kind": "state_risk", "state": "austria", "delta": 0.05 }]
+  },
+  {
+    "id": "war-september-1848",
+    "title": "Barricades on the Zeil",
+    "text": "The streets around the counting house are full of armed men, and a barricade goes up at the end of the lane. The Senate has sent to Mainz for troops. What will the house do?",
+    "historical": true,
+    "year": 1848,
+    "quarter": 3,
+    "conditions": {},
+    "effects": [],
+    "options": [
+      {
+        "id": "guards",
+        "label": "Hire guards for the counting house",
+        "text": "Armed porters stand at the doors day and night until the troops arrive. Nothing is touched.",
+        "effects": [
+          {
+            "kind": "cash",
+            "amount": -400
+          }
+        ]
+      },
+      {
+        "id": "senate",
+        "label": "Give the Senate money for the troops",
+        "text": "The house pays toward the soldiers' keep. The Senate remembers it; so do the democrats.",
+        "effects": [
+          {
+            "kind": "cash",
+            "amount": -1500
+          },
+          {
+            "kind": "reputation",
+            "delta": 3
+          }
+        ]
+      },
+      {
+        "id": "wait",
+        "label": "Bar the doors and wait",
+        "text": "The shutters go up and the clerks are sent home.",
+        "effects": [],
+        "chance": {
+          "p": 0.3,
+          "effects": [
+            {
+              "kind": "cash",
+              "share": -0.02
+            }
+          ],
+          "text": "A crowd breaks into the ground floor, and silver and coin are carried off before the soldiers come.",
+          "miss_text": "The fighting stays two streets away."
+        }
+      }
+    ],
+    "default_option": "wait"
   }
 ]

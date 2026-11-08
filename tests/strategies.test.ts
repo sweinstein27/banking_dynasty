@@ -34,8 +34,8 @@ describe("harness strategies", () => {
     const cautious = new Set(replies("cautious"));
     const aggressive = new Set(replies("aggressive"));
     expect(cautious.size).toBeGreaterThan(0);
-    expect([...cautious].every((r) => ["clerk-skimming/prosecute", "rival-rumours/open-books", "heir-illness/doctors", "heir-talent/university", "bridge-gift/give", "pamphleteer/pay"].includes(r)), [...cautious].join()).toBe(true);
-    expect([...aggressive].every((r) => ["clerk-skimming/dismiss", "rival-rumours/answer", "heir-illness/local", "pamphleteer/refuse"].includes(r)), [...aggressive].join()).toBe(true);
+    expect([...cautious].every((r) => ["clerk-skimming/prosecute", "rival-rumours/open-books", "heir-illness/doctors", "heir-talent/university", "bridge-gift/give", "pamphleteer/pay", "war-september-1848/senate"].includes(r)), [...cautious].join()).toBe(true);
+    expect([...aggressive].every((r) => ["clerk-skimming/dismiss", "rival-rumours/answer", "heir-illness/local", "pamphleteer/refuse", "war-september-1848/wait"].includes(r)), [...aggressive].join()).toBe(true);
     for (const name of ["idle", "bond_heavy", "venture_heavy"]) expect(replies(name), name).toEqual([]);
   });
 

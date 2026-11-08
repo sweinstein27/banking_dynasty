@@ -3,6 +3,7 @@
 import { workingCount } from "../capacity";
 import { hasFacility } from "../systems/counting";
 import { telegraphDelay } from "../systems/progress";
+import { unrestFactor } from "../systems/war";
 import type { Rng } from "../rng";
 import type { GameData } from "../tuning";
 import type { GameState, Sentiment } from "../types";
@@ -175,7 +176,8 @@ export function rollCities(state: GameState, rng: Rng, data: GameData, next: Qua
     const was = { mood: c.mood, status: c.status };
     const [uMood, uStatus, uShock, uDay] = [rng.next(), rng.next(), rng.next(), rng.next()];
     c.mood = nextMood(c.mood, city.volatility, uMood, e);
-    Object.assign(c, nextStatus(c, city.unrest_chance, uStatus, e));
+    // C3: unrest pressure makes random unrest likelier.
+    Object.assign(c, nextStatus(c, city.unrest_chance * unrestFactor(state, city.id, data), uStatus, e));
     const news: { title: string; text: string }[] = [];
 
     const happenings: HistoryData[] = e.history.filter((h) => h.city === city.id && h.year === next.year && h.quarter === next.quarter && !eu.fired.includes(h.id));
