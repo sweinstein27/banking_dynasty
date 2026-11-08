@@ -1,1 +1,50 @@
-{}
+{
+  "enabled": true,
+  "eras": [
+    { "name": "the years after Waterloo", "from": 1815, "to": 1819 },
+    { "name": "the twenties", "from": 1820, "to": 1829 },
+    { "name": "the thirties", "from": 1830, "to": 1839 },
+    { "name": "the forties", "from": 1840, "to": 1850 }
+  ],
+  "offers": 3,
+  "choose_quarters": 4,
+  "ambitions": [
+    { "id": "state_loan_1", "kind": "state_loan", "eras": [0], "target": 1, "public": true, "reward_reputation": 5, "miss_reputation": 3, "legacy": 15, "text": "Win a state's loan contract" },
+    { "id": "state_loan_2", "kind": "state_loan", "eras": [1, 2, 3], "target": 1, "public": true, "reward_reputation": 5, "miss_reputation": 3, "legacy": 15, "text": "Win a state's loan contract" },
+    { "id": "fortune_1", "kind": "net_worth", "eras": [0], "target": 75000, "public": false, "reward_reputation": 2, "miss_reputation": 0, "legacy": 10, "text": "Raise the house's worth to {target}" },
+    { "id": "fortune_2", "kind": "net_worth", "eras": [1], "target": 125000, "public": false, "reward_reputation": 2, "miss_reputation": 0, "legacy": 10, "text": "Raise the house's worth to {target}" },
+    { "id": "fortune_3", "kind": "net_worth", "eras": [2], "target": 200000, "public": false, "reward_reputation": 2, "miss_reputation": 0, "legacy": 10, "text": "Raise the house's worth to {target}" },
+    { "id": "fortune_4", "kind": "net_worth", "eras": [3], "target": 350000, "public": false, "reward_reputation": 2, "miss_reputation": 0, "legacy": 10, "text": "Raise the house's worth to {target}" },
+    { "id": "standing_1", "kind": "standing", "eras": [0, 1], "target": 70, "public": false, "reward_reputation": 0, "miss_reputation": 0, "legacy": 10, "text": "Raise the house's reputation to {target}" },
+    { "id": "standing_2", "kind": "standing", "eras": [2, 3], "target": 80, "public": false, "reward_reputation": 0, "miss_reputation": 0, "legacy": 10, "text": "Raise the house's reputation to {target}" },
+    { "id": "first_house", "kind": "first_house", "eras": [2, 3], "target": 1, "public": true, "reward_reputation": 5, "miss_reputation": 3, "legacy": 20, "text": "Become the richest house in Frankfurt" },
+    { "id": "alliance_1", "kind": "alliance", "eras": [0, 1], "target": 1, "public": false, "reward_reputation": 2, "miss_reputation": 0, "legacy": 10, "text": "Marry into another Frankfurt house" },
+    { "id": "alliance_2", "kind": "alliance", "eras": [2, 3], "target": 2, "public": false, "reward_reputation": 2, "miss_reputation": 0, "legacy": 10, "text": "Be allied by marriage to {target} Frankfurt houses" },
+    { "id": "trained_heir", "kind": "trained_heir", "eras": [1, 2, 3], "target": 1, "public": false, "reward_reputation": 2, "miss_reputation": 0, "legacy": 10, "text": "Have a trained heir ready to take over" },
+    { "id": "branch_1", "kind": "branch", "eras": [1, 2], "target": 1, "public": true, "reward_reputation": 3, "miss_reputation": 2, "legacy": 15, "text": "Open a branch abroad" },
+    { "id": "branch_2", "kind": "branch", "eras": [2, 3], "target": 2, "public": true, "reward_reputation": 3, "miss_reputation": 2, "legacy": 15, "text": "Have branches in {target} cities abroad" },
+    { "id": "railway", "kind": "railway", "eras": [2, 3], "target": 1, "public": true, "reward_reputation": 3, "miss_reputation": 2, "legacy": 15, "text": "Back a railway" },
+    { "id": "ennobled", "kind": "title", "eras": [1, 2], "target": 1, "public": true, "reward_reputation": 3, "miss_reputation": 3, "legacy": 10, "text": "Be ennobled, the house taking the \"von\"" },
+    { "id": "barony", "kind": "title", "eras": [2, 3], "target": 2, "public": true, "reward_reputation": 3, "miss_reputation": 3, "legacy": 15, "text": "Be raised to Freiherr" }
+  ],
+  "titles": [
+    { "rank": 1, "id": "von", "name": "von", "fee": 4000, "min_net_worth": 100000, "min_reputation": 60, "service": 1, "after_years": 0, "reputation": 4, "legacy": 30 },
+    { "rank": 2, "id": "freiherr", "name": "Freiherr", "fee": 10000, "min_net_worth": 250000, "min_reputation": 75, "service": 2, "after_years": 6, "reputation": 4, "legacy": 50 }
+  ],
+  "grantors": [
+    { "state": "austria", "reputation_extra": 0, "chance": 0.7 },
+    { "state": "bavaria", "reputation_extra": 0, "chance": 0.6 },
+    { "state": "prussia", "reputation_extra": 10, "chance": 0.4 }
+  ],
+  "petition": {
+    "connections_step": 0.05,
+    "refused_quarters": 4,
+    "bond_face": 20000
+  },
+  "prestige": {
+    "wealth": { "floor": 50000, "top": 2000000 },
+    "standing": { "reputation": 0.7, "rank": 0.3 },
+    "family": { "per_heir": 15, "max_heirs": 3, "trained_successor": 25, "per_ally": 10, "max_allies": 3 },
+    "legacy": { "per_listed": 5, "max_listed": 4 }
+  }
+}
