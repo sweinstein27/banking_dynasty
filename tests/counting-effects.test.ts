@@ -397,23 +397,43 @@ describe("richer facilities", () => {
     for (const account of ["cash", "deposits"] as const) expect(accountBalance(vault, account)).toBe(account === "cash" ? vault.house.cash : vault.house.deposits);
   });
 
-  it("reception rooms raise reputation at each year end only, up to 100", () => {
+  /** Reception rooms with every effect switched on, so the tests see the mechanism whatever the tuned numbers. */
+  const warm = { ...data, counting: { ...data.counting, effects: { ...data.counting.effects, reception_yearly_opinion: 5, reception_yearly_baseline: 3, reception_baseline_ceiling: 40 } } };
+
+  it("reception rooms warm every trading house at each year end only", () => {
     const s = withFacility(house(), "reception_rooms");
-    s.house.reputation = 60;
+    s.houses = createHouses(gameData);
+    const e = warm.counting.effects;
+    const ceiling = e.reception_baseline_ceiling;
+    const [a, b, c] = s.houses;
+    a!.opinion = 0;
+    a!.baseline = 0;
+    b!.opinion = gameData.tuning.houses.opinion.max - 1;
+    b!.baseline = ceiling - 1;
+    c!.baseline = ceiling + 20;
+    c!.failed_turn = 1;
+    const rep = s.house.reputation;
     s.world.quarter = 3;
-    resolveCounting(s, fixedRng(0.5), data);
-    expect(s.house.reputation).toBe(60);
+    resolveCounting(s, fixedRng(0.5), warm);
+    expect(a!.opinion).toBe(0);
     s.world.quarter = 4;
-    resolveCounting(s, fixedRng(0.5), data);
-    expect(s.house.reputation).toBe(60 + e.reception_yearly_reputation);
-    s.house.reputation = 100;
-    resolveCounting(s, fixedRng(0.5), data);
-    expect(s.house.reputation).toBe(100);
-    const unbuilt = house();
-    unbuilt.counting.facilities.push({ id: "reception_rooms", ready_turn: 99 });
-    unbuilt.world.quarter = 4;
-    resolveCounting(unbuilt, fixedRng(0.5), data);
-    expect(unbuilt.house.reputation).toBe(fresh().house.reputation);
+    resolveCounting(s, fixedRng(0.5), warm);
+    expect(a).toMatchObject({ opinion: e.reception_yearly_opinion, baseline: e.reception_yearly_baseline });
+    expect(b).toMatchObject({ opinion: gameData.tuning.houses.opinion.max, baseline: ceiling });
+    expect(c!.baseline).toBe(ceiling + 20);
+    // The house's own reputation is not touched.
+    expect(s.house.reputation).toBe(rep);
+  });
+
+  it("reception rooms keep warming a house over the years, up to the baseline ceiling", () => {
+    const e = warm.counting.effects;
+    let s = withFacility(house(), "reception_rooms");
+    s.houses = createHouses(gameData).slice(0, 1);
+    s.houses[0]!.opinion = 0;
+    s.houses[0]!.baseline = 0;
+    for (let i = 0; i < 80; i++) s = endTurn(s, [], noDefaults, warm);
+    expect(s.houses[0]!.baseline).toBe(e.reception_baseline_ceiling);
+    expect(s.houses[0]!.opinion).toBeGreaterThan(e.reception_baseline_ceiling - 10);
   });
 
   it("a courier stable buys bonds below the market, booking the gap as a gain", () => {

@@ -28,12 +28,22 @@ describe("harness strategies and the counting house", () => {
     expect(play("idle", 1, 4).counting.staff).toEqual([]);
   });
 
-  it("cautious keeps two clerks and a correspondent, and builds nothing", () => {
+  it("cautious keeps two clerks and a correspondent, and builds reception rooms", () => {
     const s = play("cautious", 1, 40);
     if (s.house.status === "bankrupt") return;
     expect(count(s, "clerk")).toBe(2);
     expect(count(s, "correspondent")).toBe(1);
-    expect(s.counting.facilities).toEqual([]);
+    expect(s.counting.facilities.map((f) => f.id)).toEqual(["reception_rooms"]);
+  });
+
+  it("each strategy builds what pays for its play in the first quarter", () => {
+    const built = (name: string) => play(name, 3, 1).counting.facilities.map((f) => f.id);
+    expect(built("cautious")).toEqual(["reception_rooms"]);
+    expect(built("aggressive")).toEqual(["courier_stable"]);
+    expect(built("bond_heavy")).toEqual(["courier_stable"]);
+    expect(built("venture_heavy")).toEqual([]);
+    expect(built("investor")).toEqual(["strongroom"]);
+    expect(built("idle")).toEqual([]);
   });
 
   it("aggressive, bond-heavy and venture-heavy hire their clerks and let the correspondent go in the first quarter", () => {

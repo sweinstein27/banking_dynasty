@@ -22,17 +22,19 @@
     { "size": "large", "name": "Grand counting room", "desks": 24, "build": 6000, "upkeep": 80 }
   ],
   "facilities": {
-    "strongroom": { "name": "Strongroom", "description": "Iron doors and a vault: depositors trust it, bring more money in calm years, and ask for less of it in a panic.", "build": 3000, "upkeep": 25 },
+    "strongroom": { "name": "Strongroom", "description": "Iron doors and a vault: depositors trust it, bring more money in calm years, and ask for less of it in a panic.", "build": 3000, "upkeep": 10 },
     "archive": { "name": "Archive", "description": "Shelves of old ledgers: payment records go back further.", "build": 1000, "upkeep": 10 },
-    "courier_stable": { "name": "Courier stable", "description": "Riders on the post roads: warnings of a panic reach the house at once, not a quarter late, and prices from Vienna and Paris arrive first, so bonds are bought below the market.", "build": 1500, "upkeep": 30 },
-    "reception_rooms": { "name": "Reception rooms", "description": "Rooms fit to receive the bourse: courting wins more favour, houses agree to marriages more readily, and the house's name rises a little every year.", "build": 2000, "upkeep": 30 },
+    "courier_stable": { "name": "Courier stable", "description": "Riders on the post roads: warnings of a panic reach the house at once, not a quarter late, and prices from Vienna and Paris arrive first, so bonds are bought below the market.", "build": 1500, "upkeep": 10 },
+    "reception_rooms": { "name": "Reception rooms", "description": "Rooms fit to receive the bourse: courting wins more favour, houses agree to marriages more readily, and every year the other houses think a little better of yours.", "build": 2000, "upkeep": 10 },
     "warehouse": { "name": "Warehouse", "description": "A warehouse on the Main: space to store goods.", "build": 2000, "upkeep": 20 }
   },
   "effects": {
-    "strongroom_panic_withdrawals": 0.75,
-    "strongroom_deposit_level": 1.2,
-    "reception_yearly_reputation": 1,
-    "courier_bond_edge": 0.02,
+    "strongroom_panic_withdrawals": 0.5,
+    "strongroom_deposit_level": 1.5,
+    "reception_yearly_opinion": 0,
+    "reception_yearly_baseline": 1,
+    "reception_baseline_ceiling": 25,
+    "courier_bond_edge": 0.04,
     "record_quarters": 12,
     "archive_record_quarters": 24,
     "warehouse_space": 40,
