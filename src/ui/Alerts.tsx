@@ -1,7 +1,7 @@
 // Things that need the player's eye this quarter, in the style of a grand-strategy alert list.
 // Each is a button that opens the panel where it can be dealt with. Read from the sim; no rules here.
 import { gameData } from "../data";
-import { capacityLeft } from "../sim/capacity";
+import { capacityLeft, POOLS, poolLeft, type Pool } from "../sim/capacity";
 import { inCrisis } from "../sim/crisis";
 import { ageIn, headEffects, headOf, heirsOf, isTrained, successor, yearlyDeathChance } from "../sim/family";
 import { unansweredLetters } from "../sim/letters";
@@ -10,6 +10,7 @@ import { quartersLeft } from "../sim/ventures";
 import { fl, keepUnits } from "./format";
 import { Icon } from "./icons";
 import { PageTurner, usePages } from "./Pager";
+import type { GameState } from "../sim/types";
 import type { PanelId } from "./Panel";
 import type { Game } from "./useGame";
 
@@ -47,8 +48,23 @@ export function alertsFor(game: Game): Alert[] {
     }
   }
   const left = capacityLeft(s, tuning);
-  if (left > 0) out.push({ key: "actions", tone: "info", text: `${left} action${left === 1 ? "" : "s"} left this quarter`, panel: "counting" });
+  if (left > 0) out.push({ key: "actions", tone: "info", text: `Capacity left this quarter: ${capacityWords(s)}`, panel: "counting" });
   return out;
+}
+
+const POOL_WORDS: Record<Pool, [string, string]> = {
+  deals: ["deal", "deals"],
+  reports: ["report", "reports"],
+  opinions: ["opinion", "opinions"],
+  head: ["call on the head's time", "calls on the head's time"],
+};
+
+/** "3 deals, 2 reports, 1 call on the head's time": what each pool has left, skipping empty ones. */
+function capacityWords(s: GameState): string {
+  return POOLS.map((p) => [p, poolLeft(s, p, gameData.tuning)] as const)
+    .filter(([, n]) => n > 0)
+    .map(([p, n]) => `${n} ${POOL_WORDS[p][n === 1 ? 0 : 1]}`)
+    .join(", ");
 }
 
 export function Alerts({ game, onOpen }: { game: Game; onOpen: (p: PanelId) => void }) {

@@ -39,7 +39,7 @@
       "ally_failure_reputation": 5
     },
     "invest": {
-      "educate": { "cost": 500, "gain": 1 },
+      "educate": { "cost": 250, "gain": 2 },
       "charity": { "cost": 2000, "reputation": 3 },
       "patronage": { "cost": 3000, "connections": 1, "reputation": 1 }
     }
