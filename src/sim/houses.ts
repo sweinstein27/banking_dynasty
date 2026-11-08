@@ -11,6 +11,7 @@ import type { GameData, Tuning } from "./tuning";
 import { freeCash } from "./reserves";
 import { cloneState } from "./state";
 import { houseTerms } from "./systems/counting";
+import { houseFailed, rescueFactor } from "./systems/finance";
 import type { CourtHouseDecision, GameState, OtherHouse } from "./types";
 
 /** The houses at the start of a game, from data/houses.json. Draws nothing. */
@@ -77,8 +78,8 @@ export function resolveHouses(state: GameState, rng: Rng, data: GameData): void 
 
     if (mood === "panic") {
       const weakness = Math.min(3, Math.max(0, h.start_wealth / Math.max(1, h.wealth)));
-      const chance = t.fail_chance[h.temperament] * Math.max(0.5, weakness);
-      if (rng.next() < chance) failHouse(state, h, data.tuning);
+      const chance = t.fail_chance[h.temperament] * Math.max(0.5, weakness) * rescueFactor(state, h.id, data);
+      if (rng.next() < chance) failHouse(state, h, data);
     }
   }
 }
@@ -94,9 +95,12 @@ function succeedHouse(state: GameState, h: OtherHouse, data: GameData): void {
 }
 
 /** A house closes its doors. Some of its depositors bring their money to the player, more for a good name. */
-function failHouse(state: GameState, h: OtherHouse, tuning: Tuning): void {
+function failHouse(state: GameState, h: OtherHouse, data: GameData): void {
+  const tuning = data.tuning;
   h.failed_turn = state.world.turn;
   if (state.house.status === "bankrupt") return;
+  // A5: its debts to the player are settled and its holdings go to auction.
+  houseFailed(state, h, data);
   // The bourse remembers a marriage tie to a failed house.
   if (state.marriages.some((m) => m.house === h.id)) state.house.reputation = Math.max(0, state.house.reputation - tuning.family.marriage.ally_failure_reputation);
   const amount = Math.round((tuning.houses.depositors_share * h.wealth * state.house.reputation) / 100 / 100) * 100;

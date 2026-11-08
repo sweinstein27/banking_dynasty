@@ -42,6 +42,7 @@ import type { ArrangeMarriageDecision, Decision, GameState, LedgerEntry, Person 
 import { quartersLeft, ventureBook, venturePayout } from "../src/sim/ventures";
 import { describeSystemDecision } from "../src/sim/decisions";
 import { askMarkets, askVentureCommit, marketsLine, printMarketHoldings } from "./markets-menu";
+import { askFinance, financeLine } from "./finance-menu";
 
 function argValue(name: string): number | undefined {
   const i = process.argv.indexOf(`--${name}`);
@@ -86,7 +87,7 @@ const pct = (r: number) => `${(r * 100).toFixed(1)}%`;
 function printStatus(s: GameState) {
   const { world, house } = s;
   console.log(`\n=== ${house.name}, ${house.city}. ${world.year} Q${world.quarter} (turn ${world.turn}) ===`);
-  console.log(`Cash ${fl(house.cash)}  Loans ${fl(loanBook(s))}  Bonds ${fl(bondBook(s))}  Ventures ${fl(ventureBook(s))}  ${marketsLine(s)}  Deposits ${fl(house.deposits)}  Borrowings ${fl(debtBook(s))}  Net worth ${fl(netWorth(s))}`);
+  console.log(`Cash ${fl(house.cash)}  Loans ${fl(loanBook(s))}  Bonds ${fl(bondBook(s))}  Ventures ${fl(ventureBook(s))}  ${marketsLine(s)}  ${financeLine(s)}  Deposits ${fl(house.deposits)}  Borrowings ${fl(debtBook(s))}  Net worth ${fl(netWorth(s))}`);
   console.log(`Reserve ${fl(house.reserve)}  Free cash ${fl(freeCash(s))}  Reputation ${house.reputation}, drawing deposits of ${fl(depositLevel(house.reputation, tuning))}`);
   console.log(`Sentiment ${world.sentiment}  Base rate ${pct(world.base_rate)}  Wages and upkeep ${fl(wageBill(s, gameData) + upkeepBill(s, gameData))} a quarter`);
   console.log(progressLine(s, gameData));
@@ -415,7 +416,7 @@ async function main() {
 
     while (!ended) {
       printStatus(preview);
-      const choice = (await ask("[1] Lend  [2] Report or inquiry  [s] Sell a loan  [3] Buy bonds  [4] Back venture  [5] Set reserve  [6] View holdings  [7] End turn  [8] Crisis measures  [9] Invest in family  [h] Houses  [c] Counting house  [m] Markets  [q] Quit: "))?.trim();
+      const choice = (await ask("[1] Lend  [2] Report or inquiry  [s] Sell a loan  [3] Buy bonds  [4] Back venture  [5] Set reserve  [6] View holdings  [7] End turn  [8] Crisis measures  [9] Invest in family  [h] Houses  [c] Counting house  [m] Markets  [f] High finance  [q] Quit: "))?.trim();
       if (choice === null || choice === undefined || choice === "q") return;
       if (choice === "1" || choice === "2" || choice === "s" || choice === "3" || choice === "4" || choice === "5" || choice === "8" || choice === "9") {
         const askFor = { "1": askLend, "2": askReport, s: askSellLoan, "3": askBond, "4": askVenture, "5": askReserve, "8": askCrisis, "9": askFamily }[choice];
@@ -467,8 +468,8 @@ async function main() {
           preview = r.state;
           console.log("The house is courted.");
         }
-      } else if (choice === "m") {
-        const d = await askMarkets(preview, ask);
+      } else if (choice === "m" || choice === "f") {
+        const d = choice === "m" ? await askMarkets(preview, ask) : await askFinance(preview, ask);
         if (!d) continue;
         const r = applyDecision(preview, d, gameData);
         if (!r.ok) console.log(`Refused: ${r.reason}`);
