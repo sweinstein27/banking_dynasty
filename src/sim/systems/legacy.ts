@@ -577,7 +577,7 @@ export function checkLegacyData(data: GameData): string[] {
     if (ids.has(a.id)) out.push(`Ambition "${a.id}" appears twice`);
     ids.add(a.id);
     if (!a.eras.length || a.eras.some((e) => e < 0 || e >= l.eras.length)) out.push(`Ambition "${a.id}" has a bad era`);
-    if (a.text.includes("—")) out.push(`Ambition "${a.id}" has an em dash`);
+    if (a.text.includes("\u2014")) out.push(`Ambition "${a.id}" has an em dash`);
   }
   for (const g of l.grantors) if (!data.states.some((s) => s.id === g.state)) out.push(`Grantor "${g.state}" is not a state`);
   l.titles.forEach((t, i) => {

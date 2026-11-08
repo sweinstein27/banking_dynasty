@@ -66,7 +66,7 @@ function bond(s: GameState, state: string, face: number): Bond {
   return b;
 }
 
-/** A house fit for a "von" from Austria: reputation 70, plenty of cash, 20,000 fl. of Austrian bonds. */
+/** A house fit for a "von" from Austria: reputation 70 (55 needed), plenty of cash, 20,000 fl. of Austrian bonds. */
 function worthy(): GameState {
   const s = fresh();
   s.house.reputation = 70;
@@ -266,12 +266,12 @@ describe("titles", () => {
     expect(reason(s, { kind: "petition_title", rank: 1, grantor: "france" })).toContain("grants no titles");
     expect(reason(s, { kind: "petition_title", rank: 2, grantor: "austria" })).toContain("rank below");
     const w = worthy();
-    w.house.reputation = 59;
-    expect(reason(w, { kind: "petition_title", rank: 1, grantor: "austria" })).toContain("reputation 60");
+    w.house.reputation = 54;
+    expect(reason(w, { kind: "petition_title", rank: 1, grantor: "austria" })).toContain("reputation 55");
     const p = worthy();
     bond(p, "prussia", 20_000);
-    p.house.reputation = 69;
-    expect(reason(p, { kind: "petition_title", rank: 1, grantor: "prussia" })).toContain("reputation 70");
+    p.house.reputation = 64;
+    expect(reason(p, { kind: "petition_title", rank: 1, grantor: "prussia" })).toContain("reputation 65");
     const poor = worthy();
     poor.house.cash = 0;
     expect(reason(poor, { kind: "petition_title", rank: 1, grantor: "austria" })).toContain("worth");
@@ -279,9 +279,9 @@ describe("titles", () => {
 
   it("refuses a petition with no cash for the fee", () => {
     const s = worthy();
-    s.house.cash = 3_000;
+    s.house.cash = 2_000;
     s.bonds[0]!.face_value = 200_000;
-    expect(netWorth(s)).toBeGreaterThan(100_000);
+    expect(netWorth(s)).toBeGreaterThan(75_000);
     expect(reason(s, { kind: "petition_title", rank: 1, grantor: "austria" })).toContain("Not enough cash");
   });
 
@@ -289,8 +289,8 @@ describe("titles", () => {
     const s = worthy();
     const rep = s.house.reputation;
     const next = apply(s, { kind: "petition_title", rank: 1, grantor: "austria" });
-    expect(next.house.cash).toBe(196_000);
-    expect(next.ledger.at(-1)).toMatchObject({ category: "title_fee", amount: -4000 });
+    expect(next.house.cash).toBe(197_000);
+    expect(next.ledger.at(-1)).toMatchObject({ category: "title_fee", amount: -3000 });
     expect(reason(next, { kind: "petition_title", rank: 1, grantor: "bavaria" })).toContain("awaiting");
     answerPetition(next, fixedRng(0), quiet);
     expect(titleRank(next)).toBe(1);
@@ -304,7 +304,7 @@ describe("titles", () => {
     answerPetition(s, fixedRng(NEVER), quiet);
     expect(titleRank(s)).toBe(0);
     expect(s.house.cash).toBe(200_000);
-    expect(s.ledger.at(-1)).toMatchObject({ category: "title_fee", amount: 4000 });
+    expect(s.ledger.at(-1)).toMatchObject({ category: "title_fee", amount: 3000 });
     expect(reason(s, { kind: "petition_title", rank: 1, grantor: "austria" })).toContain("must wait");
     s.world.turn = s.legacy.petition_after;
     expect(applyDecision(s, { kind: "petition_title", rank: 1, grantor: "austria" }, quiet).ok).toBe(true);
@@ -364,18 +364,18 @@ describe("titles", () => {
 });
 
 describe("prestige", () => {
-  it("scores wealth on a log scale from 50,000 fl. to 2,000,000 fl.", () => {
+  it("scores wealth on a log scale from 25,000 fl. to 1,000,000 fl.", () => {
     const s = fresh();
     s.house.deposits = 0;
-    s.house.cash = 50_000;
+    s.house.cash = 25_000;
     expect(wealthPillar(s, quiet)).toBe(0);
     s.house.cash = 0;
     expect(wealthPillar(s, quiet)).toBe(0);
-    s.house.cash = 2_000_000;
+    s.house.cash = 1_000_000;
     expect(wealthPillar(s, quiet)).toBe(100);
     s.house.cash = 5_000_000;
     expect(wealthPillar(s, quiet)).toBe(100);
-    s.house.cash = Math.round(Math.sqrt(50_000 * 2_000_000));
+    s.house.cash = Math.round(Math.sqrt(25_000 * 1_000_000));
     expect(wealthPillar(s, quiet)).toBe(50);
   });
 
