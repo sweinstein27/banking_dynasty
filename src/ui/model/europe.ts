@@ -216,6 +216,13 @@ export function openCandidates(state: GameState, cityId: string, capital: number
   }));
 }
 
+/** The chance a quarter that trouble, as known, would force a new branch here shut under this head, and what it would lose. */
+export function openRisk(state: GameState, cityId: string, headId: number | null, data: GameData): { chance: number; loss: number } {
+  const known = cityState(state, cityId)!.known;
+  const head = state.people.find((p) => p.id === headId);
+  return { chance: closeChance(known, head, data), loss: closeLoss(known, data) };
+}
+
 /** What opening a branch costs, as a section: setup and the capital sent. */
 export function openCostSection(cityId: string, capital: number, data: GameData): Section {
   const city = data.europe.cities.find((c) => c.id === cityId)!;

@@ -12,7 +12,7 @@ import { fl, keepUnits, parseAmount } from "./format";
 import { capacityNote } from "./model/capacity";
 import {
   billQuote, billTime, branchView, cityPins, delaySections, europeSection, fundBlocked, LAND_PATHS, MAP_H, MAP_W, MOOD_WORDS,
-  openBlocked, openCandidates, openCostSection, quoteSections, roads, STATUS_WORDS, type CityPin,
+  openBlocked, openCandidates, openCostSection, openRisk, quoteSections, roads, STATUS_WORDS, type CityPin,
 } from "./model/europe";
 import { ActButton, Refused, SumCard, useRun } from "./ScreenKit";
 import { Term } from "./Term";
@@ -166,6 +166,7 @@ function OpenBlock({ pin, state, onDecide }: { pin: CityPin; state: GameState; o
   const unable = people.filter((p) => p.who !== null);
   const [head, setHead] = useState<number | null>(able[0]?.person.id ?? null);
   const { error, run } = useRun(onDecide);
+  const risk = openRisk(state, c.id, head, gameData);
   const blocked = head === null ? "No member of the family can head a branch" : openBlocked(state, c.id, head, Number.isFinite(capital) ? capital : 0, gameData);
   return (
     <div className="city-block">
@@ -186,6 +187,11 @@ function OpenBlock({ pin, state, onDecide }: { pin: CityPin; state: GameState; o
         </div>
       )}
       {unable.length > 0 && <p className="small muted">Cannot go: {unable.map((p) => p.who).join("; ")}.</p>}
+      {risk.chance > 0 && (
+        <p className="small tone-bad">
+          {c.name} is {STATUS_WORDS[pin.known!.status] === "at peace" ? MOOD_WORDS[pin.known!.mood] : STATUS_WORDS[pin.known!.status]}: a branch here would have a {(risk.chance * 100).toFixed(1)}% chance a quarter of being forced shut, losing {Math.round(risk.loss * 100)}%.
+        </p>
+      )}
       <div className="field field-inline">
         <label>
           <span>Capital to send, gulden</span>
