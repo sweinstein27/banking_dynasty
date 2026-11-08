@@ -69,7 +69,7 @@ function BreakdownBody({ id, base, preview, onOpen }: { id: BreakdownId; base: G
   );
 }
 
-function BdLine({ line, total = false }: { line: Line; total?: boolean }) {
+export function BdLine({ line, total = false }: { line: Line; total?: boolean }) {
   return (
     <>
       <dt className={total ? "total" : undefined}>{line.term ? <Term id={line.term}>{line.label}</Term> : line.label}</dt>

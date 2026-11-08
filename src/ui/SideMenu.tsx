@@ -5,7 +5,7 @@ import type { GameState } from "../sim/types";
 import { Icon } from "./icons";
 import { PANELS, type PanelId } from "./Panel";
 
-const MENU: PanelId[] = ["gazette", "ledger", "bourse", "houses", "family", "counting", "letters"];
+const MENU: PanelId[] = ["gazette", "ledger", "bourse", "markets", "counting", "houses", "family", "letters"];
 
 export function SideMenu({ open, onOpen, state, onMenu }: {
   open: PanelId;

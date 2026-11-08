@@ -6,7 +6,6 @@ import { gameData } from "../data";
 import { runOver } from "../sim/actions";
 import { Alerts } from "./Alerts";
 import { BoursePanel } from "./BoursePanel";
-import { CountingPanel } from "./CountingPanel";
 import { LettersPanel } from "./LettersPanel";
 import { Desk } from "./Desk";
 import { FamilyPanel } from "./FamilyPanel";
@@ -15,9 +14,11 @@ import { Gazette } from "./Gazette";
 import { GameMenu } from "./GameMenu";
 import { GameOver } from "./GameOver";
 import { HousesView } from "./HousesView";
+import { HouseView } from "./HouseView";
+import { MarketsPanel } from "./MarketsPanel";
 import { LedgerBook } from "./LedgerBook";
 import { NewGame } from "./NewGame";
-import { PanelFrame, type PanelId } from "./Panel";
+import { PanelFrame, WIDE_PANELS, type PanelId } from "./Panel";
 import { SideMenu } from "./SideMenu";
 import { TopBar } from "./TopBar";
 import { useGame } from "./useGame";
@@ -73,7 +74,7 @@ export function App() {
   return (
     <div className="screen">
       <TopBar game={game} over={over} onEndTurn={api.endTurn} onOpen={setPanel} />
-      <div className="main">
+      <div className={WIDE_PANELS.includes(panel) && !over ? "main wide" : "main"}>
         <SideMenu open={panel} onOpen={setPanel} state={preview} onMenu={() => setMenuOpen(true)} />
         <PanelFrame id={panel} onClose={panel === "gazette" ? undefined : () => setPanel("gazette")}>
           {panel === "gazette" && <Gazette key={base.world.turn} state={base} />}
@@ -81,10 +82,11 @@ export function App() {
           {panel === "houses" && <HousesView state={preview} onCourt={over ? undefined : (house) => api.queue({ kind: "court_house", house })} />}
           {panel === "family" && <FamilyPanel state={preview} onDecide={decide} />}
           {panel === "bourse" && <BoursePanel state={preview} onDecide={decide} />}
-          {panel === "counting" && <CountingPanel state={preview} onDecide={decide} />}
+          {panel === "markets" && <MarketsPanel state={preview} onDecide={decide} />}
+          {panel === "counting" && <HouseView state={preview} onDecide={decide} />}
           {panel === "letters" && <LettersPanel state={preview} onDecide={decide} />}
         </PanelFrame>
-        {over ? (
+        {WIDE_PANELS.includes(panel) && !over ? null : over ? (
           <GameOver state={base} reason={over} seed={game.seed} onNewGame={() => setOnStartScreen(true)} onSave={save} />
         ) : (
           <div className="right-column">

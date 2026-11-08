@@ -101,6 +101,13 @@ const PATHS = {
       <circle cx="12" cy="18" r="1.4" />
     </>
   ),
+  // Merchant's scales over a sack of grain: the markets.
+  markets: (
+    <>
+      <path d="M12 3v14M5 6h14M5 6l-3 6h6zM19 6l-3 6h6z" />
+      <path d="M2 12a3 2 0 0 0 6 0M16 12a3 2 0 0 0 6 0M8 21h8M12 17v4" />
+    </>
+  ),
   // A sealed letter.
   letters: (
     <>
