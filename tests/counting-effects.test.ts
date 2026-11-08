@@ -10,6 +10,8 @@ import {
   advisors,
   analystAccuracy,
   analystOpinion,
+  countingDepositLevel,
+  courierBondEdge,
   createCounting,
   houseTerms,
   paymentRecordQuarters,
@@ -25,6 +27,9 @@ import {
   type Staff,
   type StaffRole,
 } from "../src/sim/systems/counting";
+import { accountBalance } from "../src/sim/ledger";
+import { bondBook } from "../src/sim/bonds";
+import { depositLevel } from "../src/sim/deposits";
 import { endTurn } from "../src/sim/turn";
 import type { Decision, GameState } from "../src/sim/types";
 import { fixedRng, fresh, GOOD, noDefaults, POOR, quiet, reopenRequests } from "./helpers";
@@ -344,5 +349,114 @@ describe("the advisor council", () => {
     s.counting = quietHouse;
     resolveCounting(s, count, quiet);
     expect(rolls).toBe(0);
+  });
+});
+
+describe("richer facilities", () => {
+  /** The counting test data with the real deposit flows, so the strongroom's pull has a catch-up to use. */
+  const flowing = { ...data, tuning: { ...data.tuning, deposits: gameData.tuning.deposits } };
+  const catchUp = gameData.tuning.deposits.catch_up;
+
+  it("a strongroom raises the deposit level the house draws toward", () => {
+    const s = house();
+    const base = depositLevel(s.house.reputation, gameData.tuning);
+    expect(countingDepositLevel(s, data)).toBe(base);
+    withFacility(s, "strongroom");
+    expect(countingDepositLevel(s, data)).toBe(Math.round(base * e.strongroom_deposit_level));
+  });
+
+  it("a strongroom pulls deposits through the band above the reputation's level, in calm quarters only", () => {
+    const s = withFacility(house(), "strongroom");
+    s.house.reputation = 50;
+    const base = depositLevel(50, gameData.tuning);
+    const top = countingDepositLevel(s, data);
+    // Below the base level: the core step closes the gap to it; the strongroom adds the band above.
+    s.house.deposits = base - 10000;
+    expect(tellerInflow(s, flowing)).toBe(Math.round(catchUp * (top - base)));
+    // Inside the band: the strongroom alone pulls.
+    s.house.deposits = base + 2000;
+    expect(tellerInflow(s, flowing)).toBe(Math.round(catchUp * (top - base - 2000)));
+    s.house.deposits = top + 1;
+    expect(tellerInflow(s, flowing)).toBe(0);
+    s.house.deposits = base;
+    s.world.sentiment = "uneasy";
+    expect(tellerInflow(s, flowing)).toBe(0);
+  });
+
+  it("over calm years a strongroom house holds deposits above the reputation's level, and the books reconcile", () => {
+    let plain = house();
+    let vault = withFacility(house(), "strongroom");
+    for (let i = 0; i < 40; i++) {
+      plain = endTurn(plain, [], noDefaults, flowing);
+      vault = endTurn(vault, [], noDefaults, flowing);
+    }
+    expect(vault.world.sentiment).toBe("calm");
+    expect(vault.house.deposits).toBeGreaterThan(plain.house.deposits);
+    expect(vault.house.deposits).toBeGreaterThan(depositLevel(vault.house.reputation, gameData.tuning));
+    // No upper bound here: interest credited to depositors grows deposits past any level.
+    for (const account of ["cash", "deposits"] as const) expect(accountBalance(vault, account)).toBe(account === "cash" ? vault.house.cash : vault.house.deposits);
+  });
+
+  /** Reception rooms with every effect switched on, so the tests see the mechanism whatever the tuned numbers. */
+  const warm = { ...data, counting: { ...data.counting, effects: { ...data.counting.effects, reception_yearly_opinion: 5, reception_yearly_baseline: 3, reception_baseline_ceiling: 40 } } };
+
+  it("reception rooms warm every trading house at each year end only", () => {
+    const s = withFacility(house(), "reception_rooms");
+    s.houses = createHouses(gameData);
+    const e = warm.counting.effects;
+    const ceiling = e.reception_baseline_ceiling;
+    const [a, b, c] = s.houses;
+    a!.opinion = 0;
+    a!.baseline = 0;
+    b!.opinion = gameData.tuning.houses.opinion.max - 1;
+    b!.baseline = ceiling - 1;
+    c!.baseline = ceiling + 20;
+    c!.failed_turn = 1;
+    const rep = s.house.reputation;
+    s.world.quarter = 3;
+    resolveCounting(s, fixedRng(0.5), warm);
+    expect(a!.opinion).toBe(0);
+    s.world.quarter = 4;
+    resolveCounting(s, fixedRng(0.5), warm);
+    expect(a).toMatchObject({ opinion: e.reception_yearly_opinion, baseline: e.reception_yearly_baseline });
+    expect(b).toMatchObject({ opinion: gameData.tuning.houses.opinion.max, baseline: ceiling });
+    expect(c!.baseline).toBe(ceiling + 20);
+    // The house's own reputation is not touched.
+    expect(s.house.reputation).toBe(rep);
+  });
+
+  it("reception rooms keep warming a house over the years, up to the baseline ceiling", () => {
+    const e = warm.counting.effects;
+    let s = withFacility(house(), "reception_rooms");
+    s.houses = createHouses(gameData).slice(0, 1);
+    s.houses[0]!.opinion = 0;
+    s.houses[0]!.baseline = 0;
+    for (let i = 0; i < 80; i++) s = endTurn(s, [], noDefaults, warm);
+    expect(s.houses[0]!.baseline).toBe(e.reception_baseline_ceiling);
+    expect(s.houses[0]!.opinion).toBeGreaterThan(e.reception_baseline_ceiling - 10);
+  });
+
+  it("a courier stable buys bonds below the market, booking the gap as a gain", () => {
+    const buy: Decision = { kind: "buy_bond", state: "bavaria", face_value: 10000 };
+    const plain = ok(house(), buy);
+    const s0 = withFacility(house(), "courier_stable");
+    expect(courierBondEdge(s0, data)).toBe(e.courier_bond_edge);
+    const s1 = ok(s0, buy);
+    const value = bondBook(s1);
+    expect(value).toBe(bondBook(plain));
+    expect(s0.house.cash - s1.house.cash).toBe(Math.round(value * (1 - e.courier_bond_edge)));
+    expect(s1.ledger.at(-1)).toMatchObject({ account: "bonds", category: "revaluation", amount: value - (s0.house.cash - s1.house.cash) });
+    expect(accountBalance(s1, "bonds")).toBe(bondBook(s1));
+    expect(accountBalance(s1, "cash")).toBe(s1.house.cash);
+  });
+
+  it("checks free cash against the courier's lower price", () => {
+    const s = withFacility(house(), "courier_stable");
+    const buy: Decision = { kind: "buy_bond", state: "bavaria", face_value: 10000 };
+    const price = bondBook(ok(house(), buy));
+    s.house.reserve = s.house.cash - Math.round(price * (1 - e.courier_bond_edge));
+    expect(applyDecision(s, buy, data).ok).toBe(true);
+    s.house.reserve += 1;
+    expect(applyDecision(s, buy, data).ok).toBe(false);
   });
 });

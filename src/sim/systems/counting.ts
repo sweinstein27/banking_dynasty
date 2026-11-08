@@ -78,6 +78,15 @@ export interface CountingData {
   effects: {
     /** Panic withdrawals are scaled by this with a strongroom. */
     strongroom_panic_withdrawals: number;
+    /** With a strongroom, calm quarters draw deposits toward the reputation's level times this. */
+    strongroom_deposit_level: number;
+    /** With reception rooms, at each year end every trading house's opinion rises by this... */
+    reception_yearly_opinion: number;
+    /** ...and its baseline (where opinion drifts back to) by this, up to reception_baseline_ceiling. */
+    reception_yearly_baseline: number;
+    reception_baseline_ceiling: number;
+    /** With a courier stable, bonds are bought this share below the market price (the gap is booked as a gain). */
+    courier_bond_edge: number;
     /** Quarters of payment records kept, without and with an archive (for the credit system). */
     record_quarters: number;
     archive_record_quarters: number;
@@ -670,10 +679,14 @@ export function resolveCounting(state: GameState, rng: Rng, data: GameData): voi
   if (inflow > 0) {
     house.cash += inflow;
     house.deposits += inflow;
-    const note = `New deposits, drawn by the house's tellers (${workingCount(state, "teller")})`;
+    const tellers = workingCount(state, "teller");
+    const by = [tellers ? `tellers (${tellers})` : "", hasFacility(state, "strongroom") ? "strongroom" : ""].filter(Boolean).join(" and ");
+    const note = `New deposits, drawn by the house's ${by}`;
     addEntry(state, "cash", "deposit_inflow", inflow, note);
     addEntry(state, "deposits", "deposit_inflow", inflow, note);
   }
+
+  if (state.world.quarter === 4 && hasFacility(state, "reception_rooms")) warmHouses(state, data);
 
   c.staff = c.staff.filter((m) => !m.leaving);
   if (c.room_building && c.room_building.ready_turn <= turn + 1) {
@@ -692,12 +705,47 @@ export function resolveCounting(state: GameState, rng: Rng, data: GameData): voi
 
 // ---------- What other systems ask of the counting house ----------
 
-/** Tellers' extra deposits this quarter: in a calm market, teller_catch_up per teller of the gap below the reputation's level. */
+/** The deposit level the counting house draws toward: the reputation's level, times strongroom_deposit_level with a strongroom. */
+export function countingDepositLevel(state: GameState, data: GameData): number {
+  const level = depositLevel(state.house.reputation, data.tuning);
+  return hasFacility(state, "strongroom") ? Math.round(level * data.counting.effects.strongroom_deposit_level) : level;
+}
+
+/**
+ * Extra deposits the counting house draws this quarter, in a calm market only: each teller closes
+ * teller_catch_up of the gap below the counting house's level; a strongroom closes the usual
+ * catch_up of the band between the reputation's level and its own (the core deposit step already
+ * closes the gap below the reputation's level), so together a strongroom house is pulled toward the higher level.
+ */
 export function tellerInflow(state: GameState, data: GameData): number {
   if (state.world.sentiment !== "calm") return 0;
-  const tellers = workingCount(state, "teller");
-  const gap = depositLevel(state.house.reputation, data.tuning) - state.house.deposits;
-  return tellers > 0 && gap > 0 ? Math.round(gap * tellers * data.counting.effects.teller_catch_up) : 0;
+  const { deposits } = state.house;
+  const base = depositLevel(state.house.reputation, data.tuning);
+  const level = countingDepositLevel(state, data);
+  const tellers = workingCount(state, "teller") * data.counting.effects.teller_catch_up * Math.max(0, level - deposits);
+  const vault = hasFacility(state, "strongroom") ? data.tuning.deposits.catch_up * Math.max(0, level - Math.max(deposits, base)) : 0;
+  return Math.round(tellers + vault);
+}
+
+/**
+ * Reception rooms at year end: the bourse dines at the house, and every trading house thinks a
+ * little better of it: opinion rises by reception_yearly_opinion (within the opinion limits) and
+ * the baseline it drifts back to by reception_yearly_baseline, never past reception_baseline_ceiling
+ * (a baseline already above the ceiling is left alone). Mutates `state`.
+ */
+export function warmHouses(state: GameState, data: GameData): void {
+  const e = data.counting.effects;
+  const { min, max } = data.tuning.houses.opinion;
+  for (const h of state.houses) {
+    if (h.failed_turn !== null) continue;
+    h.opinion = Math.min(max, Math.max(min, h.opinion + e.reception_yearly_opinion));
+    if (h.baseline < e.reception_baseline_ceiling) h.baseline = Math.min(e.reception_baseline_ceiling, h.baseline + e.reception_yearly_baseline);
+  }
+}
+
+/** The share below the market price at which the house buys bonds: courier_bond_edge with a courier stable, else 0. */
+export function courierBondEdge(state: GameState, data: GameData): number {
+  return hasFacility(state, "courier_stable") ? data.counting.effects.courier_bond_edge : 0;
 }
 
 /** Scales what depositors ask: less in a panic with a strongroom. */

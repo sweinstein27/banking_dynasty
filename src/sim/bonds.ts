@@ -7,6 +7,7 @@ import { addEntry } from "./ledger";
 import { freeCash } from "./reserves";
 import type { Rng } from "./rng";
 import type { BondIssuer, GameData, Tuning } from "./tuning";
+import { courierBondEdge } from "./systems/counting";
 import type { Bond, BuyBondDecision, GameState, Sentiment } from "./types";
 
 /** Market price per gulden of face value: 1 - sensitivity * risk * (m - 1), floored, to 4 decimals. */
@@ -64,7 +65,7 @@ export function checkBuyBond(state: GameState, d: BuyBondDecision, data: GameDat
     return `${issuer.name} will only deal with houses of reputation ${gate} or more (yours is ${state.house.reputation})`;
   if (!Number.isInteger(d.face_value)) return "Face value must be whole gulden";
   if (d.face_value < t.bonds.min_amount) return `Face value must be at least ${fl(t.bonds.min_amount)}`;
-  const cost = bondCost(state, issuer, d.face_value, t);
+  const cost = Math.round(bondCost(state, issuer, d.face_value, t) * (1 - courierBondEdge(state, data)));
   if (cost > freeCash(state)) return `Not enough cash above the reserve (cost ${fl(cost)}, free ${fl(freeCash(state))})`;
   return null;
 }
@@ -86,13 +87,16 @@ export function buyBond(state: GameState, d: BuyBondDecision, data: GameData): D
     purchase_turn: next.world.turn,
     status: "active",
   };
-  const cost = bondValue(bond);
+  // A courier stable (the counting house) buys below the market; the gap is a gain on the books.
+  const value = bondValue(bond);
+  const cost = Math.round(value * (1 - courierBondEdge(next, data)));
   next.bonds.push(bond);
   next.house.cash -= cost;
   useCapacity(next, "buy_bond", data.tuning);
   const note = `Bond #${bond.id}: ${d.face_value} face of ${issuer.name} at ${bond.price}`;
   addEntry(next, "cash", "bond_purchase", -cost, note);
   addEntry(next, "bonds", "bond_purchase", cost, note);
+  if (value > cost) addEntry(next, "bonds", "revaluation", value - cost, `Bond #${bond.id}: bought below the market, prices brought first by the courier stable`);
   return { ok: true, state: next };
 }
 
