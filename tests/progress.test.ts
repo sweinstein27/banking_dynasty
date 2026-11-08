@@ -20,6 +20,7 @@ import {
 } from "../src/sim/systems/progress";
 import { stepMarkets } from "../src/sim/systems/markets";
 import { stepVentures } from "../src/sim/ventures";
+import { newsDelay } from "../src/sim/europe/world";
 import { endTurn } from "../src/sim/turn";
 import type { GameData } from "../src/sim/tuning";
 import type { GameState, Quarter, Venture } from "../src/sim/types";
@@ -432,5 +433,18 @@ describe("harness makers", () => {
     const r = applyDecision(s, d!, quiet);
     expect(r.ok).toBe(true);
     if (r.ok) expect(back(r.state)).toBeNull();
+  });
+});
+
+describe("the telegraph and Europe's news (C1 and C4 together)", () => {
+  it("news from Berlin travels by courier until the line opens, then arrives the same day", () => {
+    const s = newGame(gameData, createRng(1));
+    const before = newsDelay(s, "berlin", gameData);
+    expect(before).toBeGreaterThan(0);
+    const line = gameData.progress.telegraph_lines.find((l) => l.place === "berlin")!;
+    s.world.year = line.year;
+    s.world.quarter = line.quarter;
+    expect(newsDelay(s, "berlin", gameData)).toBe(0);
+    expect(newsDelay(s, "london", gameData)).toBeGreaterThan(0);
   });
 });

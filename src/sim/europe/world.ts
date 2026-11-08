@@ -2,6 +2,7 @@
 // exchange rates, and the dispatches that carry news of them to Frankfurt.
 import { workingCount } from "../capacity";
 import { hasFacility } from "../systems/counting";
+import { telegraphDelay } from "../systems/progress";
 import type { Rng } from "../rng";
 import type { GameData } from "../tuning";
 import type { GameState, Sentiment } from "../types";
@@ -96,7 +97,8 @@ export function newsDelay(state: GameState, from: string, data: GameData): numbe
   if (hasFacility(state, "courier_stable")) days *= e.delay.courier_stable;
   if (state.europe.branches.some((b) => b.city === from)) days *= e.delay.branch;
   days *= 1 - Math.min(e.delay.max_correspondent_cut, workingCount(state, "correspondent") * e.delay.per_correspondent);
-  return Math.round(days * 10) / 10;
+  // C4: once a telegraph line from this place to Frankfurt is open, its news arrives the same day.
+  return telegraphDelay(state, data, from, Math.round(days * 10) / 10);
 }
 
 /** The first turn a dispatch written at `turn`'s End Turn, on day `day` of the quarter, is known in Frankfurt. */

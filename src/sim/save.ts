@@ -11,7 +11,7 @@ import { ventureBook } from "./ventures";
 import { commoditiesBook, sharesBook } from "./systems/markets";
 import { financeAccounts } from "./systems/finance";
 
-export const SAVE_VERSION = 15;
+export const SAVE_VERSION = 16;
 
 export interface SaveFile {
   version: number;
