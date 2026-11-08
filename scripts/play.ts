@@ -44,6 +44,7 @@ import { quartersLeft, ventureBook, venturePayout } from "../src/sim/ventures";
 import { describeSystemDecision } from "../src/sim/decisions";
 import { askMarkets, askVentureCommit, marketsLine, printMarketHoldings } from "./markets-menu";
 import { askFinance, financeLine } from "./finance-menu";
+import { askEurope, europeLine, printEuropeHoldings } from "./europe-menu";
 
 function argValue(name: string): number | undefined {
   const i = process.argv.indexOf(`--${name}`);
@@ -88,7 +89,7 @@ const pct = (r: number) => `${(r * 100).toFixed(1)}%`;
 function printStatus(s: GameState) {
   const { world, house } = s;
   console.log(`\n=== ${house.name}, ${house.city}. ${world.year} Q${world.quarter} (turn ${world.turn}) ===`);
-  console.log(`Cash ${fl(house.cash)}  Loans ${fl(loanBook(s))}  Bonds ${fl(bondBook(s))}  Ventures ${fl(ventureBook(s))}  ${marketsLine(s)}  ${financeLine(s)}  Deposits ${fl(house.deposits)}  Borrowings ${fl(debtBook(s))}  Net worth ${fl(netWorth(s))}`);
+  console.log(`Cash ${fl(house.cash)}  Loans ${fl(loanBook(s))}  Bonds ${fl(bondBook(s))}  Ventures ${fl(ventureBook(s))}  ${marketsLine(s)}  ${financeLine(s)}  ${europeLine(s)}  Deposits ${fl(house.deposits)}  Borrowings ${fl(debtBook(s))}  Net worth ${fl(netWorth(s))}`);
   console.log(`Reserve ${fl(house.reserve)}  Free cash ${fl(freeCash(s))}  Reputation ${house.reputation}, drawing deposits of ${fl(depositLevel(house.reputation, tuning))}`);
   console.log(`Sentiment ${world.sentiment}  Base rate ${pct(world.base_rate)}  Wages and upkeep ${fl(wageBill(s, gameData) + upkeepBill(s, gameData))} a quarter`);
   console.log(progressLine(s, gameData));
@@ -100,8 +101,10 @@ function printHoldings(s: GameState) {
   const active = s.loans.filter((l) => l.status === "active");
   const bonds = s.bonds.filter((b) => b.status === "active");
   const markets = Object.keys(s.markets.shares).length + Object.keys(s.markets.goods).length + s.ventures.filter((v) => v.status === "active" || v.status === "listed").length;
-  if (!active.length && !bonds.length && !markets) return console.log("No active loans, bonds, ventures, shares or goods.");
+  const europe = s.europe.branches.length + s.europe.bills.length;
+  if (!active.length && !bonds.length && !markets && !europe) return console.log("No active loans, bonds, ventures, shares or goods.");
   printMarketHoldings(s);
+  printEuropeHoldings(s);
   for (const b of bonds) {
     const name = gameData.states.find((st) => st.id === b.issuer_state)?.name ?? b.issuer_state;
     console.log(`  Bond #${b.id} ${name}: ${fl(b.face_value)} face at ${b.price}, worth ${fl(bondValue(b))}, coupon ${fl(quarterlyCoupon(b))}/qtr`);
@@ -468,7 +471,7 @@ async function main() {
 
     while (!ended) {
       printStatus(preview);
-      const choice = (await ask("[1] Lend  [2] Report or inquiry  [s] Sell a loan  [3] Buy bonds  [4] Back venture  [5] Set reserve  [6] View holdings  [7] End turn  [8] Crisis measures  [9] Invest in family  [h] Houses  [c] Counting house  [m] Markets  [f] High finance  [q] Quit: "))?.trim();
+      const choice = (await ask("[1] Lend  [2] Report or inquiry  [s] Sell a loan  [3] Buy bonds  [4] Back venture  [5] Set reserve  [6] View holdings  [7] End turn  [8] Crisis measures  [9] Invest in family  [h] Houses  [c] Counting house  [m] Markets  [f] High finance  [e] Europe  [q] Quit: "))?.trim();
       if (choice === null || choice === undefined || choice === "q") return;
       if (choice === "1" || choice === "2" || choice === "s" || choice === "3" || choice === "4" || choice === "5" || choice === "8" || choice === "9") {
         const askFor = { "1": askLend, "2": askReport, s: askSellLoan, "3": askBond, "4": askVenture, "5": askReserve, "8": askCrisis, "9": askFamily }[choice];
@@ -523,6 +526,16 @@ async function main() {
         }
       } else if (choice === "m" || choice === "f") {
         const d = choice === "m" ? await askMarkets(preview, ask) : await askFinance(preview, ask);
+        if (!d) continue;
+        const r = applyDecision(preview, d, gameData);
+        if (!r.ok) console.log(`Refused: ${r.reason}`);
+        else {
+          queued.push(d);
+          preview = r.state;
+          console.log(`Done: ${describeSystemDecision(d, state, gameData) ?? d.kind}.`);
+        }
+      } else if (choice === "e") {
+        const d = await askEurope(preview, ask);
         if (!d) continue;
         const r = applyDecision(preview, d, gameData);
         if (!r.ok) console.log(`Refused: ${r.reason}`);

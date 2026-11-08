@@ -81,7 +81,7 @@ describe("quarter news", () => {
     const back = Math.round(10000 * (1 + gameData.ventures.find((v) => v.id === "brewery")!.expected_return));
     let s = endTurn(fresh(), [{ kind: "invest_venture", venture: "brewery", amount: 10000 }], noDefaults, sureVentures);
     for (let i = 1; i < 4; i++) s = endTurn(s, [], noDefaults, sureVentures);
-    expect(s.news.filter((n) => n.kind !== "markets")).toEqual([
+    expect(s.news.filter((n) => n.kind !== "markets" && n.kind !== "europe")).toEqual([
       { turn: 4, kind: "venture_paid_out", text: `Venture #1 (Brewery) succeeded, turning a stake of 10,000 fl. into ${back.toLocaleString("en-GB")} fl.` },
     ]);
   });
