@@ -748,7 +748,7 @@ export function describePoliticsDecision(d: PoliticsDecision, state: GameState, 
 export function checkPoliticsData(data: GameData): string[] {
   const problems: string[] = [];
   const p = data.politics;
-  const dash = /[—–]/;
+  const dash = /[\u2014\u2013]/;
   if (dash.test(JSON.stringify(p))) problems.push("politics.json uses a dash; the writing style forbids em dashes");
   const officeIds = new Set(p.offices.map((o) => o.id));
   for (const o of p.offices) {

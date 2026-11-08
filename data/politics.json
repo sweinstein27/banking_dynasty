@@ -54,7 +54,7 @@
       "cost": 2500,
       "min_age": 30,
       "min_reputation": 50,
-      "min_influence": 30,
+      "min_influence": 20,
       "min_net_worth": 5000,
       "influence_per_quarter": 3,
       "win": {
@@ -140,7 +140,7 @@
     "influence_per_quarter": 2,
     "reputation_per_year": 1,
     "favour": {
-      "start": 20,
+      "start": 40,
       "accept": 15,
       "decline": 25,
       "max": 100,
