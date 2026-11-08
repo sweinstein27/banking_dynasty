@@ -85,7 +85,7 @@ export function reopenRequests(s: GameState): void {
   s.requests = fresh().requests;
 }
 /** Seed for the panic golden run, picked with `npm run find-panic-seed`; see docs/decisions.md. */
-export const PANIC_SEED = 161;
+export const PANIC_SEED = 673;
 
 
 /** Marries the person `memberId` to a new spouse of the other gender, born in `birthYear`. Returns the spouse. */

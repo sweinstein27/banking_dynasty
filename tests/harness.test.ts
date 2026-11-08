@@ -80,7 +80,8 @@ describe("runOnce", () => {
     expect(found).toBeDefined();
     expect(found!.run.last_turn).toBeLessThan(144);
     expect(found!.years.length).toBeLessThanOrEqual(Math.ceil(found!.run.last_turn / 4));
-  });
+    // Plays up to dozens of full runs; with every system in the game this takes several seconds.
+  }, 20_000);
 
   it("is deterministic", () => {
     expect(runOnce("cautious", STRATEGIES.cautious!, 9, gameData)).toEqual(runOnce("cautious", STRATEGIES.cautious!, 9, gameData));
