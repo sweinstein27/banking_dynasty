@@ -9,5 +9,6 @@
   { "id": "sickly", "name": "Sickly", "description": "Coughs through every winter.", "opposite": "hale", "effects": { "death_chance": 1.8 } },
   { "id": "frugal", "name": "Frugal", "description": "Counts the candles.", "opposite": "spendthrift", "effects": { "family_cost": 0.75 } },
   { "id": "spendthrift", "name": "Spendthrift", "description": "Never refuses a tailor, a tutor or a ball.", "opposite": "frugal", "effects": { "family_cost": 1.5 } },
+  { "id": "pious", "name": "Pious", "description": "Never misses a sermon, and remembers the poor.", "effects": { "reputation_gain": 1.25 } },
   { "id": "gambler", "name": "Gambler", "description": "Loves a long shot, and backs too many.", "effects": { "acumen": 1, "venture_failure": 1.3 } }
 ]

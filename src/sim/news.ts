@@ -1,6 +1,7 @@
 import { ageIn, STATS } from "./family";
 import { fl } from "./format";
 import { warningKnown } from "./systems/counting";
+import { acceptsPassingOver, letterWords } from "./systems/people";
 import type { GameData } from "./tuning";
 import type { GameState, LedgerEntry, NewsItem, NewsKind } from "./types";
 
@@ -118,9 +119,17 @@ export function quarterNews(before: GameState, after: GameState, data: GameData)
       ? `With no heir left, a distant cousin, ${heir.name}, aged ${ageIn(heir, year)}, comes to take over.`
       : `${heir.name}, aged ${ageIn(heir, year)}, takes over the house${sc.named ? `, as ${dead.name} had named` : ""}.`;
     const elder = after.people.find((p) => p.id === sc.passed_over);
-    const passed = elder ? ` The elder ${elder.name} is passed over, and the bourse mutters.` : "";
+    const passed = !elder ? "" : acceptsPassingOver(after, elder, data)
+      ? ` The elder ${elder.name} is passed over, and loyally accepts it.`
+      : ` The elder ${elder.name} is passed over, and the bourse mutters.`;
     const how = sc.trained ? "" : " Untrained and unready, the new head will need time, and the bourse knows it.";
     add("family", `${dead.name} has died, aged ${ageIn(dead, year)}. ${who}${passed}${how}`);
+  }
+  // People (B2): what the family did this quarter, and the family letters that arrived.
+  for (const e of after.agendas.log.filter((x) => x.turn === turn)) news.push(e.title ? { turn, kind: "family", title: e.title, text: e.text } : { turn, kind: "family", text: e.text });
+  for (const l of after.agendas.letters.filter((x) => x.turn === turn && !before.agendas.letters.some((y) => y.id === x.id))) {
+    const w = letterWords(after, l, data);
+    news.push({ turn, kind: "letter", title: w.title, text: `${w.text} A letter awaits your answer.` });
   }
   const namedNow = after.house.designated_heir;
   if (namedNow !== null && namedNow !== before.house.designated_heir) {

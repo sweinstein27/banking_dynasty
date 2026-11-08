@@ -44,6 +44,8 @@ export const quiet: GameData = {
     auctions: { ...gameData.finance.auctions, collateral_share: 0 },
     insurance: { ...gameData.finance.insurance, requests_per_quarter: 0, storm: { ...gameData.finance.insurance.storm, chance: 0, winter_chance: 0 } },
   },
+  // People (B2): no family letters, so no rolls and no claims or feuds; studies still work.
+  people: { ...gameData.people, enabled: false },
 };
 
 /** Test borrowers with known quality, standing in for the old tiers. GOOD_2 is a second good borrower. */
