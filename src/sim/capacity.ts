@@ -38,6 +38,11 @@ const BY_KIND: Readonly<Record<string, Pool>> = {
   scheme: "head",
   counter_plot: "head",
   petition_title: "head",
+  // C2, politics: the head's own time.
+  stand_for_office: "head",
+  cultivate_influence: "head",
+  seek_court: "head",
+  senate_assurance: "head",
 };
 
 /** The pool a decision kind draws on, or null if it uses no capacity. Kinds not listed (new systems' deals) are deals. */

@@ -250,5 +250,6 @@ describe("full runs with the real data", () => {
     }
     // From 50 in 1815 to 85 in 1850 the chance of surviving is about 0.01%.
     expect(founderDied).toBeGreaterThanOrEqual(18);
-  });
+    // 20 full runs: about 1.5 s alone, but it can pass 5 s when the suite runs files in parallel.
+  }, 20000);
 });

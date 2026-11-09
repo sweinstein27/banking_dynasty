@@ -1,1 +1,302 @@
-{}
+{
+  "enabled": true,
+  "influence": {
+    "start": 0,
+    "max": 100,
+    "decay": 0.08,
+    "cultivate": {
+      "cost": 1000,
+      "gain": 5
+    }
+  },
+  "offices": [
+    {
+      "id": "senate",
+      "name": "the Senate",
+      "title": "Senator",
+      "from": {
+        "year": 1817,
+        "quarter": 1
+      },
+      "vacancy_chance": 0.15,
+      "cost": 1500,
+      "min_age": 30,
+      "min_reputation": 45,
+      "min_influence": 0,
+      "min_net_worth": 5000,
+      "influence_per_quarter": 3,
+      "win": {
+        "base": 0.25,
+        "per_reputation": 0.005,
+        "per_influence": 0.01,
+        "per_opinion": 0.002,
+        "min": 0.1,
+        "max": 0.8
+      },
+      "win_reputation": 2,
+      "win_opinion": 5,
+      "loss_influence": 10
+    },
+    {
+      "id": "diet",
+      "name": "the Federal Diet",
+      "title": "Frankfurt's envoy to the Federal Diet",
+      "from": {
+        "year": 1816,
+        "quarter": 4
+      },
+      "until": {
+        "year": 1848,
+        "quarter": 3
+      },
+      "requires": "senate",
+      "vacancy_chance": 0.05,
+      "cost": 2500,
+      "min_age": 30,
+      "min_reputation": 50,
+      "min_influence": 20,
+      "min_net_worth": 5000,
+      "influence_per_quarter": 3,
+      "win": {
+        "base": 0.4,
+        "per_reputation": 0.005,
+        "per_influence": 0.005,
+        "per_opinion": 0.002,
+        "min": 0.1,
+        "max": 0.85
+      },
+      "win_reputation": 3,
+      "win_opinion": 0,
+      "loss_influence": 10
+    }
+  ],
+  "courts": {
+    "list": [
+      {
+        "id": "nassau",
+        "name": "the court of Nassau",
+        "prince": "the Duke of Nassau",
+        "min_reputation": 40,
+        "min_influence": 15,
+        "gift": 2000,
+        "amount": [
+          5000,
+          15000
+        ]
+      },
+      {
+        "id": "hesse",
+        "name": "the court of Hesse at Darmstadt",
+        "prince": "the Grand Duke of Hesse",
+        "min_reputation": 45,
+        "min_influence": 15,
+        "gift": 2500,
+        "amount": [
+          5000,
+          20000
+        ]
+      },
+      {
+        "id": "bavaria",
+        "name": "the Bavarian court",
+        "prince": "the King of Bavaria",
+        "state": "bavaria",
+        "min_reputation": 55,
+        "min_influence": 20,
+        "gift": 4000,
+        "amount": [
+          10000,
+          30000
+        ]
+      },
+      {
+        "id": "austria",
+        "name": "the imperial court at Vienna",
+        "prince": "the Emperor of Austria",
+        "state": "austria",
+        "min_reputation": 60,
+        "min_influence": 25,
+        "gift": 5000,
+        "amount": [
+          15000,
+          40000
+        ]
+      },
+      {
+        "id": "prussia",
+        "name": "the Prussian court",
+        "prince": "the King of Prussia",
+        "state": "prussia",
+        "min_reputation": 65,
+        "min_influence": 25,
+        "gift": 5000,
+        "amount": [
+          15000,
+          40000
+        ]
+      }
+    ],
+    "max_held": 2,
+    "influence_per_quarter": 2,
+    "reputation_per_year": 1,
+    "favour": {
+      "start": 40,
+      "accept": 15,
+      "decline": 25,
+      "max": 100,
+      "dismiss_below": 0
+    },
+    "dismiss_influence": 10,
+    "request_chance": 0.15,
+    "request_mood": {
+      "calm": 1,
+      "uneasy": 1.5,
+      "panic": 2
+    },
+    "amount_step": 1000,
+    "rate": 0.05,
+    "term_quarters": 8,
+    "accept_influence": 3,
+    "delay_chance": {
+      "calm": 0.25,
+      "uneasy": 0.35,
+      "panic": 0.5
+    },
+    "delay_quarters": 4,
+    "default_chance": 0.003,
+    "default_mood": {
+      "calm": 1,
+      "uneasy": 2,
+      "panic": 5
+    },
+    "contract_favour": 0.005,
+    "gate_relief": 10
+  },
+  "contracts": {
+    "favour_per_influence": 0.0001,
+    "gate_per_influence": 0.1,
+    "max_gate": 10
+  },
+  "assurance": {
+    "influence": 20,
+    "min_influence": 20,
+    "withdrawal_factor": 0.5
+  },
+  "letters": [
+    {
+      "event": "politics-hep-hep",
+      "year": 1819,
+      "quarter": 3,
+      "to": "all",
+      "responses": [
+        {
+          "option": "stand",
+          "influence": -5
+        }
+      ]
+    },
+    {
+      "event": "politics-carlsbad",
+      "year": 1819,
+      "quarter": 4,
+      "to": "senator",
+      "responses": [
+        {
+          "option": "enforce",
+          "influence": 5
+        },
+        {
+          "option": "object",
+          "influence": -5
+        }
+      ]
+    },
+    {
+      "event": "politics-rights-1824",
+      "year": 1824,
+      "quarter": 2,
+      "to": "senator",
+      "responses": [
+        {
+          "option": "support",
+          "influence": -3
+        },
+        {
+          "option": "oppose",
+          "influence": 3
+        }
+      ]
+    },
+    {
+      "event": "politics-garrison",
+      "year": 1833,
+      "quarter": 2,
+      "to": "senator",
+      "responses": [
+        {
+          "option": "welcome",
+          "influence": 5
+        },
+        {
+          "option": "protest",
+          "influence": -5
+        }
+      ]
+    },
+    {
+      "event": "politics-march-1848",
+      "year": 1848,
+      "quarter": 1,
+      "to": "senator",
+      "responses": [
+        {
+          "option": "reform",
+          "influence": -3
+        },
+        {
+          "option": "resist",
+          "influence": 3
+        }
+      ]
+    },
+    {
+      "event": "politics-september-1848",
+      "year": 1848,
+      "quarter": 3,
+      "to": "senator",
+      "responses": [
+        {
+          "option": "troops",
+          "influence": 4
+        },
+        {
+          "option": "talks",
+          "influence": -4
+        }
+      ]
+    },
+    {
+      "event": "politics-imperial-loan",
+      "year": 1848,
+      "quarter": 4,
+      "to": "court_or_influence",
+      "min_influence": 30,
+      "responses": [
+        {
+          "option": "lend",
+          "influence": 8,
+          "court_loan": {
+            "court": "austria",
+            "amount": 20000,
+            "rate": 0.06,
+            "term_quarters": 8
+          }
+        },
+        {
+          "option": "refuse",
+          "influence": -5
+        }
+      ]
+    }
+  ]
+}
