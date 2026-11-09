@@ -14,7 +14,7 @@ import { financeAccounts } from "./systems/finance";
 import { warLoansBook } from "./systems/war";
 import { rivalsAccounts } from "./systems/rivals";
 
-export const SAVE_VERSION = 17;
+export const SAVE_VERSION = 18;
 
 export interface SaveFile {
   version: number;

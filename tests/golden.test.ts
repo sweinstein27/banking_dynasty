@@ -33,8 +33,7 @@ describe("golden run", () => {
     expect(accountBalance(state, "deposits")).toBe(state.house.deposits);
   });
 
-  // B1 rivals: houses now poach, plot and take loans, which changes this run; the integrator re-records it.
-  it.skip("matches the recorded result", () => {
+  it("matches the recorded result", () => {
     const { state, netWorthByTurn, sentimentByTurn } = play();
     const count = (status: string) => state.loans.filter((l) => l.status === status).length;
     expect({
@@ -72,8 +71,7 @@ describe("golden run: full economy", () => {
     expect(state.ventures.length).toBeGreaterThan(0);
   });
 
-  // C3 war and B1 rivals move this run: skipped until the integrator re-records it.
-  it.skip("matches the recorded result", () => {
+  it("matches the recorded result", () => {
     const { state, netWorthByTurn, sentimentByTurn } = play(economyDecisions);
     const tally = (items: { status: string }[]) =>
       items.reduce<Record<string, number>>((acc, i) => ((acc[i.status] = (acc[i.status] ?? 0) + 1), acc), {});
@@ -122,8 +120,7 @@ describe("golden run: panic", () => {
     });
   });
 
-  // C3 war and B1 rivals move this run: skipped until the integrator re-records it.
-  it.skip("matches the recorded result", () => {
+  it("matches the recorded result", () => {
     const { state, netWorthByTurn, sentimentByTurn } = run();
     const tally = (items: { status: string }[]) =>
       items.reduce<Record<string, number>>((acc, i) => ((acc[i.status] = (acc[i.status] ?? 0) + 1), acc), {});

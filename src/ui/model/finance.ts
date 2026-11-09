@@ -2,7 +2,7 @@
 // houses, lots at auction and assets owned, and requests for cover and policies written. Built only
 // from A5's own read, check and price functions (src/sim/finance/*), so a screen can never offer
 // what the sim would refuse. tests/ui-wave3-screens.test.ts checks every row against the sim.
-import { bondPrice, bondValue, stateRisk } from "../../sim/bonds";
+import { bondValue, statePrice, stateRisk } from "../../sim/bonds";
 import { workingCount } from "../../sim/capacity";
 import { fl } from "../../sim/format";
 import { assetSalePrice, bidPrice, checkBidLot, checkSellAsset, openLots, seasonFactor } from "../../sim/finance/auctions";
@@ -125,7 +125,7 @@ const ORDER = { open: 0, placing: 1, announced: 2, done: 3 } as const;
 /** Each commission the house may ask: its score against a rival of the same name, the fee at full placement, and the sim's verdict. */
 export function commissionChoices(state: GameState, c: Contract, data: GameData): Choice[] {
   const issuer = issuerOf(data, c.state)!;
-  const price = bondPrice(stateRisk(state, issuer), state.world.sentiment, data.tuning);
+  const price = statePrice(state, issuer, data);
   return data.finance.contracts.commissions.map((commission) => ({
     value: commission,
     label: pct(commission),

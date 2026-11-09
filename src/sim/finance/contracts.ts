@@ -4,7 +4,9 @@
 // keeps its commission on what it places, and at the close buys what it could not place (a firm
 // contract). Those bonds join the house's holdings and are redeemed at par when the term ends.
 import type { DecisionResult } from "../actions";
-import { bondPrice, bondValue, reputationGate, stateRisk } from "../bonds";
+import { bondValue, reputationGate, statePrice, stateRisk } from "../bonds";
+import { contractFavour } from "../systems/politics";
+import { warContractFactor } from "../systems/war";
 import { checkCapacity, useCapacity, workingCount } from "../capacity";
 import { fl } from "../format";
 import { tradingHouses } from "../houses";
@@ -80,10 +82,13 @@ export function awardContracts(state: GameState, rng: Rng, data: GameData): void
   const t = data.finance.contracts;
   for (const c of openContracts(state)) {
     const issuer = issuerOf(data, c.state)!;
-    type Bid = { who: string; name: string; commission: number; reputation: number };
+    // rank: the commission the bid is ranked at, when it differs from the fee (C2 favour).
+    type Bid = { who: string; name: string; commission: number; rank?: number; reputation: number };
     const bids: Bid[] = [];
     if (c.player_bid !== null) {
-      if (state.house.cash >= cautionFor(c, data) && state.house.status !== "bankrupt") bids.push({ who: "player", name: state.house.name, commission: c.player_bid, reputation: state.house.reputation });
+      if (state.house.cash >= cautionFor(c, data) && state.house.status !== "bankrupt")
+        // C2: influence and a court post make the player's bid rank as if it asked less; the fee stays the bid.
+        bids.push({ who: "player", name: state.house.name, commission: c.player_bid, rank: Math.max(0, c.player_bid - contractFavour(state, c.state, data)), reputation: state.house.reputation });
       else financeNews(state, `${state.house.name}'s bid for the ${issuer.name} loan lapsed: the caution money was not in the till.`);
     }
     for (const h of tradingHouses(state)) {
@@ -100,13 +105,13 @@ export function awardContracts(state: GameState, rng: Rng, data: GameData): void
       financeNews(state, `No house would take the ${issuer.name} loan of ${fl(c.size)}; the state has withdrawn it.`);
       continue;
     }
-    bids.sort((a, b) => bidScore(a.commission, a.reputation, data) - bidScore(b.commission, b.reputation, data) || b.reputation - a.reputation || Number(b.who === "player") - Number(a.who === "player"));
+    bids.sort((a, b) => bidScore(a.rank ?? a.commission, a.reputation, data) - bidScore(b.rank ?? b.commission, b.reputation, data) || b.reputation - a.reputation || Number(b.who === "player") - Number(a.who === "player"));
     const win = bids[0]!;
     c.winner = win.who;
     c.commission = win.commission;
     if (win.who === "player") {
       c.status = "placing";
-      c.issue_price = bondPrice(stateRisk(state, issuer), state.world.sentiment, data.tuning);
+      c.issue_price = statePrice(state, issuer, data);
       c.caution = cautionFor(c, data);
       state.house.cash -= c.caution;
       const note = `Caution money for the ${issuer.name} loan of ${fl(c.size)}`;
@@ -247,7 +252,7 @@ export function announceContracts(state: GameState, rng: Rng, data: GameData): v
     const sizes = t.sizes[issuer.id];
     if (!sizes || state.defaulted_states.includes(issuer.id)) continue;
     if (state.finance.contracts.some((c) => c.state === issuer.id && (c.status === "open" || c.status === "placing"))) continue;
-    if (rng.next() >= chance) continue;
+    if (rng.next() >= chance * warContractFactor(state, issuer.id, data)) continue;
     const size = roundTo(between(rng, sizes), t.size_step);
     const coupon = Math.round((issuer.coupon + Math.round(between(rng, t.coupon_premium) / 0.0025) * 0.0025) * 10000) / 10000;
     const term = t.terms[Math.floor(rng.next() * t.terms.length)]!;

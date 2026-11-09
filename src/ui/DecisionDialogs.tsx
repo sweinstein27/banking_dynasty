@@ -246,7 +246,7 @@ function BondForm(props: FormProps) {
   const [face, setFace] = useState("");
   const issuer = gameData.states.find((s) => s.id === id);
   const faceValue = parseAmount(face);
-  const cost = issuer && Number.isFinite(faceValue) ? bondCost(state, issuer, faceValue, gameData.tuning) : null;
+  const cost = issuer && Number.isFinite(faceValue) ? bondCost(state, issuer, faceValue, gameData) : null;
 
   return (
     <>

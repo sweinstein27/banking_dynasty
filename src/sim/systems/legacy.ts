@@ -2,6 +2,7 @@
 // prestige score across five pillars (wealth, standing, family, influence, legacy). The family
 // tree view comes in wave 4. Legacy reads other systems only through their exported functions and
 // state; the only things it changes are the house's reputation and cash (title fees), and the news.
+import { influence as politicsInfluence } from "./politics";
 import type { DecisionResult } from "../actions";
 import { runOver } from "../actions";
 import { checkCapacity, useCapacity } from "../capacity";
@@ -476,13 +477,9 @@ export function answerPetition(state: GameState, rng: Rng, data: GameData): void
 
 // ---------------------------------------------------------------- prestige
 
-/**
- * Influence from politics (C2): seats in the Senate and the Diet, a court banker's place. Politics is
- * being built in parallel; until it merges this is 0. The integrator replaces the body with a call
- * to the function politics exports, scaled to 0 to 100.
- */
-export function influence(_state: GameState, _data: GameData): number {
-  return 0;
+/** Influence from politics (C2): seats in the Senate and the Diet, a court banker's place. Already 0 to 100. */
+export function influence(state: GameState, _data: GameData): number {
+  return politicsInfluence(state);
 }
 
 const clamp100 = (n: number) => Math.round(Math.min(100, Math.max(0, n)));

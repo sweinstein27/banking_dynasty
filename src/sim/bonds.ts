@@ -8,6 +8,8 @@ import { freeCash } from "./reserves";
 import type { Rng } from "./rng";
 import type { BondIssuer, GameData, Tuning } from "./tuning";
 import { courierBondEdge } from "./systems/counting";
+import { contractGateRelief } from "./systems/politics";
+import { warBondDiscount } from "./systems/war";
 import type { Bond, BuyBondDecision, GameState, Sentiment } from "./types";
 
 /** Market price per gulden of face value: 1 - sensitivity * risk * (m - 1), floored, to 4 decimals. */
@@ -23,9 +25,9 @@ export function stateRisk(state: GameState, issuer: BondIssuer): number {
   return Math.round(Math.min(1, Math.max(0, shifted)) * 1000) / 1000;
 }
 
-/** Reputation a state requires before it sells to the house: its min_reputation, less the head's Connections bonus. */
+/** Reputation a state requires before it sells to the house: its min_reputation, less the head's Connections bonus and the relief influence brings (C2). */
 export function reputationGate(state: GameState, issuer: BondIssuer, data: GameData): number {
-  return issuer.min_reputation - connectionsBonus(headStat(state, "connections", data), data.tuning);
+  return issuer.min_reputation - connectionsBonus(headStat(state, "connections", data), data.tuning) - contractGateRelief(state, issuer.id, data);
 }
 
 /** Book value of a holding at its last mark, in whole gulden. */
@@ -47,9 +49,15 @@ export function bondDefaultChance(risk: number, sentiment: Sentiment, tuning: Tu
   return tuning.bonds.p0 * tuning.sentiment_multiplier[sentiment] * risk;
 }
 
+/** A state's bond price now: the market price for its risk and the mood, less the war's discount while it is at war (C3). */
+export function statePrice(state: GameState, issuer: BondIssuer, data: GameData): number {
+  const price = bondPrice(stateRisk(state, issuer), state.world.sentiment, data.tuning);
+  return Math.round(price * (1 - warBondDiscount(state, issuer.id, data)) * 10000) / 10000;
+}
+
 /** What buying `face_value` of a state's bonds costs now, in whole gulden. */
-export function bondCost(state: GameState, issuer: BondIssuer, face_value: number, tuning: Tuning): number {
-  return Math.round(face_value * bondPrice(stateRisk(state, issuer), state.world.sentiment, tuning));
+export function bondCost(state: GameState, issuer: BondIssuer, face_value: number, data: GameData): number {
+  return Math.round(face_value * statePrice(state, issuer, data));
 }
 
 /** Returns why a buy_bond decision is invalid, or null if it can go ahead. */
@@ -65,7 +73,7 @@ export function checkBuyBond(state: GameState, d: BuyBondDecision, data: GameDat
     return `${issuer.name} will only deal with houses of reputation ${gate} or more (yours is ${state.house.reputation})`;
   if (!Number.isInteger(d.face_value)) return "Face value must be whole gulden";
   if (d.face_value < t.bonds.min_amount) return `Face value must be at least ${fl(t.bonds.min_amount)}`;
-  const cost = Math.round(bondCost(state, issuer, d.face_value, t) * (1 - courierBondEdge(state, data)));
+  const cost = Math.round(bondCost(state, issuer, d.face_value, data) * (1 - courierBondEdge(state, data)));
   if (cost > freeCash(state)) return `Not enough cash above the reserve (cost ${fl(cost)}, free ${fl(freeCash(state))})`;
   return null;
 }
@@ -82,7 +90,7 @@ export function buyBond(state: GameState, d: BuyBondDecision, data: GameData): D
     issuer_state: issuer.id,
     face_value: d.face_value,
     coupon: issuer.coupon,
-    price: bondPrice(stateRisk(next, issuer), next.world.sentiment, data.tuning),
+    price: statePrice(next, issuer, data),
     risk: stateRisk(next, issuer),
     purchase_turn: next.world.turn,
     status: "active",
@@ -140,7 +148,7 @@ export function markBonds(state: GameState, data: GameData): void {
     const before = bondValue(b);
     const issuer = data.states.find((s) => s.id === b.issuer_state);
     if (issuer) b.risk = stateRisk(state, issuer);
-    b.price = bondPrice(b.risk, state.world.sentiment, data.tuning);
+    b.price = issuer ? statePrice(state, issuer, data) : bondPrice(b.risk, state.world.sentiment, data.tuning);
     const change = bondValue(b) - before;
     if (change !== 0) {
       const name = data.states.find((s) => s.id === b.issuer_state)?.name ?? b.issuer_state;

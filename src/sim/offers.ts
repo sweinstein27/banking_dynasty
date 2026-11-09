@@ -1,5 +1,5 @@
 // What each decision can be made with right now, for the terminal and the UI to list.
-import { bondPrice, reputationGate, stateRisk } from "./bonds";
+import { reputationGate, statePrice, stateRisk } from "./bonds";
 import { headEffects, headStat } from "./family";
 import { fileStale, quartersLeft, salePrice, yearsInTrade, type Band, type BookFile } from "./systems/credit";
 import type { GameData } from "./tuning";
@@ -118,7 +118,7 @@ export function bondOffers(state: GameState, data: GameData): BondOffer[] {
       name: st.name,
       coupon: st.coupon,
       risk: stateRisk(state, st),
-      price: bondPrice(stateRisk(state, st), state.world.sentiment, data.tuning),
+      price: statePrice(state, st, data),
       blocked,
     };
   });

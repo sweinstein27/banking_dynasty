@@ -26,7 +26,7 @@ import { resolvePeople } from "./systems/people";
 import { resolveProgress } from "./systems/progress";
 import { rivalsBook, resolveRivals } from "./systems/rivals";
 import { legacyBook, resolveLegacy } from "./systems/legacy";
-import { politicsBook, resolvePolitics } from "./systems/politics";
+import { politicsBook, resolvePolitics, withdrawalRelief } from "./systems/politics";
 import { warBook, resolveWar } from "./systems/war";
 import { resolveVentures, ventureBook } from "./ventures";
 
@@ -81,7 +81,7 @@ export function endTurn(state: GameState, decisions: Decision[], rng: Rng, data:
   resolveEurope(next, rng, data);
   serviceDebts(next, data.tuning);
   resolveCounting(next, rng, data);
-  resolveWithdrawals(next, data.tuning, headEffects(next, data).withdrawals * withdrawalFactor(next, data));
+  resolveWithdrawals(next, data.tuning, headEffects(next, data).withdrawals * withdrawalFactor(next, data) * withdrawalRelief(next, data));
   resolveDeposits(next, data.tuning);
   resolveHouses(next, rng, data);
   resolvePolitics(next, rng, data);
