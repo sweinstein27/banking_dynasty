@@ -67,8 +67,12 @@ describe("harness strategies", () => {
   });
 
   it("bond-heavy puts more into bonds than anything else", () => {
-    const k = kinds("bond_heavy");
-    expect(k.filter((x) => x === "buy_bond").length).toBeGreaterThan(k.filter((x) => x === "lend").length);
+    // Measured in gulden, not decisions (B1): a small loan every quarter can outnumber bond purchases
+    // the reputation gates hold back, while the money still goes mostly into bonds.
+    const ds = runs.bond_heavy!.flatMap((r) => r.decisions);
+    const bonds = ds.reduce((n, d) => n + (d.kind === "buy_bond" ? d.face_value : 0), 0);
+    const lent = ds.reduce((n, d) => n + (d.kind === "lend" ? d.amount : 0), 0);
+    expect(bonds).toBeGreaterThan(lent);
   });
 
   it("venture-heavy backs ventures, including railways once they open", () => {

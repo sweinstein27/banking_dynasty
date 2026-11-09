@@ -24,7 +24,7 @@ import { investorWants, marketsMakers, shareOfUncommitted } from "./systems/mark
 
 /** Every system's early makers, the strategy's own wants, then every system's late makers. */
 function accepted(name: string, state: GameState, data: GameData, wanted: Maker[]): Decision[] {
-  const systems = [creditMakers, countingMakers, marketsMakers, financeMakers, peopleMakers, europeMakers, progressMakers, rivalsMakers, legacyMakers, politicsMakers, warMakers].map((f) => f(name, state, data));
+  const systems = [creditMakers, countingMakers, marketsMakers, financeMakers, peopleMakers, europeMakers, progressMakers, warMakers, rivalsMakers, legacyMakers, politicsMakers].map((f) => f(name, state, data));
   return acceptedCore(state, data, [...systems.flatMap((m) => m.early), ...wanted, ...systems.flatMap((m) => m.late)]);
 }
 

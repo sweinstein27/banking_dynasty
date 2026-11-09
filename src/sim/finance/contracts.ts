@@ -8,6 +8,7 @@ import { bondPrice, bondValue, reputationGate, stateRisk } from "../bonds";
 import { checkCapacity, useCapacity, workingCount } from "../capacity";
 import { fl } from "../format";
 import { tradingHouses } from "../houses";
+import { rivalBid } from "../systems/rivals";
 import { addEntry } from "../ledger";
 import { freeCash } from "../reserves";
 import type { Rng } from "../rng";
@@ -88,8 +89,11 @@ export function awardContracts(state: GameState, rng: Rng, data: GameData): void
     for (const h of tradingHouses(state)) {
       if (h.wealth < c.size * t.rivals.wealth_cover || h.reputation < issuer.min_reputation + t.reputation_premium) continue;
       if (rng.next() >= t.rivals.bid_chance[h.temperament]) continue;
-      const commission = Math.round(between(rng, t.rivals.commission[h.temperament]) / 0.0025) * 0.0025;
-      bids.push({ who: h.id, name: h.name, commission: Math.round(commission * 10000) / 10000, reputation: h.reputation });
+      const drawn = Math.round((Math.round(between(rng, t.rivals.commission[h.temperament]) / 0.0025) * 0.0025) * 10000) / 10000;
+      // B1: a short-handed house sits out; a hostile one may undercut the player's bid.
+      const commission = rivalBid(state, h, drawn, c.player_bid, data);
+      if (commission === null) continue;
+      bids.push({ who: h.id, name: h.name, commission, reputation: h.reputation });
     }
     if (!bids.length) {
       c.status = "unawarded";

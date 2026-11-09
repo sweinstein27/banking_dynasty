@@ -20,7 +20,7 @@ export const POOL_NAMES: Record<Pool, string> = {
 };
 
 /** Decision kinds that use no capacity: they cost money or nothing, but no one's time. */
-const FREE: ReadonlySet<string> = new Set(["set_reserve", "designate_heir", "answer_letter", "pay_slowly", "suspend", "hire", "dismiss", "build", "answer_family_letter"]);
+const FREE: ReadonlySet<string> = new Set(["set_reserve", "designate_heir", "answer_letter", "pay_slowly", "suspend", "hire", "dismiss", "build", "answer_family_letter", "match_wage", "choose_ambition"]);
 
 const BY_KIND: Readonly<Record<string, Pool>> = {
   lend: "deals",
@@ -35,6 +35,9 @@ const BY_KIND: Readonly<Record<string, Pool>> = {
   invest_family: "head",
   borrow: "head",
   send_to_study: "head",
+  scheme: "head",
+  counter_plot: "head",
+  petition_title: "head",
 };
 
 /** The pool a decision kind draws on, or null if it uses no capacity. Kinds not listed (new systems' deals) are deals. */

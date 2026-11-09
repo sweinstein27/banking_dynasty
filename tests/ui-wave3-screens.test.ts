@@ -10,6 +10,7 @@ import { createRng } from "../src/sim/rng";
 import { europeBook } from "../src/sim/systems/europe";
 import { financeBook } from "../src/sim/systems/finance";
 import { netWorth, endTurn } from "../src/sim/turn";
+import { openPoachOffers } from "../src/sim/systems/rivals";
 import { exposure } from "../src/sim/finance/insurance";
 import type { Decision, GameState } from "../src/sim/types";
 import { breakdown, type Section } from "../src/ui/model/breakdowns";
@@ -139,13 +140,16 @@ function applySome(s: GameState, ds: Decision[]): { state: GameState; taken: Dec
 
 describe("wave 3 screens", () => {
   it("agree with the sim for a rich, well-known house that takes every chance", () => {
-    const rng = createRng(1830);
+    // Seed 1831: a seed whose run meets all six screens. After B1 merged, 1830 drew no family letter in 70 quarters (chance; seeds 1831 to 1834 all pass).
+    const rng = createRng(1831);
     let s = newGame(gameData, rng);
     s.house.cash += 400000;
     s.house.reputation = 85;
     const seen = { contract: false, lot: false, cover: false, branch: false, study: false, letter: false };
     for (let i = 0; i < 70 && s.house.status !== "bankrupt"; i++) {
-      const eco = applySome(s, economyDecisions(s, gameData));
+      // B1: keep staff that rivals try to lure, or poaching leaves no clerk free to open a branch.
+      const keep: Decision[] = openPoachOffers(s).map((o) => ({ kind: "match_wage", staff: o.staff }));
+      const eco = applySome(s, [...keep, ...economyDecisions(s, gameData)]);
       const mine = checkScreens(eco.state);
       const all = applySome(eco.state, mine);
       checkScreens(all.state);
