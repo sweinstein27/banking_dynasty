@@ -1,6 +1,6 @@
 // The family: the head of house and the heirs as portraits, with what each stat does. A click on a
 // portrait opens the person's sheet: their traits and what each one does.
-import { Dialog } from "radix-ui";
+import { Dialog, Tabs } from "radix-ui";
 import { useState } from "react";
 import { gameData } from "../data";
 import { ageIn, effectiveStat, headEffects, headOf, headStat, heirsOf, isTrained, livingSpouse, STATS, successor, yearlyDeathChance, type Stat } from "../sim/family";
@@ -11,6 +11,9 @@ import { MarriageDialog } from "./MarriageDialog";
 import { pct } from "./format";
 import { PageTurner, usePages } from "./Pager";
 import { Term } from "./Term";
+import { FamilyLetters, Feuds, LoyaltyChip, Studies } from "./PeoplePages";
+import { unansweredFamilyLetters } from "./model/people";
+import { studyOf } from "../sim/systems/people";
 
 const HEIRS_PER_PAGE = 3;
 const STAT_NAMES: Record<Stat, string> = { acumen: "Acumen", prudence: "Prudence", connections: "Connections" };
@@ -57,7 +60,7 @@ function SpouseLine({ p, state }: { p: Person; state: GameState }) {
   const spouse = livingSpouse(state, p);
   if (spouse) {
     const from = spouse.origin && spouse.origin !== "merchant" ? state.houses.find((h) => h.id === spouse.origin)?.name : null;
-    return <p className="small spouse-line">Married to {spouse.name}{spouse.born ? `, born ${spouse.born}` : ""}{from ? `, of ${from}` : ", of a merchant family"}</p>;
+    return <p className="small spouse-line">Married to {spouse.name}{spouse.born ? `, born ${spouse.born}` : ""}{from ? `, of ${from}` : ", of a merchant family"} <LoyaltyChip p={spouse} state={state} /></p>;
   }
   const widowed = p.spouse !== null;
   if (ageIn(p, state.world.year) < gameData.tuning.family.marriage.min_age) return null;
@@ -148,6 +151,26 @@ function PersonSheet({ p, state, onClose, onDecide, onMarry }: {
 }
 
 export function FamilyPanel({ state, onDecide }: { state: GameState; onDecide?: (d: Decision) => string | null }) {
+  const waiting = unansweredFamilyLetters(state);
+  return (
+    <div className="doc family">
+      <Tabs.Root defaultValue={waiting > 0 ? "letters" : "family"} className="doc-tabs">
+        <Tabs.List className="ribbons" aria-label="The family">
+          <Tabs.Trigger value="family" className="ribbon">The House of {gameData.family.surname}</Tabs.Trigger>
+          <Tabs.Trigger value="letters" className="ribbon">Letters{waiting > 0 ? ` (${waiting})` : ""}</Tabs.Trigger>
+          <Tabs.Trigger value="studies" className="ribbon">Studies</Tabs.Trigger>
+          <Tabs.Trigger value="feuds" className="ribbon">Feuds</Tabs.Trigger>
+        </Tabs.List>
+        <Tabs.Content value="family" className="doc-page"><FamilyTree state={state} onDecide={onDecide} /></Tabs.Content>
+        <Tabs.Content value="letters" className="doc-page"><FamilyLetters state={state} onDecide={onDecide} /></Tabs.Content>
+        <Tabs.Content value="studies" className="doc-page"><Studies state={state} onDecide={onDecide} /></Tabs.Content>
+        <Tabs.Content value="feuds" className="doc-page"><Feuds state={state} /></Tabs.Content>
+      </Tabs.Root>
+    </div>
+  );
+}
+
+function FamilyTree({ state, onDecide }: { state: GameState; onDecide?: (d: Decision) => string | null }) {
   const { tuning } = gameData;
   const { world } = state;
   const max = tuning.family.max_stat;
@@ -163,8 +186,7 @@ export function FamilyPanel({ state, onDecide }: { state: GameState; onDecide?: 
   const [marrying, setMarrying] = useState<Person | null>(null);
 
   return (
-    <div className="doc family">
-      <h2>The House of {gameData.family.surname}</h2>
+    <>
 
       {head && (
         <div className="person head">
@@ -202,14 +224,16 @@ export function FamilyPanel({ state, onDecide }: { state: GameState; onDecide?: 
                   <p className="person-name">
                     {p.name}
                     {p.id === next?.id && <span className="ribbon-tag">{named ? "Heir: named" : "Heir: by right"}</span>}
+                    <LoyaltyChip p={p} state={state} />
+                    {studyOf(state, p.id) && <span className="chip chip-away">Away studying</span>}
                   </p>
                   <TraitLabels p={p} />
                   <SpouseLine p={p} state={state} />
                   <p className="small">
-                    {STATS.map((k) => `${STAT_NAMES[k]} ${effectiveStat(p, k, gameData)}`).join(", ")}
-                  </p>
-                  <p className={trained ? "small good" : "small muted"}>
-                    {trained ? <Term id="trained">Trained</Term> : <><Term id="trained">Untrained</Term>: needs {tuning.family.succession.adult_age}+ and a total of {tuning.family.succession.trained_total}</>}
+                    {STATS.map((k) => `${STAT_NAMES[k]} ${effectiveStat(p, k, gameData)}`).join(", ")}.{" "}
+                    <span className={trained ? "good" : "muted"}>
+                      {trained ? <Term id="trained">Trained</Term> : <><Term id="trained">Untrained</Term>: needs {tuning.family.succession.adult_age}+ and a total of {tuning.family.succession.trained_total}</>}
+                    </span>
                   </p>
                 </div>
               </li>
@@ -227,6 +251,6 @@ export function FamilyPanel({ state, onDecide }: { state: GameState; onDecide?: 
           Remembered: {dead.map((p) => `${p.name} (${p.birth_year} to ${p.death_year})`).join("; ")}
         </p>
       )}
-    </div>
+    </>
   );
 }

@@ -137,6 +137,31 @@ const PATHS = {
       <path d="M9 11V8h6v3M15 5l5-3" />
     </>
   ),
+  // A sealed bond with a ribbon: high finance.
+  finance: (
+    <>
+      <path d="M5 3h11l3 3v15H5z" />
+      <path d="M8 8h8M8 11h8M8 14h4" />
+      <circle cx="15.5" cy="17" r="2" />
+      <path d="M14.5 18.7L13.5 22l2-1 2 1-1-3.3" />
+    </>
+  ),
+  // A globe with meridians: Europe.
+  europe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3c-3 3-3 15 0 18M12 3c3 3 3 15 0 18M5 7h14M5 17h14" />
+    </>
+  ),
+  // A locomotive's wheel and chimney: progress.
+  progress: (
+    <>
+      <path d="M3 17h14v-6H9V7H5v10M17 11l3-4h-4" />
+      <path d="M6 4h2v3H6z" />
+      <circle cx="7" cy="19" r="2" />
+      <circle cx="14" cy="19" r="2" />
+    </>
+  ),
   close: <path d="M6 6l12 12M18 6L6 18" />,
   up: <path d="M12 19V5M6 11l6-6 6 6" />,
   down: <path d="M12 5v14M6 13l6 6 6-6" />,

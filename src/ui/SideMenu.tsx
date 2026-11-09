@@ -1,11 +1,12 @@
 // The side menu: one icon per panel, each with its name always shown (never hover-only), and a
-// count on Letters while any wait. The quill at the foot opens save, load and new game.
+// count on Letters and on the Family while any letters wait. The quill at the foot opens save, load and new game.
 import { unansweredLetters } from "../sim/letters";
 import type { GameState } from "../sim/types";
 import { Icon } from "./icons";
+import { unansweredFamilyLetters } from "./model/people";
 import { PANELS, type PanelId } from "./Panel";
 
-const MENU: PanelId[] = ["gazette", "ledger", "bourse", "markets", "counting", "houses", "family", "letters"];
+const MENU: PanelId[] = ["gazette", "ledger", "bourse", "markets", "finance", "europe", "counting", "houses", "family", "letters", "progress"];
 
 export function SideMenu({ open, onOpen, state, onMenu }: {
   open: PanelId;
@@ -14,11 +15,12 @@ export function SideMenu({ open, onOpen, state, onMenu }: {
   onMenu: () => void;
 }) {
   const waiting = unansweredLetters(state).length;
+  const family = unansweredFamilyLetters(state);
   return (
     <nav className="rail" aria-label="Panels">
       {MENU.map((id) => {
         const p = PANELS.find((x) => x.id === id)!;
-        const badge = id === "letters" && waiting > 0 ? waiting : 0;
+        const badge = id === "letters" ? waiting : id === "family" ? family : 0;
         return (
           <button key={id} className={open === id ? "rail-button on" : "rail-button"} aria-pressed={open === id} onClick={() => onOpen(id)}>
             <Icon name={p.icon} />
