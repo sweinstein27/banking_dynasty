@@ -1,15 +1,16 @@
 // What each harness strategy does with politics (C2). Politics letters are answered by each
-// strategy's usual letter style (src/harness/common.ts); these makers only take office and lend
-// to courts.
+// strategy's usual letter style (src/harness/common.ts); these makers only take office and, where
+// a strategy plays courts, seek one and lend to it.
 //
 // - cautious and cautious_no_family (the same, so T7 still measures education alone) stand for the
 //   Senate when a seat falls vacant, and in a panic, short of cash for depositors, ask the Senate's
 //   assurance.
-// - bond_heavy stands for the Senate and then the Diet, seeks the court of the state it holds most
-//   bonds in (else the grandest that will take it), and lends to its courts when a request is at most 15% of free cash.
-// - aggressive buys influence until a court will take it, seeks the grandest court that will, and
-//   lends to its courts when a request is at most 60% of free cash.
-// - venture_heavy and investor stand for the Senate only. idle does nothing.
+// - bond_heavy stands for the Senate and then the Diet. venture_heavy and investor stand for the
+//   Senate only. aggressive and idle do nothing political.
+// - No strategy plays courts (measured on 1,000 seeds, docs/notes/C2-politics.md): aggressive,
+//   buying influence and taking a court, lent little (its cash is all at work) and spent about
+//   16,500 fl. a run on gifts, and went bankrupt in 47% of runs against 33%; bond_heavy never had
+//   15% of free cash for a request and was dismissed. The court makers stay for later use.
 import { applyDecision } from "../../sim/decisions";
 import { headOf } from "../../sim/family";
 import { freeCash } from "../../sim/reserves";
@@ -34,8 +35,8 @@ const NONE: Play = { offices: [], assurance: false, court: null, lend_share: 0, 
 const PLAYS: Record<string, Play> = {
   cautious: { ...NONE, offices: ["senate"], assurance: true },
   cautious_no_family: { ...NONE, offices: ["senate"], assurance: true },
-  bond_heavy: { ...NONE, offices: ["senate", "diet"], court: "bonds", lend_share: 0.15 },
-  aggressive: { ...NONE, court: "grandest", lend_share: 0.6, cultivate: true },
+  bond_heavy: { ...NONE, offices: ["senate", "diet"] },
+  aggressive: NONE,
   venture_heavy: { ...NONE, offices: ["senate"] },
   investor: { ...NONE, offices: ["senate"] },
 };

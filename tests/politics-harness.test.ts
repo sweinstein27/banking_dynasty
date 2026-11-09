@@ -37,12 +37,9 @@ describe("politics in the harness", { timeout: 30_000 }, () => {
     expect(kinds("idle")).toEqual([]);
   });
 
-  it("aggressive buys influence, takes a court and lends to it", () => {
-    const k = kinds("aggressive");
-    expect(k).toContain("cultivate_influence");
-    expect(k).toContain("seek_court");
-    expect(k).toContain("lend_court");
-    expect(k).not.toContain("stand_for_office");
+  it("aggressive does nothing political, and no strategy plays courts", () => {
+    expect(kinds("aggressive")).toEqual([]);
+    for (const name of ["cautious", "bond_heavy", "investor"]) expect(kinds(name).filter((k) => k !== "stand_for_office" && k !== "senate_assurance"), name).toEqual([]);
   });
 
   it("bond_heavy stands for office", () => {
