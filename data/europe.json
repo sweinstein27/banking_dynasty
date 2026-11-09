@@ -617,6 +617,44 @@
       "quarters": 1,
       "title": "Vienna besieged",
       "text": "Vienna rises again, and the imperial army besieges and storms the city."
+    },
+    {
+      "id": "hamburg-blockade-1848",
+      "city": "hamburg",
+      "year": 1848,
+      "quarter": 2,
+      "kind": "war",
+      "quarters": 2,
+      "title": "The Danes blockade the Elbe",
+      "text": "Danish warships close the mouth of the Elbe. Hamburg's ships stay in port and its warehouses fill."
+    },
+    {
+      "id": "hamburg-armistice-1848",
+      "city": "hamburg",
+      "year": 1848,
+      "quarter": 4,
+      "kind": "peace",
+      "title": "The Elbe is open",
+      "text": "With the armistice signed at Malmoe the blockade is lifted, and Hamburg's ships sail again."
+    },
+    {
+      "id": "hamburg-blockade-1849",
+      "city": "hamburg",
+      "year": 1849,
+      "quarter": 2,
+      "kind": "war",
+      "quarters": 1,
+      "title": "The blockade again",
+      "text": "The Danish war has begun again, and Danish ships lie off the Elbe once more."
+    },
+    {
+      "id": "hamburg-truce-1849",
+      "city": "hamburg",
+      "year": 1849,
+      "quarter": 3,
+      "kind": "peace",
+      "title": "Hamburg trades again",
+      "text": "A truce with Denmark lifts the blockade, and Hamburg's ships put to sea."
     }
   ],
   "texts": {

@@ -46,6 +46,13 @@ export const quiet: GameData = {
   },
   // People (B2): no family letters, so no rolls and no claims or feuds; studies still work.
   people: { ...gameData.people, enabled: false },
+  // War (C3): no campaigns, no Frankfurt troubles, and pressure that moves nothing and says nothing.
+  war: {
+    ...gameData.war,
+    campaigns: [],
+    home: [],
+    pressure: { ...gameData.war.pressure, warn: [], state_risk: 0, unrest_scale: Infinity, home: { from: 100, chance: 0 } },
+  },
 };
 
 /** Test borrowers with known quality, standing in for the old tiers. GOOD_2 is a second good borrower. */
