@@ -2,22 +2,7 @@
 
 Decisions from the screens session (branch `claude/w3-screens-e89361`), in the style of docs/decisions.md, for the integrator to move there. Plan approved by Scott on 2026-11-08. Nothing in `src/sim/` changed.
 
-## Decisions
-
-| # | Question | Decision |
-| --- | --- | --- |
-| 1 | Where do wave 2's systems live in the shell? | Three new side-menu panels: **Finance** (A5), **Europe** (C1, the map) and **Progress** (C4), all wide (they take the Desk's room, like Markets and the House). People (B2) goes into the **Family** panel as ribbons: the house, Letters, Studies, Feuds. |
-| 2 | How is a decision with a few fixed choices shown (a commission, a rate, a bid, a line)? | One `ChoiceDialog` (src/ui/ScreenKit.tsx): the terms as sums at the top, each choice as a large button with its price and what it brings, the sim's refusal under any it would refuse, the time it takes, and a confirm button. |
-| 3 | What does a decision say about the house's time? | `capacityNote` (src/ui/model/capacity.ts) reads capacity.ts's pools: "Uses 1 of 2 deals (clerks) left this quarter (of 3)", or that it falls back to the head's time, or that none is left. Every wave 2 action shows it. |
-| 4 | Rates to offer a house asking for credit | About five even steps (whole half points) from the floor (`min_rate`) to the house's top rate, plus the top of each gratitude band, so the opinion change at each band edge is visible. Every half point made the dialog too tall. |
-| 5 | The map | An inline SVG, equirectangular, squeezed east-west at 48 degrees north, with a hand-drawn simplified coastline (the mainland and Great Britain) in src/ui/model/europe.ts. It is labelled "drawn by hand, for orientation only". No map library. |
-| 6 | What the map shows of a city | Only `known` (mood, status, shock as last heard), never the true mood or rate; the test checks the map's data equals `known`. Each label says how many days late its news is. A dispatch written at turn t's End Turn tells of quarter t + 1, so "news as of" is that quarter. |
-| 7 | A city's branch estimate | `branchQuarter` run on the city's **known** mood and status at the Frankfurt quote: "next quarter, if the city stays as Frankfurt knows it". The closure chance and the open-branch warning use the known view too. |
-| 8 | Who may open a branch | The sheet lists only members who can head one (`headProblem` is null) and sums up the rest in one line ("Cannot go: ... too young ..."), so the sheet fits the page. |
-| 9 | Progress and borrower quality | Trades moved by progress are described by direction only ("grow weaker, turnover falls toward 70%"): no quality number reaches the screen (the test checks). |
-| 10 | Untitled stages | A stage with no title in data/progress.json (the 1835 railway, told by its own event) is shown as "The first railways in the German lands". |
-| 11 | Narrow windows | At 900 px wide or less, wave 2's pages stack their columns and scroll inside the document rather than clip. Desktop sizes never scroll. |
-| 12 | The top bar's net worth breakdown | Now lists finance, Europe and the four wave 3 books when they hold anything, so its lines always add up to `netWorth`. It left them out before, which would have shown a sum that did not add up once a branch or an asset was held. |
+The decisions table from this file was moved into docs/decisions.md when the branch was merged (2026-11-09). What is left here is the supporting detail.
 
 ## Checks
 

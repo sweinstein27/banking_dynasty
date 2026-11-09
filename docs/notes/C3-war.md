@@ -2,12 +2,7 @@
 
 Branch `claude/w3-war-b53301`. Plan approved by Scott on 2026-11-08 with the recommended answers to its four questions. Written in the style of docs/decisions.md; the integrator moves these there.
 
-## Approved choices
-
-- **Historical campaigns only, no random wars.** Start dates and phase lengths are fixed so history holds. What is rolled is how each fighting quarter's news reads for each state at war (its fortunes), which moves its risk and the chance its war loans are repaid. Random unrest abroad (C1's rolls, scaled by pressure) carries the uncertainty.
-- **Forced sales sell war loans** at the loan discount, after high finance and before merchant loans (`raiseFromWar`, one line in `liquidity.ts`). Without it a house could go bankrupt while still holding war loans.
-- **Hooks for the integrator, not wired:** `warContractFactor(state, stateId, data)` (finance announces loans 3x as often from a state mobilizing, 2x fighting, 1.5x settling) and `warBondDiscount(state, stateId, data)` (a share off its bond price, 3% / 6% / 2%, even in a calm market). Both default to no change at peace. `bonds.ts` and finance are not C3's files.
-- **The Central Power's fleet advance** stays, labelled as an invention (see below).
+The approved choices from this file were moved into docs/decisions.md when the branch was merged (2026-11-09). What is left here is the supporting detail.
 
 ## How it works
 
